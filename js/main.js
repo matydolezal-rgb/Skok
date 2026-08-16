@@ -18,6 +18,8 @@
     overNum: $('over-num'), overBest: $('over-best'), overCause: $('over-cause'),
     retry: $('btn-retry'), toMenu: $('btn-menu'),
     sound: $('btn-sound'), music: $('btn-music'),
+    pause: $('ui-pause'), pauseBtn: $('btn-pause'), pauseNum: $('pause-num'),
+    resume: $('btn-resume'), quit: $('btn-quit'),
   };
 
   /* ---------- ukládání ---------- */
@@ -71,11 +73,13 @@
   function show(o){
     obrazovka = o;
     /* aby aktualizace hry nepřerušila rozehrané kolo */
-    window.__skokHraje = (o === 'play');
-    ui.menu.classList.toggle('hidden',  o !== 'menu');
-    ui.board.classList.toggle('hidden', o !== 'board');
-    ui.over.classList.toggle('hidden',  o !== 'over');
-    ui.hud.classList.toggle('hidden',   o !== 'play');
+    window.__skokHraje = (o === 'play' || o === 'pause');
+    ui.menu.classList.toggle('hidden',   o !== 'menu');
+    ui.board.classList.toggle('hidden',  o !== 'board');
+    ui.over.classList.toggle('hidden',   o !== 'over');
+    ui.pause.classList.toggle('hidden',  o !== 'pause');
+    ui.hud.classList.toggle('hidden',    o !== 'play' && o !== 'pause');
+    ui.pauseBtn.classList.toggle('hidden', o !== 'play');
   }
 
   /* ---------- menu ---------- */
@@ -303,6 +307,30 @@
     show('over');
   }
 
+  /* ---------- pauza ---------- */
+  function pozastav(){
+    if (obrazovka !== 'play' || Game.over) return;
+    ui.pauseNum.textContent = Game.meters();
+    Zvuk.voda(0);            // ať v pauze nehučí voda
+    show('pause');
+  }
+
+  function pokracuj(){
+    if (obrazovka !== 'pause') return;
+    last = 0; acc = 0;       // zahodíme čas strávený v pauze
+    show('play');
+  }
+
+  function ukonci(){
+    Zvuk.vodaStop();
+    Zvuk.hudbaStop();
+    obnovMenu();             // rozehraný běh se zahodí, nic se nezapisuje
+  }
+
+  ui.pauseBtn.addEventListener('click', pozastav);
+  ui.resume.addEventListener('click', pokracuj);
+  ui.quit.addEventListener('click', ukonci);
+
   /* ---------- ovládání ---------- */
   function tap(e){
     if (obrazovka !== 'play') return;
@@ -319,8 +347,17 @@
     if (e.code === 'Space' || e.code === 'ArrowUp'){
       e.preventDefault();
       if (obrazovka === 'play') Game.jump();
+      else if (obrazovka === 'pause') pokracuj();
       else if (obrazovka === 'menu') startDaily();
+    } else if (e.code === 'Escape'){
+      if (obrazovka === 'play') pozastav();
+      else if (obrazovka === 'pause') pokracuj();
     }
+  });
+
+  /* přepnutí do jiné aplikace nebo zhasnutí displeje běh taky zastaví */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && obrazovka === 'play') pozastav();
   });
 
   /* ---------- zvuk a hudba ---------- */
@@ -399,6 +436,9 @@
         overDelay += dt;
         if (overDelay > 0.9) konecBehu();
       }
+    } else if (obrazovka === 'pause'){
+      /* v pauze se nic nepohne — obrázek zůstane přesně tam, kde jsi přestal */
+      Render.draw(ctx, Game, getBest());
     } else if (Game.player){
       /* pod nabídkami běží roklina dál jako živé pozadí */
       Game.time += dt;

@@ -22,10 +22,11 @@ f.onload = function(){
     /* žebříček prázdný */
     d.getElementById('btn-board').click();
     L.push('žebříček se otevřel: ' + vis('ui-board') + ', prázdná hláška: ' + vis('board-empty'));
+    /* bez zadané přezdívky musí obě síťové záložky nabídnout její zadání */
     d.getElementById('tab-world').click();
-    L.push('záložka svět bez serveru vysvětluje stav: ' + (txt('board-empty').indexOf('zapojený') > -1));
+    L.push('svět chce nejdřív přezdívku: ' + (!!d.getElementById('in-jmeno')));
     d.getElementById('tab-friends').click();
-    L.push('záložka kamarádi bez serveru vysvětluje stav: ' + (txt('board-empty').indexOf('zapojený') > -1));
+    L.push('kamarádi chtějí nejdřív přezdívku: ' + (!!d.getElementById('in-jmeno')));
     d.getElementById('tab-me').click();
     L.push('záložka moje funguje i bez serveru: ' + (txt('board-empty').indexOf('denní výzva') > -1));
     d.getElementById('btn-board-back').click();
@@ -37,6 +38,20 @@ f.onload = function(){
     var cv = d.getElementById('cv');
     for (var i = 0; i < 20; i++) cv.dispatchEvent(new w.PointerEvent('pointerdown', { bubbles:true }));
 
+    /* pauza */
+    L.push('tlačítko pauzy je za běhu vidět: ' + vis('btn-pause'));
+    d.getElementById('btn-pause').click();
+    L.push('pauza se otevřela: ' + vis('ui-pause') + ', tlačítko pauzy schované: ' + !vis('btn-pause'));
+    var predJump = txt('m-num');
+    for (var p = 0; p < 5; p++) cv.dispatchEvent(new w.PointerEvent('pointerdown', { bubbles:true }));
+    L.push('v pauze klepání neskáče: ' + (txt('m-num') === predJump));
+    d.getElementById('btn-resume').click();
+    L.push('pokračování vrátí hru: ' + (vis('btn-pause') && !vis('ui-pause')));
+    d.getElementById('btn-pause').click();
+    d.getElementById('btn-quit').click();
+    L.push('ukončení běhu vede do menu: ' + vis('ui-menu'));
+
+    d.getElementById('btn-free').click();
     d.getElementById('btn-menu').click();
     L.push('z běhu zpět do menu: ' + vis('ui-menu'));
 

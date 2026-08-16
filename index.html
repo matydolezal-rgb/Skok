@@ -24,6 +24,17 @@
     <div class="meters"><span id="m-num">0</span><span class="m-unit">m</span></div>
   </div>
 
+  <button id="btn-pause" class="pause-btn hidden" aria-label="Pauza">॥</button>
+
+  <!-- PAUZA -->
+  <div id="ui-pause" class="overlay hidden">
+    <h2 class="pause-title">Pauza</h2>
+    <div class="pause-score"><span id="pause-num">0</span><span class="m-unit">m</span></div>
+    <button id="btn-resume" class="btn">Pokračovat</button>
+    <button id="btn-quit" class="btn btn-ghost">Ukončit běh a zpět do menu</button>
+    <div class="pause-note">Ukončený běh se nepočítá.</div>
+  </div>
+
   <!-- MENU -->
   <div id="ui-menu" class="overlay">
     <h1 class="logo">SKOK</h1>
