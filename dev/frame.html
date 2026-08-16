@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>frame</title>
+<style>body{margin:0;background:#000;display:flex;gap:10px}canvas{width:400px;height:850px}</style>
+</head><body>
+<canvas id="c1" width="400" height="850"></canvas>
+<canvas id="c2" width="400" height="850"></canvas>
+<canvas id="c3" width="400" height="850"></canvas>
+<script src="../js/rng.js"></script>
+<script src="../js/world.js"></script>
+<script src="../js/game.js"></script>
+<script src="../js/render.js"></script>
+<script>
+var STEP = 1/120, W = 400, H = 850;
+
+function predictLanding(){
+  var p = Game.player, side = p.side;
+  var x = p.x, y = p.y, vx = -side * P.JUMP_VX, vy = P.JUMP_VY, dt = STEP;
+  for (var i = 0; i < 400; i++){
+    vy += P.GRAVITY*dt; x += vx*dt; y += vy*dt;
+    if (side < 0 ? (x + P.R >= World.rightWall(y)) : (x - P.R <= World.leftWall(y))) return { y:y, side:-side };
+  }
+  return null;
+}
+
+/* rozehraje hru chytrým hráčem na zadaný počet vteřin */
+function playFor(seconds, seed){
+  Game.reset(W, H, seed);
+  for (var i = 0; i < seconds*120 && !Game.over; i++){
+    var p = Game.player;
+    if (p.state === 'cling' && p.stun <= 0){
+      var land = predictLanding();
+      if (!(land && World.spikeAt(land.y, land.side))) Game.jump();
+    }
+    Game.update(STEP);
+  }
+}
+
+/* zkracuje běh, dokud hráč nepřežije — mrtvý hráč není hezký náhled */
+function playSafe(seconds, seed){
+  for (var s = seconds; s > 0.5; s -= 1.5){
+    playFor(s, seed);
+    if (!Game.over) return;
+  }
+}
+
+playSafe(0.6, 'ukazka-1');
+Render.draw(document.getElementById('c1').getContext('2d'), Game, 0);
+
+playSafe(9, 'ukazka-2');
+Render.draw(document.getElementById('c2').getContext('2d'), Game, 40);
+
+playSafe(14, 'ukazka-3');
+/* voda těsně pod patami — ať je vidět, jak vypadá krize */
+Game.waterY = Game.player.y + 330;
+Game.update(STEP);
+Render.draw(document.getElementById('c3').getContext('2d'), Game, 40);
+
+document.title = 'hotovo ' + Game.meters() + ' m';
+</script>
+</body></html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>trace</title></head><body>
+<pre id="out">běží…</pre>
+<script src="../js/rng.js"></script>
+<script src="../js/world.js"></script>
+<script src="../js/game.js"></script>
+<script>
+var STEP = 1/120, W = 420, H = 800, L = [];
+Game.reset(W, H, 'trace-1');
+
+var t = 0, nextLog = 0, jumps = 0, airTime = 0, clingTime = 0, stunTime = 0;
+var lastState = 'cling';
+
+for (var i = 0; i < 120 * 60 && !Game.over; i++){
+  var p = Game.player;
+  if (p.state === 'cling' && p.stun <= 0){ Game.jump(); jumps++; }
+  Game.update(STEP);
+  t += STEP;
+  if (Game.player.state === 'air') airTime += STEP; else clingTime += STEP;
+  if (Game.player.stun > 0) stunTime += STEP;
+
+  if (t >= nextLog){
+    nextLog += 1;
+    L.push('t=' + t.toFixed(1) +
+           '  y=' + Game.player.y.toFixed(0) +
+           '  výška=' + Game.height.toFixed(1) + 'm' +
+           '  voda=' + Game.waterY.toFixed(0) +
+           '  odstup=' + (Game.waterY - Game.player.y).toFixed(0) +
+           '  stav=' + Game.player.state +
+           '  skoků=' + jumps);
+  }
+}
+
+L.push('---');
+L.push('konec: ' + Game.cause + ' v ' + t.toFixed(1) + ' s, ' + Game.meters() + ' m, ' + jumps + ' skoků');
+L.push('ve vzduchu ' + airTime.toFixed(1) + ' s, na stěně ' + clingTime.toFixed(1) + ' s, omráčen ' + stunTime.toFixed(1) + ' s');
+L.push('stoupání celkem: ' + (Game.height * P.METER).toFixed(0) + ' px za ' + t.toFixed(1) + ' s = ' + (Game.height*P.METER/t).toFixed(0) + ' px/s');
+L.push('voda: ' + Game.waterSpeed().toFixed(0) + ' px/s na konci');
+document.getElementById('out').textContent = L.join('\n');
+</script>
+</body></html>

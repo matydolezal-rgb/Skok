@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>jumps</title></head><body>
+<pre id="out">běží…</pre>
+<script src="../js/rng.js"></script>
+<script src="../js/world.js"></script>
+<script src="../js/game.js"></script>
+<script>
+var STEP = 1/120, W = 420, H = 800, L = [];
+Game.reset(W, H, 'trace-1');
+
+var jumpY = null, jumpT = 0, t = 0, gains = [];
+var prevState = 'cling';
+
+for (var i = 0; i < 120*60 && !Game.over; i++){
+  var p = Game.player;
+  if (p.state === 'cling' && p.stun <= 0){
+    jumpY = p.y; jumpT = t;
+    Game.jump();
+  }
+  Game.update(STEP);
+  t += STEP;
+
+  // právě přistál
+  if (prevState === 'air' && Game.player.state === 'cling' && jumpY !== null){
+    var gain = jumpY - Game.player.y;          // kladné = stoupl
+    gains.push(gain);
+    if (gains.length <= 14){
+      L.push('skok ' + gains.length + ': zisk ' + gain.toFixed(0) + ' px, trval ' +
+             (t - jumpT).toFixed(2) + ' s, průrva ' + (2*World.halfGap(Game.player.y)).toFixed(0) + ' px');
+    }
+  }
+  prevState = Game.player.state;
+}
+
+var sum = gains.reduce(function(a,b){ return a+b; }, 0);
+L.push('---');
+L.push('přistání: ' + gains.length + ', průměrný zisk ' + (sum/gains.length).toFixed(0) + ' px');
+L.push('nejhorší ' + Math.min.apply(null, gains).toFixed(0) + ' px, nejlepší ' + Math.max.apply(null, gains).toFixed(0) + ' px');
+L.push('teoretický strop: výstup ' + (880*880/(2*2100)).toFixed(0) + ' px, přelet ' +
+       ((2*World.halfGap(0)-26)/560).toFixed(2) + ' s vs. vrchol v ' + (880/2100).toFixed(2) + ' s');
+document.getElementById('out').textContent = L.join('\n');
+</script>
+</body></html>

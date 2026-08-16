@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>shot</title>
+<style>body{margin:0;background:#000;display:flex;gap:10px}iframe{border:0;width:400px;height:850px}</style>
+</head><body>
+<iframe id="a" src="../index.html"></iframe>
+<iframe id="b" src="../index.html"></iframe>
+<iframe id="c" src="../index.html"></iframe>
+<script>
+/* rozehraje hru v rámu a klepe podle toho, co se děje */
+function play(id, stopAfter){
+  var f = document.getElementById(id);
+  f.onload = function(){
+    var d = f.contentDocument, w = f.contentWindow;
+    d.getElementById('btn-play').click();
+    var cv = d.getElementById('cv');
+    var elapsed = 0;
+    var tick = setInterval(function(){
+      elapsed += 60;
+      if (elapsed > stopAfter){ clearInterval(tick); return; }
+      var g = w.performance ? null : null;
+      cv.dispatchEvent(new w.PointerEvent('pointerdown', { bubbles:true }));
+    }, 60);
+  };
+}
+play('b', 4000);
+play('c', 11000);
+</script>
+</body></html>

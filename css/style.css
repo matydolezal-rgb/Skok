@@ -1,0 +1,83 @@
+*{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+
+html,body{ height:100%; overflow:hidden; background:#05070c; }
+
+body{
+  font-family:"Segoe UI", system-ui, -apple-system, sans-serif;
+  color:#eaf2ff;
+  -webkit-user-select:none; user-select:none;
+  touch-action:none;
+}
+
+#app{
+  position:relative;
+  width:100%; max-width:480px; height:100%;
+  margin:0 auto;
+  overflow:hidden;
+  background:#05070c;
+}
+
+#cv{ display:block; width:100%; height:100%; }
+
+.hidden{ display:none !important; }
+
+/* ---------- ukazatel výšky ---------- */
+.hud{
+  position:absolute; top:0; left:0; right:0;
+  padding:calc(14px + env(safe-area-inset-top)) 18px 0;
+  pointer-events:none;
+  display:flex; justify-content:center;
+}
+.meters{
+  display:flex; align-items:baseline; gap:3px;
+  font-weight:800; font-size:2.6rem; line-height:1;
+  color:#fff;
+  text-shadow:0 2px 18px rgba(0,0,0,.9), 0 0 40px rgba(120,180,255,.35);
+}
+.m-unit{ font-size:1rem; font-weight:600; opacity:.65; }
+
+/* ---------- překryvné obrazovky ---------- */
+.overlay{
+  position:absolute; inset:0; z-index:10;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:16px; padding:32px 28px;
+  text-align:center;
+  background:radial-gradient(ellipse at 50% 45%, rgba(10,16,28,.72) 0%, rgba(4,6,11,.94) 70%);
+  backdrop-filter:blur(2px);
+}
+
+.logo{
+  font-size:3.6rem; font-weight:900; letter-spacing:.28em; margin-left:.28em;
+  background:linear-gradient(180deg,#ffffff 0%,#8fb8e8 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 4px 24px rgba(90,150,240,.35));
+}
+.sub{ color:#8fa3bd; font-size:.95rem; letter-spacing:.02em; }
+
+.btn{
+  font:inherit; font-weight:700; font-size:1.05rem; cursor:pointer;
+  color:#06101f;
+  background:linear-gradient(180deg,#9fd4ff 0%,#4c93e0 100%);
+  border:none; border-radius:14px;
+  padding:15px 46px;
+  box-shadow:0 8px 28px rgba(60,130,220,.35);
+  transition:transform .08s ease;
+}
+.btn:active{ transform:scale(.96); }
+
+.btn-ghost{
+  background:none; color:#7f94ae; box-shadow:none;
+  font-size:.9rem; font-weight:600; padding:8px 20px;
+}
+
+.hint{ display:flex; flex-direction:column; gap:5px; color:#7e91a9; font-size:.85rem; line-height:1.5; max-width:26ch; }
+.hint-dim{ opacity:.6; }
+
+.best-line{ color:#6d8099; font-size:.85rem; margin-top:4px; }
+.best-line b{ color:#a8c6e8; }
+
+/* ---------- konec ---------- */
+.over-cause{ color:#e0748a; font-size:1.05rem; font-weight:600; letter-spacing:.02em; }
+.over-score{ display:flex; align-items:baseline; gap:4px; font-size:4.4rem; font-weight:900; line-height:1; }
+.over-score .m-unit{ font-size:1.3rem; }
+.over-best{ color:#8fa3bd; font-size:.9rem; min-height:1.2em; }

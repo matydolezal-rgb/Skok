@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>sim</title></head><body>
+<pre id="out">běží…</pre>
+<script src="../js/rng.js"></script>
+<script src="../js/world.js"></script>
+<script src="../js/game.js"></script>
+<script>
+var STEP = 1/120, errs = [], W = 420, H = 800;
+
+/* kam dopadnu, když skočím teď? vrátí y dopadu, nebo null */
+/* pozor: hodnoty musí brát z P, jinak robot předpovídá jinou hru, než se hraje */
+function predictLanding(){
+  var p = Game.player, side = p.side;
+  var x = p.x, y = p.y, vx = -side * P.JUMP_VX, vy = P.JUMP_VY, dt = 1/120;
+  for (var i = 0; i < 400; i++){
+    vy += P.GRAVITY * dt; x += vx * dt; y += vy * dt;
+    if (side < 0 ? (x + P.R >= World.rightWall(y)) : (x - P.R <= World.leftWall(y))) return { y: y, side: -side };
+  }
+  return null;
+}
+
+/* styl hráče: 'perfect' skáče hned, 'lazy' chvíli visí, 'sloppy' občas zaspí,
+   'smart' se dívá, kam dopadne, a trnům se vyhne */
+var diag = { spike:0, rock:0, jumps:0, runs:0 };
+
+function run(seed, style){
+  Game.reset(W, H, seed);
+  /* obalíme si funkce, ať víme, co hráče brzdí */
+  var origSpike = Game.bounceOffSpikes.bind(Game);
+  Game.bounceOffSpikes = function(p){ diag.spike++; return origSpike(p); };
+  var lastStun = 0;
+  var t = 0, wait = 0, jumps = 0, maxSteps = 120 * 300;
+  for (var i = 0; i < maxSteps && !Game.over; i++){
+    var p = Game.player;
+    if (p.state === 'cling' && p.stun <= 0){
+      if (style === 'smart'){
+        var land = predictLanding();
+        /* dopadl bych do trnů — radši sjedu níž a zkusím to za chvíli */
+        if (land && World.spikeAt(land.y, land.side)){ Game.update(STEP); t += STEP; continue; }
+        Game.jump(); jumps++;
+      } else if (wait <= 0){
+        Game.jump(); jumps++;
+        wait = style === 'perfect' ? 0
+             : style === 'lazy'    ? 0.35
+             : (Math.random() < 0.25 ? 0.8 : 0.05);
+      } else wait -= STEP;
+    }
+    var before = Game.rocks.length;
+    Game.update(STEP);
+    if (Game.player.stun > lastStun && Game.rocks.length < before) diag.rock++;
+    lastStun = Game.player.stun;
+    t += STEP;
+
+    var q = Game.player;
+    if (!isFinite(q.x) || !isFinite(q.y)) { errs.push(seed + ': NaN pozice'); break; }
+    if (q.x < -80 || q.x > W + 80) { errs.push(seed + ': hráč mimo roklinu x=' + q.x.toFixed(0)); break; }
+  }
+  if (!Game.over) errs.push(seed + '/' + style + ': běh neskončil do 300 s');
+  Game.bounceOffSpikes = origSpike;
+  diag.jumps += jumps; diag.runs++;
+  return { m: Game.meters(), t: t, jumps: jumps, rocks: Game.rocks.length };
+}
+
+var styles = ['perfect','lazy','sloppy','smart'], res = {};
+styles.forEach(function(s){ res[s] = { m: [], t: [] }; });
+
+for (var i = 0; i < 60; i++){
+  styles.forEach(function(s){
+    var r = run('2026-08-16#' + i, s);
+    res[s].m.push(r.m); res[s].t.push(r.t);
+  });
+}
+
+function stat(a){
+  a = a.slice().sort(function(x,y){ return x-y; });
+  var sum = a.reduce(function(p,c){ return p+c; }, 0);
+  return 'prům ' + (sum/a.length).toFixed(0) + ' | min ' + a[0] + ' | med ' + a[a.length>>1] + ' | max ' + a[a.length-1];
+}
+
+var out = ['chyb: ' + errs.length];
+styles.forEach(function(s){
+  out.push(s + ' → metry: ' + stat(res[s].m) + '   délka běhu: ' +
+    (res[s].t.reduce(function(p,c){ return p+c; },0)/res[s].t.length).toFixed(1) + ' s');
+});
+out.push('na běh: ' + (diag.jumps/diag.runs).toFixed(1) + ' skoků, ' +
+         (diag.spike/diag.runs).toFixed(2) + ' nárazů do trnů, ' +
+         (diag.rock/diag.runs).toFixed(2) + ' zásahů kamenem');
+out.push(errs.slice(0,6).join('\n'));
+document.getElementById('out').textContent = out.join('\n');
+</script>
+</body></html>

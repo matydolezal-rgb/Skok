@@ -1,0 +1,16 @@
+{
+  "name": "Skok",
+  "short_name": "Skok",
+  "description": "Voda stoupá. Nahoru, nebo nic.",
+  "lang": "cs",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#05070c",
+  "theme_color": "#0a0d14",
+  "icons": [
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
