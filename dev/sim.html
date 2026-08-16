@@ -62,12 +62,14 @@ function run(seed, style){
 }
 
 var styles = ['perfect','lazy','sloppy','smart'], res = {};
-styles.forEach(function(s){ res[s] = { m: [], t: [] }; });
+styles.forEach(function(s){ res[s] = { m: [], t: [], led: 0, snih: 0 }; });
 
 for (var i = 0; i < 60; i++){
   styles.forEach(function(s){
     var r = run('2026-08-16#' + i, s);
     res[s].m.push(r.m); res[s].t.push(r.t);
+    if (r.m >= World.ICE_FROM_M)  res[s].led++;
+    if (r.m >= World.SNOW_FROM_M) res[s].snih++;
   });
 }
 
@@ -79,8 +81,10 @@ function stat(a){
 
 var out = ['chyb: ' + errs.length];
 styles.forEach(function(s){
-  out.push(s + ' → metry: ' + stat(res[s].m) + '   délka běhu: ' +
-    (res[s].t.reduce(function(p,c){ return p+c; },0)/res[s].t.length).toFixed(1) + ' s');
+  out.push(s + ' → metry: ' + stat(res[s].m) + '   délka: ' +
+    (res[s].t.reduce(function(p,c){ return p+c; },0)/res[s].t.length).toFixed(1) + ' s' +
+    '   dosáhlo ledu: ' + Math.round(res[s].led / res[s].m.length * 100) + ' %' +
+    ', sněhu: ' + Math.round(res[s].snih / res[s].m.length * 100) + ' %');
 });
 out.push('na běh: ' + (diag.jumps/diag.runs).toFixed(1) + ' skoků, ' +
          (diag.spike/diag.runs).toFixed(2) + ' nárazů do trnů, ' +

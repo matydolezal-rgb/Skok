@@ -65,7 +65,7 @@ const World = {
      Od 120 metrů výš jsou některé úseky stěny namrzlé. Nezabíjejí,
      ale sjíždíš po nich skoro třikrát rychleji — nedá se na nich čekat. */
 
-  ICE_FROM_M: 120,
+  ICE_FROM_M: 70,
 
   iceStartY(){ return -this.ICE_FROM_M * 50; },
 
@@ -90,7 +90,7 @@ const World = {
      po holé skále, ale pomaleji než po ledu — a překvapí to míň, protože
      sníh je téměř souvislý. */
 
-  SNOW_FROM_M: 200,
+  SNOW_FROM_M: 140,
 
   snowStartY(){ return -this.SNOW_FROM_M * 50; },
 

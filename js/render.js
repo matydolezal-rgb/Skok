@@ -311,7 +311,8 @@ const Render = {
      Proto malé, rozmazané, pomalé a bez obrysu: nesmí to jít splést
      se sněhovou koulí, která je velká, ostrá a padá rovnou dolů. */
   snowfall(ctx, g, W, H, cam){
-    const sila = Math.max(0, Math.min(1, (g.height - 170) / 60));
+    /* sněžit začne o kus dřív, než přijde zavátá stěna — jako předzvěst */
+    const sila = Math.max(0, Math.min(1, (g.height - (World.SNOW_FROM_M - 30)) / 45));
     if (sila <= 0) return;
 
     const pocet = Math.floor(70 * sila);
