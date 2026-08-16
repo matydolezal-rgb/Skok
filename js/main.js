@@ -82,11 +82,10 @@
     Zvuk.vodaStop();
     Zvuk.hudbaStop();
     const dnes = todaySeed();
-    const hotovo = getDaily(dnes);
-    ui.dailyNote.textContent = hotovo === null
-      ? 'dnešní roklina — jeden pokus'
-      : 'dnes máš ' + hotovo + ' m — hotovo';
-    ui.daily.classList.toggle('card-main', hotovo === null);
+    const nejlepsi = getDaily(dnes);
+    ui.dailyNote.textContent = nejlepsi === null
+      ? 'dnešní roklina — stejná pro všechny'
+      : 'dnes nejlíp ' + nejlepsi + ' m — zkus to překonat';
 
     const best = getBest();
     ui.freeNote.textContent = best ? 'trénink — tvůj rekord ' + best + ' m' : 'trénuj, kolikrát chceš';
@@ -133,7 +132,7 @@
         '<span class="row-rank">' + (i + 1) + '.</span>' +
         '<span class="row-main">' +
           '<span class="row-name">' + hezkeDatum(z.datum) + (z.datum === dnes ? ' — dnes' : '') + '</span>' +
-          '<span class="row-sub">denní výzva</span>' +
+          '<span class="row-sub">nejlepší pokus dne</span>' +
         '</span>' +
         '<span class="row-score">' + z.m + ' m</span>';
       ui.boardList.appendChild(row);
@@ -141,17 +140,12 @@
   }
 
   /* ---------- běh ---------- */
+  /* Denní výzvu jde hrát kolikrát chceš — počítá se nejlepší pokus dne.
+     Roklina je pro všechny stejná, takže se dá během dne předhánět. */
   function startDaily(){
-    const dnes = todaySeed();
-    if (getDaily(dnes) !== null){    // dnešek už je odehraný — ukaž výsledky
-      zalozka = 'me';
-      obnovZebricek();
-      show('board');
-      return;
-    }
     rezim = 'daily';
     ui.mode.textContent = 'denní výzva';
-    spust(dnes);
+    spust(todaySeed());
   }
 
   function startFree(){
@@ -180,9 +174,16 @@
 
     if (rezim === 'daily'){
       const dnes = todaySeed();
-      if (getDaily(dnes) === null) save(KEY_DAILY + dnes, m);
-      ui.overBest.textContent = 'Dnešní výzva je hotová. Zítra nová roklina.';
-      ui.retry.textContent = 'Volný let';
+      const dosud = getDaily(dnes);
+      if (dosud === null || m > dosud){
+        save(KEY_DAILY + dnes, m);
+        ui.overBest.textContent = dosud === null
+          ? 'První dnešní pokus. Zkus se překonat.'
+          : 'Nový nejlepší dnešek! Předtím ' + dosud + ' m.';
+      } else {
+        ui.overBest.textContent = 'Dnes nejlíp ' + dosud + ' m. Ještě jednou?';
+      }
+      ui.retry.textContent = 'Znovu';
     } else {
       ui.overBest.textContent = m > best ? 'Nový rekord!' : 'Rekord: ' + best + ' m';
       ui.retry.textContent = 'Znovu';
@@ -250,9 +251,10 @@
   ui.tabMe.addEventListener('click', () => { zalozka = 'me'; obnovZebricek(); });
   ui.tabFriends.addEventListener('click', () => { zalozka = 'friends'; obnovZebricek(); });
   ui.toMenu.addEventListener('click', obnovMenu);
-  /* po denní výzvě i po volném letu vede tlačítko na volný let —
-     denní se dá hrát jen jednou za den, jinak by ztratila smysl */
-  ui.retry.addEventListener('click', startFree);
+  /* „Znovu" pokračuje ve stejném režimu, ve kterém jsi hrál */
+  ui.retry.addEventListener('click', () => {
+    if (rezim === 'daily') startDaily(); else startFree();
+  });
 
   /* ---------- smyčka ---------- */
   const STEP = 1 / 120;

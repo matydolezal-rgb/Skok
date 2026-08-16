@@ -47,8 +47,12 @@ f.onload = function(){
     d.getElementById('btn-menu').click();
     L.push('menu ví o hotové výzvě: ' + (txt('daily-note').indexOf('77') > -1));
 
+    /* denní výzva musí jít hrát opakovaně */
     d.getElementById('btn-daily').click();
-    L.push('druhý pokus vede na žebříček: ' + vis('ui-board'));
+    L.push('druhý pokus se rozjede: ' + vis('hud') + ' (ne žebříček: ' + !vis('ui-board') + ')');
+    d.getElementById('btn-menu').click();
+
+    d.getElementById('btn-board').click();
     L.push('v seznamu je dnešek: ' + (d.querySelectorAll('#board-list .row').length === 1) +
            ', zvýrazněný: ' + (d.querySelectorAll('#board-list .row.today').length === 1));
     L.push('skóre v řádku: ' + (d.querySelector('.row-score') || {}).textContent);
