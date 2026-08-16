@@ -45,11 +45,11 @@ const Sit = {
 
   pridejKamarada(kod){
     kod = String(kod || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (kod.length !== 6) return { ok:false, chyba:'Kód má mít šest znaků.' };
-    if (kod === this.kod())  return { ok:false, chyba:'To je tvůj vlastní kód.' };
+    if (kod.length !== 6) return { ok:false, chyba:'A code has six characters.' };
+    if (kod === this.kod())  return { ok:false, chyba:'That is your own code.' };
     const k = this.kamaradi();
-    if (k.indexOf(kod) > -1) return { ok:false, chyba:'Tohohle kamaráda už máš.' };
-    if (k.length >= 50)      return { ok:false, chyba:'Víc kamarádů se do seznamu nevejde.' };
+    if (k.indexOf(kod) > -1) return { ok:false, chyba:'You already have this friend.' };
+    if (k.length >= 50)      return { ok:false, chyba:'Your friend list is full.' };
     k.push(kod);
     this.ulozKamarady(k);
     return { ok:true, kod };
@@ -79,7 +79,7 @@ const Sit = {
 
   /* Registrace zařízení. Vrátí kód pro kamarády. */
   async registruj(jmeno){
-    const j = String(jmeno || '').trim().slice(0, 16) || 'Lezec';
+    const j = String(jmeno || '').trim().slice(0, 16) || 'Climber';
     const kod = await this.rpc('registruj', { p_hrac: this.hrac(), p_jmeno: j });
     this.uloz(this.KLIC_JMENO, j);
     if (kod) this.uloz(this.KLIC_KOD, kod);

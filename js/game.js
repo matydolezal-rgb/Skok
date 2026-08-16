@@ -131,7 +131,7 @@ const Game = {
                    : 'skala';
     if (novaZona !== this.zona){
       this.zona = novaZona;
-      this.zonaText = novaZona === 'snih' ? 'SNÍH' : novaZona === 'led' ? 'LED' : '';
+      this.zonaText = novaZona === 'snih' ? 'SNOW' : novaZona === 'led' ? 'ICE' : '';
       this.zonaCas = 2.6;
       if (this.zonaText) Z('zona');
     }
@@ -151,7 +151,7 @@ const Game = {
 
     if (p.y > this.waterY){
       this.over  = true;
-      this.cause = 'Voda tě dostihla';
+      this.cause = 'The water caught you';
       this.burst(p.x, this.waterY, 26, '#6fc9e8', 1.6);
       this.shake = 1;
       Z('konec');

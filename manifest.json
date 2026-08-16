@@ -1,8 +1,8 @@
 {
   "name": "Skok",
   "short_name": "Skok",
-  "description": "Voda stoupá. Nahoru, nebo nic.",
-  "lang": "cs",
+  "description": "The water is rising. Up, or nothing.",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

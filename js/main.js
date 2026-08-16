@@ -47,9 +47,11 @@
     return out;
   }
 
+  const MESICE = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
   function hezkeDatum(seed){
     const [y, m, d] = seed.split('-');
-    return Number(d) + '. ' + Number(m) + '.';
+    return MESICE[Number(m) - 1] + ' ' + Number(d);
   }
 
   /* ---------- stav ---------- */
@@ -89,11 +91,11 @@
     const dnes = todaySeed();
     const nejlepsi = getDaily(dnes);
     ui.dailyNote.textContent = nejlepsi === null
-      ? 'dnešní roklina — stejná pro všechny'
-      : 'dnes nejlíp ' + nejlepsi + ' m — zkus to překonat';
+      ? "today's ravine — the same for everyone"
+      : 'best today ' + nejlepsi + ' m — try to beat it';
 
     const best = getBest();
-    ui.freeNote.textContent = best ? 'trénink — tvůj rekord ' + best + ' m' : 'trénuj, kolikrát chceš';
+    ui.freeNote.textContent = best ? 'practice — your record ' + best + ' m' : 'practise as much as you like';
     show('menu');
   }
 
@@ -122,7 +124,7 @@
       row.innerHTML =
         '<span class="row-rank">' + (i + 1) + '.</span>' +
         '<span class="row-main">' +
-          '<span class="row-name">' + bezpecne(p.jmeno) + (p.kod === zvyraznitKod ? ' — ty' : '') + '</span>' +
+          '<span class="row-name">' + bezpecne(p.jmeno) + (p.kod === zvyraznitKod ? ' — you' : '') + '</span>' +
           '<span class="row-sub">' + bezpecne(p.popis || '') + '</span>' +
         '</span>' +
         '<span class="row-score">' + (p.metry < 0 ? '—' : p.metry + ' m') + '</span>';
@@ -134,25 +136,25 @@
   function panelJmeno(){
     ui.boardPanel.classList.remove('hidden');
     ui.boardPanel.innerHTML =
-      '<span class="panel-label">Pod jakým jménem tě uvidí ostatní?</span>' +
+      '<span class="panel-label">What name should others see?</span>' +
       '<div class="panel-row">' +
-        '<input id="in-jmeno" maxlength="16" placeholder="přezdívka">' +
-        '<button class="panel-btn" id="btn-jmeno">Uložit</button>' +
+        '<input id="in-jmeno" maxlength="16" placeholder="nickname">' +
+        '<button class="panel-btn" id="btn-jmeno">Save</button>' +
       '</div>' +
-      '<span class="panel-msg" id="msg-jmeno">Žádný e-mail ani heslo. Jméno jde kdykoliv změnit.</span>';
+      '<span class="panel-msg" id="msg-jmeno">No email, no password. You can change it any time.</span>';
 
     $('btn-jmeno').addEventListener('click', async () => {
       const j = $('in-jmeno').value.trim();
       const msg = $('msg-jmeno');
-      if (j.length < 2){ msg.className = 'panel-msg chyba'; msg.textContent = 'Napiš aspoň dva znaky.'; return; }
-      msg.className = 'panel-msg'; msg.textContent = 'Zapisuji…';
+      if (j.length < 2){ msg.className = 'panel-msg chyba'; msg.textContent = 'Use at least two characters.'; return; }
+      msg.className = 'panel-msg'; msg.textContent = 'Saving…';
       try {
         await Sit.registruj(j);
         await Sit.synchronizuj();
         obnovZebricek();
       } catch(e){
         msg.className = 'panel-msg chyba';
-        msg.textContent = 'Server neodpovídá. Zkus to za chvíli, hra funguje dál.';
+        msg.textContent = 'The server is not responding. Try again later — the game keeps working.';
       }
     });
   }
@@ -160,20 +162,20 @@
   function panelKamaradi(){
     ui.boardPanel.classList.remove('hidden');
     ui.boardPanel.innerHTML =
-      '<span class="panel-label">Tvůj kód — pošli ho kamarádovi</span>' +
+      '<span class="panel-label">Your code — send it to a friend</span>' +
       '<div class="panel-code">' + bezpecne(Sit.kod() || '——————') + '</div>' +
       '<div class="panel-row">' +
-        '<input id="in-kod" maxlength="7" placeholder="kód kamaráda">' +
-        '<button class="panel-btn" id="btn-kod">Přidat</button>' +
+        '<input id="in-kod" maxlength="7" placeholder="friend\'s code">' +
+        '<button class="panel-btn" id="btn-kod">Add</button>' +
       '</div>' +
-      '<span class="panel-msg" id="msg-kod">Kamarádi se ukládají jen v tomhle telefonu.</span>';
+      '<span class="panel-msg" id="msg-kod">Friends are stored on this phone only.</span>';
 
     $('btn-kod').addEventListener('click', () => {
       const msg = $('msg-kod');
       const v = Sit.pridejKamarada($('in-kod').value);
       if (!v.ok){ msg.className = 'panel-msg chyba'; msg.textContent = v.chyba; return; }
       msg.className = 'panel-msg ok';
-      msg.textContent = 'Přidáno: ' + v.kod;
+      msg.textContent = 'Added: ' + v.kod;
       obnovZebricek();
     });
   }
@@ -187,19 +189,19 @@
 
     const dnes = todaySeed();
     ui.boardSub.textContent = zalozka === 'me'
-      ? 'tvoje nejlepší pokusy po dnech'
-      : 'dnešní roklina · ' + hezkeDatum(dnes);
+      ? 'your best run of each day'
+      : "today's ravine · " + hezkeDatum(dnes);
 
     /* ---- moje výsledky: fungují i bez serveru ---- */
     if (zalozka === 'me'){
       const h = historieVyzev();
       if (!h.length){
-        prazdno('<b>Zatím žádná denní výzva.</b><br><br>Zahraj si dnešní a objeví se tady.');
+        prazdno('<b>No daily challenge yet.</b><br><br>Play today\'s one and it will show up here.');
         return;
       }
       vypisRadky(h.slice().sort((a, b) => b.m - a.m).map((z) => ({
-        jmeno: hezkeDatum(z.datum) + (z.datum === dnes ? ' — dnes' : ''),
-        popis: 'nejlepší pokus dne',
+        jmeno: hezkeDatum(z.datum) + (z.datum === dnes ? ' — today' : ''),
+        popis: 'best run of the day',
         metry: z.m,
         kod: null,
       })), null);
@@ -208,21 +210,21 @@
 
     /* ---- svět a kamarádi: potřebují server ---- */
     if (!Sit.pripojeno()){
-      prazdno('<b>Žebříček ještě není zapojený.</b><br><br>' +
-              'Hra zatím nemá kam posílat výsledky. Až bude server hotový, ' +
-              'objeví se tu ostatní hráči i tvoji kamarádi.');
+      prazdno('<b>The leaderboard is not connected yet.</b><br><br>' +
+              'The game has nowhere to send scores. Once the server is ready, ' +
+              'other players and your friends will show up here.');
       return;
     }
 
     if (!Sit.jmeno()){
-      prazdno('Nejdřív si vyber přezdívku — pod tou tě uvidí ostatní.');
+      prazdno('Pick a nickname first — that\'s how others will see you.');
       panelJmeno();
       return;
     }
 
     if (zalozka === 'friends') panelKamaradi();
 
-    prazdno('Načítám…');
+    prazdno('Loading…');
     try {
       const data = zalozka === 'world'
         ? await Sit.svet(dnes, 50)
@@ -230,8 +232,8 @@
 
       if (!data.length){
         prazdno(zalozka === 'world'
-          ? '<b>Dnes ještě nikdo nelezl.</b><br><br>Můžeš být první.'
-          : '<b>Zatím žádní kamarádi.</b><br><br>Pošli jim svůj kód, nebo zadej jejich.');
+          ? '<b>Nobody has climbed today.</b><br><br>You can be the first.'
+          : '<b>No friends yet.</b><br><br>Send them your code, or enter theirs.');
         if (zalozka === 'friends') panelKamaradi();
         return;
       }
@@ -240,13 +242,14 @@
         jmeno: r.jmeno,
         kod: r.kod,
         metry: r.metry,
-        popis: r.metry < 0 ? 'dnes ještě nehrál' : 'dnešní nejlepší',
+        popis: r.metry < 0 ? "hasn't played today" : "today's best",
       })), Sit.kod());
 
       if (zalozka === 'friends') panelKamaradi();
     } catch(e){
-      prazdno('<b>Žebříček se nepodařilo načíst.</b><br><br>' +
-              'Nejspíš nemáš signál. Hra funguje dál a tvůj výsledek se odešle, až bude spojení.');
+      prazdno('<b>Could not load the leaderboard.</b><br><br>' +
+              'You are probably offline. The game keeps working and your score ' +
+              'will be sent as soon as there is a connection.');
       if (zalozka === 'friends') panelKamaradi();
     }
   }
@@ -256,13 +259,13 @@
      Roklina je pro všechny stejná, takže se dá během dne předhánět. */
   function startDaily(){
     rezim = 'daily';
-    ui.mode.textContent = 'denní výzva';
+    ui.mode.textContent = 'daily challenge';
     spust(todaySeed());
   }
 
   function startFree(){
     rezim = 'free';
-    ui.mode.textContent = 'volný let';
+    ui.mode.textContent = 'free climb';
     spust('volny-' + Date.now() + '-' + Math.floor(Math.random() * 1e6));
   }
 
@@ -282,7 +285,7 @@
     const m = Game.meters();
     const best = getBest();
     ui.overNum.textContent = m;
-    ui.overCause.textContent = Game.cause || 'Konec';
+    ui.overCause.textContent = Game.cause || 'Run over';
 
     if (rezim === 'daily'){
       const dnes = todaySeed();
@@ -290,17 +293,17 @@
       if (dosud === null || m > dosud){
         save(KEY_DAILY + dnes, m);
         ui.overBest.textContent = dosud === null
-          ? 'První dnešní pokus. Zkus se překonat.'
-          : 'Nový nejlepší dnešek! Předtím ' + dosud + ' m.';
+          ? 'Your first run today. Try to beat it.'
+          : 'New best today! Previously ' + dosud + ' m.';
       } else {
-        ui.overBest.textContent = 'Dnes nejlíp ' + dosud + ' m. Ještě jednou?';
+        ui.overBest.textContent = 'Best today ' + dosud + ' m. One more?';
       }
-      ui.retry.textContent = 'Znovu';
+      ui.retry.textContent = 'Again';
       /* výsledek do žebříčku; bez signálu počká ve frontě */
       if (Sit.pripojeno() && Sit.jmeno()) Sit.posli(dnes, Math.max(m, dosud || 0));
     } else {
-      ui.overBest.textContent = m > best ? 'Nový rekord!' : 'Rekord: ' + best + ' m';
-      ui.retry.textContent = 'Znovu';
+      ui.overBest.textContent = m > best ? 'New record!' : 'Record: ' + best + ' m';
+      ui.retry.textContent = 'Again';
     }
 
     if (m > best) save(KEY_BEST, m);
@@ -368,8 +371,8 @@
   Zvuk.hudbaVypnuta  = load(KEY_HUDBA, '1') === '0';
 
   function obnovPrepinace(){
-    ui.sound.textContent = (Zvuk.vypnuto ? '🔇' : '🔊') + ' Zvuky';
-    ui.music.textContent = (Zvuk.hudbaVypnuta ? '🔈' : '🎵') + ' Hudba';
+    ui.sound.textContent = (Zvuk.vypnuto ? '🔇' : '🔊') + ' Sound';
+    ui.music.textContent = (Zvuk.hudbaVypnuta ? '🔈' : '🎵') + ' Music';
     ui.sound.classList.toggle('on', !Zvuk.vypnuto);
     ui.music.classList.toggle('on', !Zvuk.hudbaVypnuta);
   }

@@ -28,7 +28,7 @@ f.onload = function(){
     d.getElementById('tab-friends').click();
     L.push('kamarádi chtějí nejdřív přezdívku: ' + (!!d.getElementById('in-jmeno')));
     d.getElementById('tab-me').click();
-    L.push('záložka moje funguje i bez serveru: ' + (txt('board-empty').indexOf('denní výzva') > -1));
+    L.push('záložka moje funguje i bez serveru: ' + (txt('board-empty').indexOf('daily challenge') > -1));
     d.getElementById('btn-board-back').click();
     L.push('zpět v menu: ' + vis('ui-menu'));
 
@@ -63,7 +63,7 @@ f.onload = function(){
     var dnes = w.todaySeed();
     w.localStorage.setItem('skok.daily.' + dnes, '77');
     d.getElementById('btn-menu').click();
-    L.push('menu ví o hotové výzvě: ' + (txt('daily-note').indexOf('77') > -1));
+    L.push('menu ví o hotové výzvě: ' + (txt('daily-note').indexOf('77') > -1) + ' — "' + txt('daily-note') + '"');
 
     /* denní výzva musí jít hrát opakovaně */
     d.getElementById('btn-daily').click();
@@ -83,7 +83,7 @@ f.onload = function(){
     L.push('hudba se přepíná: ' + (pred !== po) + ' (' + pred + ' → ' + po + ')');
     d.getElementById('btn-music').click();
     d.getElementById('btn-sound').click();
-    L.push('zvuk se přepíná: ' + (txt('btn-sound').indexOf('🔇') > -1));
+    L.push('zvuk se přepíná: ' + (txt('btn-sound').indexOf('🔇') > -1) + ', text: "' + txt('btn-sound') + '"');
     d.getElementById('btn-sound').click();
 
     /* běh se zapnutou hudbou */
