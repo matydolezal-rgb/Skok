@@ -81,8 +81,17 @@
 <script src="js/render.js"></script>
 <script src="js/main.js"></script>
 <script>
-  /* offline režim — na file:// se registrace neprovádí, tam není potřeba */
+  /* Offline režim — na file:// se registrace neprovádí, tam není potřeba.
+     Když se na pozadí stáhne novější verze hry, stránka se sama načte znovu,
+     ať uživatel nemusí aplikaci zavírat a otevírat. Uprostřed běhu ne — to by
+     ho to připravilo o rozehrané kolo, tam se s tím počká na další spuštění. */
   if ('serviceWorker' in navigator && location.protocol === 'https:'){
+    var uzSeNacita = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if (uzSeNacita || window.__skokHraje) return;
+      uzSeNacita = true;
+      location.reload();
+    });
     navigator.serviceWorker.register('sw.js').catch(function(){});
   }
 </script>

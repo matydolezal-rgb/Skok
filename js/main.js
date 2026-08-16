@@ -68,6 +68,8 @@
 
   function show(o){
     obrazovka = o;
+    /* aby aktualizace hry nepřerušila rozehrané kolo */
+    window.__skokHraje = (o === 'play');
     ui.menu.classList.toggle('hidden',  o !== 'menu');
     ui.board.classList.toggle('hidden', o !== 'board');
     ui.over.classList.toggle('hidden',  o !== 'over');
