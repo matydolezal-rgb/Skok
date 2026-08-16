@@ -1,13 +1,15 @@
-/* Offline režim. Po prvním načtení hra běží bez signálu i bez wifi.
-   Při každé změně hry zvyš VERZI — jinak si telefon nechá starou verzi. */
+﻿/* Offline reĹľim. Po prvnĂ­m naÄŤtenĂ­ hra bÄ›ĹľĂ­ bez signĂˇlu i bez wifi.
+   PĹ™i kaĹľdĂ© zmÄ›nÄ› hry zvyĹˇ VERZI â€” jinak si telefon nechĂˇ starou verzi. */
 
-const VERZE = 'skok-v8';
+const VERZE = 'skok-v9';
 
 const SOUBORY = [
   './',
   './index.html',
   './manifest.json',
   './css/style.css',
+  './js/config.js',
+  './js/sit.js',
   './js/audio.js',
   './js/rng.js',
   './js/world.js',
@@ -39,7 +41,7 @@ self.addEventListener('fetch', (e) => {
     caches.match(e.request).then((hit) => {
       if (hit) return hit;
       return fetch(e.request).then((res) => {
-        /* co se povede stáhnout, rovnou schováme na příště */
+        /* co se povede stĂˇhnout, rovnou schovĂˇme na pĹ™Ă­ĹˇtÄ› */
         if (res && res.ok && res.type === 'basic'){
           const kopie = res.clone();
           caches.open(VERZE).then((c) => c.put(e.request, kopie));

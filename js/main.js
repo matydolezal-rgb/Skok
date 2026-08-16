@@ -12,8 +12,9 @@
     mNum:  $('m-num'),   mode:  $('hud-mode'),
     daily: $('btn-daily'), free: $('btn-free'), boardBtn: $('btn-board'),
     dailyNote: $('daily-note'), freeNote: $('free-note'),
-    tabMe: $('tab-me'), tabFriends: $('tab-friends'),
+    tabWorld: $('tab-world'), tabFriends: $('tab-friends'), tabMe: $('tab-me'),
     boardList: $('board-list'), boardEmpty: $('board-empty'), boardBack: $('btn-board-back'),
+    boardPanel: $('board-panel'), boardSub: $('board-sub'),
     overNum: $('over-num'), overBest: $('over-best'), overCause: $('over-cause'),
     retry: $('btn-retry'), toMenu: $('btn-menu'),
     sound: $('btn-sound'), music: $('btn-music'),
@@ -93,50 +94,157 @@
   }
 
   /* ---------- žebříček ---------- */
-  let zalozka = 'me';
+  let zalozka = 'world';
 
-  function obnovZebricek(){
-    ui.tabMe.classList.toggle('tab-on', zalozka === 'me');
-    ui.tabFriends.classList.toggle('tab-on', zalozka === 'friends');
-    ui.boardList.innerHTML = '';
+  function bezpecne(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
 
-    if (zalozka === 'friends'){
-      ui.boardList.classList.add('hidden');
-      ui.boardEmpty.classList.remove('hidden');
-      ui.boardEmpty.innerHTML =
-        '<b>Kamarádi zatím nejsou zapojení.</b><br><br>' +
-        'Aby se ti tu ukazovala jejich skóre, musí hra posílat výsledky na server. ' +
-        'To je další krok — pak dostaneš kód, který kamarádovi pošleš, a uvidíte se navzájem.';
-      return;
-    }
+  function prazdno(html){
+    ui.boardList.classList.add('hidden');
+    ui.boardEmpty.classList.remove('hidden');
+    ui.boardEmpty.innerHTML = html;
+  }
 
-    const h = historieVyzev();
-    if (!h.length){
-      ui.boardList.classList.add('hidden');
-      ui.boardEmpty.classList.remove('hidden');
-      ui.boardEmpty.innerHTML = '<b>Zatím žádná denní výzva.</b><br><br>Zahraj si dnešní a objeví se tady.';
-      return;
-    }
-
+  function vypisRadky(polozky, zvyraznitKod){
     ui.boardEmpty.classList.add('hidden');
     ui.boardList.classList.remove('hidden');
+    ui.boardList.innerHTML = '';
 
-    /* seřazeno podle výkonu, ať je vidět, který den byl tvůj nejlepší */
-    const dnes = todaySeed();
-    const podleVykonu = h.slice().sort((a, b) => b.m - a.m);
-
-    podleVykonu.forEach((z, i) => {
+    polozky.forEach((p, i) => {
       const row = document.createElement('div');
-      row.className = 'row' + (z.datum === dnes ? ' today' : '');
+      row.className = 'row' + (p.kod && p.kod === zvyraznitKod ? ' today' : '');
       row.innerHTML =
         '<span class="row-rank">' + (i + 1) + '.</span>' +
         '<span class="row-main">' +
-          '<span class="row-name">' + hezkeDatum(z.datum) + (z.datum === dnes ? ' — dnes' : '') + '</span>' +
-          '<span class="row-sub">nejlepší pokus dne</span>' +
+          '<span class="row-name">' + bezpecne(p.jmeno) + (p.kod === zvyraznitKod ? ' — ty' : '') + '</span>' +
+          '<span class="row-sub">' + bezpecne(p.popis || '') + '</span>' +
         '</span>' +
-        '<span class="row-score">' + z.m + ' m</span>';
+        '<span class="row-score">' + (p.metry < 0 ? '—' : p.metry + ' m') + '</span>';
       ui.boardList.appendChild(row);
     });
+  }
+
+  /* jméno se zadává jen jednou, žádná registrace ani heslo */
+  function panelJmeno(){
+    ui.boardPanel.classList.remove('hidden');
+    ui.boardPanel.innerHTML =
+      '<span class="panel-label">Pod jakým jménem tě uvidí ostatní?</span>' +
+      '<div class="panel-row">' +
+        '<input id="in-jmeno" maxlength="16" placeholder="přezdívka">' +
+        '<button class="panel-btn" id="btn-jmeno">Uložit</button>' +
+      '</div>' +
+      '<span class="panel-msg" id="msg-jmeno">Žádný e-mail ani heslo. Jméno jde kdykoliv změnit.</span>';
+
+    $('btn-jmeno').addEventListener('click', async () => {
+      const j = $('in-jmeno').value.trim();
+      const msg = $('msg-jmeno');
+      if (j.length < 2){ msg.className = 'panel-msg chyba'; msg.textContent = 'Napiš aspoň dva znaky.'; return; }
+      msg.className = 'panel-msg'; msg.textContent = 'Zapisuji…';
+      try {
+        await Sit.registruj(j);
+        await Sit.synchronizuj();
+        obnovZebricek();
+      } catch(e){
+        msg.className = 'panel-msg chyba';
+        msg.textContent = 'Server neodpovídá. Zkus to za chvíli, hra funguje dál.';
+      }
+    });
+  }
+
+  function panelKamaradi(){
+    ui.boardPanel.classList.remove('hidden');
+    ui.boardPanel.innerHTML =
+      '<span class="panel-label">Tvůj kód — pošli ho kamarádovi</span>' +
+      '<div class="panel-code">' + bezpecne(Sit.kod() || '——————') + '</div>' +
+      '<div class="panel-row">' +
+        '<input id="in-kod" maxlength="7" placeholder="kód kamaráda">' +
+        '<button class="panel-btn" id="btn-kod">Přidat</button>' +
+      '</div>' +
+      '<span class="panel-msg" id="msg-kod">Kamarádi se ukládají jen v tomhle telefonu.</span>';
+
+    $('btn-kod').addEventListener('click', () => {
+      const msg = $('msg-kod');
+      const v = Sit.pridejKamarada($('in-kod').value);
+      if (!v.ok){ msg.className = 'panel-msg chyba'; msg.textContent = v.chyba; return; }
+      msg.className = 'panel-msg ok';
+      msg.textContent = 'Přidáno: ' + v.kod;
+      obnovZebricek();
+    });
+  }
+
+  async function obnovZebricek(){
+    ui.tabWorld.classList.toggle('tab-on',   zalozka === 'world');
+    ui.tabFriends.classList.toggle('tab-on', zalozka === 'friends');
+    ui.tabMe.classList.toggle('tab-on',      zalozka === 'me');
+    ui.boardPanel.classList.add('hidden');
+    ui.boardPanel.innerHTML = '';
+
+    const dnes = todaySeed();
+    ui.boardSub.textContent = zalozka === 'me'
+      ? 'tvoje nejlepší pokusy po dnech'
+      : 'dnešní roklina · ' + hezkeDatum(dnes);
+
+    /* ---- moje výsledky: fungují i bez serveru ---- */
+    if (zalozka === 'me'){
+      const h = historieVyzev();
+      if (!h.length){
+        prazdno('<b>Zatím žádná denní výzva.</b><br><br>Zahraj si dnešní a objeví se tady.');
+        return;
+      }
+      vypisRadky(h.slice().sort((a, b) => b.m - a.m).map((z) => ({
+        jmeno: hezkeDatum(z.datum) + (z.datum === dnes ? ' — dnes' : ''),
+        popis: 'nejlepší pokus dne',
+        metry: z.m,
+        kod: null,
+      })), null);
+      return;
+    }
+
+    /* ---- svět a kamarádi: potřebují server ---- */
+    if (!Sit.pripojeno()){
+      prazdno('<b>Žebříček ještě není zapojený.</b><br><br>' +
+              'Hra zatím nemá kam posílat výsledky. Až bude server hotový, ' +
+              'objeví se tu ostatní hráči i tvoji kamarádi.');
+      return;
+    }
+
+    if (!Sit.jmeno()){
+      prazdno('Nejdřív si vyber přezdívku — pod tou tě uvidí ostatní.');
+      panelJmeno();
+      return;
+    }
+
+    if (zalozka === 'friends') panelKamaradi();
+
+    prazdno('Načítám…');
+    try {
+      const data = zalozka === 'world'
+        ? await Sit.svet(dnes, 50)
+        : await Sit.kamaradiDne(dnes);
+
+      if (!data.length){
+        prazdno(zalozka === 'world'
+          ? '<b>Dnes ještě nikdo nelezl.</b><br><br>Můžeš být první.'
+          : '<b>Zatím žádní kamarádi.</b><br><br>Pošli jim svůj kód, nebo zadej jejich.');
+        if (zalozka === 'friends') panelKamaradi();
+        return;
+      }
+
+      vypisRadky(data.map((r) => ({
+        jmeno: r.jmeno,
+        kod: r.kod,
+        metry: r.metry,
+        popis: r.metry < 0 ? 'dnes ještě nehrál' : 'dnešní nejlepší',
+      })), Sit.kod());
+
+      if (zalozka === 'friends') panelKamaradi();
+    } catch(e){
+      prazdno('<b>Žebříček se nepodařilo načíst.</b><br><br>' +
+              'Nejspíš nemáš signál. Hra funguje dál a tvůj výsledek se odešle, až bude spojení.');
+      if (zalozka === 'friends') panelKamaradi();
+    }
   }
 
   /* ---------- běh ---------- */
@@ -184,6 +292,8 @@
         ui.overBest.textContent = 'Dnes nejlíp ' + dosud + ' m. Ještě jednou?';
       }
       ui.retry.textContent = 'Znovu';
+      /* výsledek do žebříčku; bez signálu počká ve frontě */
+      if (Sit.pripojeno() && Sit.jmeno()) Sit.posli(dnes, Math.max(m, dosud || 0));
     } else {
       ui.overBest.textContent = m > best ? 'Nový rekord!' : 'Rekord: ' + best + ' m';
       ui.retry.textContent = 'Znovu';
@@ -246,10 +356,15 @@
 
   ui.daily.addEventListener('click', startDaily);
   ui.free.addEventListener('click', startFree);
-  ui.boardBtn.addEventListener('click', () => { zalozka = 'me'; obnovZebricek(); show('board'); });
+  ui.boardBtn.addEventListener('click', () => {
+    zalozka = Sit.pripojeno() ? 'world' : 'me';
+    obnovZebricek();
+    show('board');
+  });
   ui.boardBack.addEventListener('click', obnovMenu);
-  ui.tabMe.addEventListener('click', () => { zalozka = 'me'; obnovZebricek(); });
+  ui.tabWorld.addEventListener('click',   () => { zalozka = 'world';   obnovZebricek(); });
   ui.tabFriends.addEventListener('click', () => { zalozka = 'friends'; obnovZebricek(); });
+  ui.tabMe.addEventListener('click',      () => { zalozka = 'me';      obnovZebricek(); });
   ui.toMenu.addEventListener('click', obnovMenu);
   /* „Znovu" pokračuje ve stejném režimu, ve kterém jsi hrál */
   ui.retry.addEventListener('click', () => {

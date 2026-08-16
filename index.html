@@ -55,12 +55,15 @@
   <!-- ŽEBŘÍČEK -->
   <div id="ui-board" class="overlay overlay-top hidden">
     <h2 class="board-title">Žebříček</h2>
+    <div class="board-sub" id="board-sub">dnešní roklina</div>
 
     <div class="tabs">
-      <button id="tab-me" class="tab tab-on">Moje výzvy</button>
+      <button id="tab-world" class="tab tab-on">Svět</button>
       <button id="tab-friends" class="tab">Kamarádi</button>
+      <button id="tab-me" class="tab">Moje</button>
     </div>
 
+    <div id="board-panel" class="board-panel hidden"></div>
     <div id="board-list" class="board-list"></div>
     <div id="board-empty" class="board-empty hidden"></div>
 
@@ -77,6 +80,8 @@
   </div>
 </div>
 
+<script src="js/config.js"></script>
+<script src="js/sit.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/rng.js"></script>
 <script src="js/world.js"></script>

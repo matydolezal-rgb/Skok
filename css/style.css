@@ -118,6 +118,38 @@ body{
 }
 .tab.tab-on{ background:#1d2d43; color:#cfe4ff; border-color:#3d6a9e; }
 
+.board-sub{ color:#6d8099; font-size:.82rem; margin-top:-8px; }
+
+.board-panel{
+  width:100%; max-width:340px;
+  display:flex; flex-direction:column; gap:9px;
+  padding:14px; border-radius:14px;
+  background:#111a27; border:1px solid #1e2c3f;
+}
+.panel-label{ font-size:.75rem; color:#7f95b0; letter-spacing:.06em; text-transform:uppercase; }
+.panel-code{
+  font-size:1.6rem; font-weight:800; letter-spacing:.28em;
+  color:#9fd4ff; text-align:center; padding:6px 0;
+}
+.panel-row{ display:flex; gap:7px; }
+.panel-row input{
+  flex:1; min-width:0; font:inherit; font-size:.95rem;
+  background:#0b1220; border:1px solid #24344b; border-radius:10px;
+  color:#eaf2ff; padding:11px 13px;
+}
+.panel-row input::placeholder{ color:#4e5d70; }
+.panel-btn{
+  font:inherit; font-weight:700; font-size:.9rem; cursor:pointer;
+  color:#06101f;
+  background:linear-gradient(180deg,#9fd4ff 0%,#4c93e0 100%);
+  border:none; border-radius:10px;
+  padding:11px 16px;
+}
+.panel-btn.tichy{ background:none; color:#7f95b0; border:1px solid #24344b; }
+.panel-msg{ font-size:.8rem; color:#7f95b0; line-height:1.45; }
+.panel-msg.chyba{ color:#e0748a; }
+.panel-msg.ok{ color:#7fc99a; }
+
 .board-list{
   width:100%; max-width:340px;
   display:flex; flex-direction:column; gap:7px;

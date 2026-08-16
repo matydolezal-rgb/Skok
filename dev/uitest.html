@@ -22,9 +22,12 @@ f.onload = function(){
     /* žebříček prázdný */
     d.getElementById('btn-board').click();
     L.push('žebříček se otevřel: ' + vis('ui-board') + ', prázdná hláška: ' + vis('board-empty'));
+    d.getElementById('tab-world').click();
+    L.push('záložka svět bez serveru vysvětluje stav: ' + (txt('board-empty').indexOf('zapojený') > -1));
     d.getElementById('tab-friends').click();
-    L.push('záložka kamarádi vysvětluje stav: ' + (txt('board-empty').indexOf('server') > -1));
+    L.push('záložka kamarádi bez serveru vysvětluje stav: ' + (txt('board-empty').indexOf('zapojený') > -1));
     d.getElementById('tab-me').click();
+    L.push('záložka moje funguje i bez serveru: ' + (txt('board-empty').indexOf('denní výzva') > -1));
     d.getElementById('btn-board-back').click();
     L.push('zpět v menu: ' + vis('ui-menu'));
 
@@ -53,8 +56,8 @@ f.onload = function(){
     d.getElementById('btn-menu').click();
 
     d.getElementById('btn-board').click();
-    L.push('v seznamu je dnešek: ' + (d.querySelectorAll('#board-list .row').length === 1) +
-           ', zvýrazněný: ' + (d.querySelectorAll('#board-list .row.today').length === 1));
+    d.getElementById('tab-me').click();
+    L.push('v seznamu je dnešek: ' + (d.querySelectorAll('#board-list .row').length === 1));
     L.push('skóre v řádku: ' + (d.querySelector('.row-score') || {}).textContent);
 
     /* přepínače zvuku a hudby */
