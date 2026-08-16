@@ -1,13 +1,14 @@
 /* Offline režim. Po prvním načtení hra běží bez signálu i bez wifi.
    Při každé změně hry zvyš VERZI — jinak si telefon nechá starou verzi. */
 
-const VERZE = 'skok-v3';
+const VERZE = 'skok-v4';
 
 const SOUBORY = [
   './',
   './index.html',
   './manifest.json',
   './css/style.css',
+  './js/audio.js',
   './js/rng.js',
   './js/world.js',
   './js/game.js',

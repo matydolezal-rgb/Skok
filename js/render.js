@@ -30,9 +30,17 @@ const Render = {
     this.rocks(ctx, g, cam);
     this.particles(ctx, g, cam);
     this.player(ctx, g, cam);
+    this.snowfall(ctx, g, W, H, cam);
 
     ctx.restore();
     this.vignette(ctx, W, H);
+    this.zoneTitle(ctx, g, W, H);
+
+    /* probliknutí po ráně */
+    if (g.flash > 0){
+      ctx.fillStyle = 'rgba(255,255,255,' + (g.flash * 0.30).toFixed(3) + ')';
+      ctx.fillRect(0, 0, W, H);
+    }
   },
 
   /* ---------- pozadí ---------- */
@@ -252,9 +260,93 @@ const Render = {
       ctx.lineWidth = 2;
       ctx.stroke();
 
+      this.snow(ctx, g, H, cam, side);
       this.ice(ctx, g, H, cam, side);
       this.spikes(ctx, g, H, cam, side);
     }
+  },
+
+  /* Zaváté úseky. Sníh je matný a nadýchaný — schválně jinak než lesklý led,
+     ať se ty dva povrchy nepletou. */
+  snow(ctx, g, H, cam, side){
+    const b0 = Math.floor((cam - 40) / World.BAND);
+    const b1 = Math.floor((cam + H + 40) / World.BAND);
+
+    for (let b = b0; b <= b1; b++){
+      const band = World.snowBand(b, side);
+      if (!band) continue;
+
+      /* nadýchaný okraj — nepravidelná čepice na hraně skály */
+      ctx.beginPath();
+      const edge = side < 0 ? -4 : g.W + 4;
+      ctx.moveTo(edge, band.y0 - cam);
+      for (let y = band.y0; y <= band.y1; y += 10){
+        const nadych = 4 + hash1(Math.floor(y / 10) * 17 + (side < 0 ? 5 : 9)) * 12;
+        ctx.lineTo(World.wallAt(y, side) - side * nadych, y - cam);
+      }
+      ctx.lineTo(edge, band.y1 - cam);
+      ctx.closePath();
+
+      const gr = ctx.createLinearGradient(side < 0 ? 0 : g.W, 0, side < 0 ? g.W * 0.35 : g.W * 0.65, 0);
+      gr.addColorStop(0, 'rgba(225,235,248,.30)');
+      gr.addColorStop(1, 'rgba(248,252,255,.88)');
+      ctx.fillStyle = gr;
+      ctx.fill();
+
+      /* jemné stíny v závěji, ať to není bílá placka */
+      ctx.save();
+      ctx.clip();
+      ctx.fillStyle = 'rgba(150,175,205,.30)';
+      for (let y = band.y0; y < band.y1; y += 19){
+        const h = hash1(y * 3 + 1);
+        ctx.beginPath();
+        ctx.ellipse(World.wallAt(y, side) - side * (10 + h * 26), y - cam, 16 + h * 16, 5, 0, 0, 6.283);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  },
+
+  /* Sněžení v popředí — čistě ozdoba, hráči se nemůže nic stát.
+     Proto malé, rozmazané, pomalé a bez obrysu: nesmí to jít splést
+     se sněhovou koulí, která je velká, ostrá a padá rovnou dolů. */
+  snowfall(ctx, g, W, H, cam){
+    const sila = Math.max(0, Math.min(1, (g.height - 170) / 60));
+    if (sila <= 0) return;
+
+    const pocet = Math.floor(70 * sila);
+    for (let i = 0; i < pocet; i++){
+      const sx = hash1(i * 313);
+      const sy = hash1(i * 577);
+      const rychlost = 0.35 + sy * 0.5;
+      const span = H + 140;
+      let y = ((sy * span + cam * -rychlost) % span + span) % span - 70;
+      const x = (sx * W + Math.sin(g.time * (0.4 + sx) + i) * 22 + W) % W;
+      const r = 1 + sy * 1.6;
+
+      ctx.globalAlpha = (0.18 + sx * 0.30) * sila;
+      ctx.fillStyle = '#eaf4ff';
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, 6.283);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  },
+
+  /* název nové části hory — krátce probliknе a zmizí */
+  zoneTitle(ctx, g, W, H){
+    if (g.zonaCas <= 0 || !g.zonaText) return;
+    const t = g.zonaCas / 2.6;
+    const a = t > 0.75 ? (1 - t) * 4 : Math.min(1, t * 1.6);
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.textAlign = 'center';
+    ctx.font = '800 34px system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,.92)';
+    ctx.shadowColor = 'rgba(120,190,255,.9)';
+    ctx.shadowBlur = 24;
+    ctx.fillText(g.zonaText, W / 2, H * 0.30);
+    ctx.restore();
   },
 
   /* namrzlé úseky stěny — musí být poznat na první pohled, ne až po pádu */
@@ -387,6 +479,46 @@ const Render = {
     for (const r of g.rocks){
       const y = r.y - cam;
       if (y < -60 || y > g.H + 60) continue;
+
+      /* Sněhová koule: velká, ostře ohraničená, se stínem a ocasem.
+         Vedle drobných vloček na pozadí musí být na první pohled jasné,
+         že tohle je věc, která tě srazí. */
+      if (r.typ === 'koule'){
+        ctx.save();
+        ctx.translate(r.x, y);
+
+        /* ocas za koulí — musí jen naznačit rychlost, ne dělat sněhuláka */
+        for (let k = 1; k <= 3; k++){
+          ctx.fillStyle = 'rgba(226,240,255,' + (0.13 - k * 0.035).toFixed(3) + ')';
+          ctx.beginPath();
+          ctx.ellipse(0, -k * r.r * 0.55, r.r * (0.92 - k * 0.20), r.r * (1.1 - k * 0.22), 0, 0, 6.283);
+          ctx.fill();
+        }
+
+        const kg = ctx.createRadialGradient(-r.r * 0.35, -r.r * 0.4, r.r * 0.2, 0, 0, r.r);
+        kg.addColorStop(0, '#ffffff');
+        kg.addColorStop(0.65, '#e8f1fb');
+        kg.addColorStop(1, '#a9bed6');
+        ctx.beginPath();
+        ctx.arc(0, 0, r.r, 0, 6.283);
+        ctx.fillStyle = kg;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(60,85,120,.85)';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        /* hrudky, ať to není jen kolečko */
+        ctx.fillStyle = 'rgba(140,165,195,.45)';
+        for (let k = 0; k < 3; k++){
+          const a = hash1(k * 91 + r.shape) * 6.283;
+          const d = r.r * (0.25 + hash1(k * 37) * 0.4);
+          ctx.beginPath();
+          ctx.arc(Math.cos(a) * d, Math.sin(a) * d, r.r * 0.16, 0, 6.283);
+          ctx.fill();
+        }
+        ctx.restore();
+        continue;
+      }
 
       if (r.typ === 'rampouch'){
         ctx.save();

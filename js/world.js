@@ -85,6 +85,31 @@ const World = {
     return { y0: band * this.BAND, y1: (band + 1) * this.BAND };
   },
 
+  /* ---------- sníh ----------
+     Od 200 metrů je stěna zaváta skoro všude. Sjíždíš po ní rychleji než
+     po holé skále, ale pomaleji než po ledu — a překvapí to míň, protože
+     sníh je téměř souvislý. */
+
+  SNOW_FROM_M: 200,
+
+  snowStartY(){ return -this.SNOW_FROM_M * 50; },
+
+  bandIsSnowy(band, side){
+    if (band * this.BAND > this.snowStartY()) return false;
+    if (this.bandHasSpikes(band, side)) return false;
+    if (this.bandIsIcy(band, side)) return false;          // led má přednost
+    return hash1(band * 6151 + (side < 0 ? 23 : 71) + this.seedNum) < 0.82;
+  },
+
+  snowAt(y, side){
+    return this.bandIsSnowy(Math.floor(y / this.BAND), side);
+  },
+
+  snowBand(band, side){
+    if (!this.bandIsSnowy(band, side)) return null;
+    return { y0: band * this.BAND, y1: (band + 1) * this.BAND };
+  },
+
   /* rozsah trnového pásma pro vykreslení, nebo null */
   spikeBand(band, side){
     if (!this.bandHasSpikes(band, side)) return null;

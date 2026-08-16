@@ -96,6 +96,13 @@ body{
 .card-title{ font-weight:800; font-size:1.15rem; letter-spacing:.01em; }
 .card-note{ font-size:.82rem; color:#7f95b0; }
 
+.sound-toggle{
+  font:inherit; font-size:.82rem; cursor:pointer;
+  background:none; border:none; color:#6d8099;
+  padding:8px 14px; margin-top:2px;
+}
+.sound-toggle:active{ color:#a8c6e8; }
+
 /* ---------- žebříček ---------- */
 .overlay-top{ justify-content:flex-start; padding-top:calc(30px + env(safe-area-inset-top)); gap:14px; }
 

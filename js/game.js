@@ -9,6 +9,11 @@ const P = {
   METER:    50,     // kolik bodů je jeden metr
 };
 
+/* Zvuk je nepovinný — testovací stránky ho nenačítají, hra proto nesmí spadnout. */
+function Z(jmeno, arg){
+  if (typeof Zvuk !== 'undefined' && Zvuk[jmeno]) Zvuk[jmeno](arg);
+}
+
 const Game = {
 
   reset(width, height, seedStr){
@@ -36,6 +41,11 @@ const Game = {
     this.rocks  = [];
     this.parts  = [];
     this.shake  = 0;
+    this.flash  = 0;      // bílé probliknutí při nárazu
+    this.hitStop = 0;     // krátké zastavení času, aby rána byla cítit
+    this.zona   = 'skala';
+    this.zonaText = '';
+    this.zonaCas  = 0;
     this.over   = false;
     this.cause  = '';
     this.rockTimer = 1.6;
@@ -55,6 +65,7 @@ const Game = {
     p.vy = P.JUMP_VY;
     p.face = -p.side;
     this.burst(p.x, p.y, 7, '#9db4cf', 1);
+    Z('skok');
   },
 
   /* ---------- částice ---------- */
@@ -85,8 +96,9 @@ const Game = {
     if (p.squash > 0) p.squash = Math.max(0, p.squash - dt * 4);
 
     if (p.state === 'cling'){
-      p.onIce = World.iceAt(p.y, p.side);
-      p.y += P.SLIDE * (p.onIce ? 2.8 : 1) * dt;
+      p.onIce  = World.iceAt(p.y, p.side);
+      p.onSnow = !p.onIce && World.snowAt(p.y, p.side);
+      p.y += P.SLIDE * (p.onIce ? 2.8 : p.onSnow ? 1.8 : 1) * dt;
       p.x = World.wallAt(p.y, p.side) - p.side * P.R;
       /* z ledu odlétávají úlomky, ať je hned poznat, že ujíždíš */
       if (p.onIce && this.rng.chance(dt * 14)){
@@ -110,6 +122,24 @@ const Game = {
     const h = Math.max(0, -p.y / P.METER);
     if (h > this.height) this.height = h;
 
+    if (this.flash > 0)   this.flash = Math.max(0, this.flash - dt * 3.4);
+    if (this.zonaCas > 0) this.zonaCas = Math.max(0, this.zonaCas - dt);
+
+    /* vstup do nové části hory */
+    const novaZona = this.height >= World.SNOW_FROM_M ? 'snih'
+                   : this.height >= World.ICE_FROM_M  ? 'led'
+                   : 'skala';
+    if (novaZona !== this.zona){
+      this.zona = novaZona;
+      this.zonaText = novaZona === 'snih' ? 'SNÍH' : novaZona === 'led' ? 'LED' : '';
+      this.zonaCas = 2.6;
+      if (this.zonaText) Z('zona');
+    }
+
+    /* hukot vody sílí, jak se blíží */
+    const odstup = this.waterY - p.y;
+    Z('voda', Math.max(0, Math.min(1, 1 - odstup / 900)));
+
     /* kamera */
     const target = p.y - this.H * 0.58;
     this.camY += (target - this.camY) * Math.min(1, dt * 6.5);
@@ -121,6 +151,7 @@ const Game = {
       this.cause = 'Voda tě dostihla';
       this.burst(p.x, this.waterY, 26, '#6fc9e8', 1.6);
       this.shake = 1;
+      Z('konec');
     }
   },
 
@@ -157,7 +188,13 @@ const Game = {
     p.vy     = 0;
     p.face   = -side;
     p.squash = 1;
-    this.burst(p.x, p.y + P.R * 0.5, 6, '#7d8ea3', 0.7);
+
+    const povrch = World.iceAt(p.y, side) ? 'led' : World.snowAt(p.y, side) ? 'snih' : 'skala';
+    this.burst(p.x, p.y + P.R * 0.5,
+               povrch === 'snih' ? 9 : 6,
+               povrch === 'skala' ? '#7d8ea3' : '#dff0ff',
+               povrch === 'snih' ? 0.9 : 0.7);
+    Z('dopad', povrch);
   },
 
   bounceOffSpikes(p){
@@ -166,7 +203,10 @@ const Game = {
     p.vy = -240;
     p.stun = 0.18;
     this.shake = Math.max(this.shake, 0.55);
+    this.flash = 0.75;
+    this.hitStop = 0.06;
     this.burst(p.x, p.y, 10, '#e0748a', 1.1);
+    Z('trny');
   },
 
   /* ---------- voda ---------- */
@@ -216,12 +256,18 @@ const Game = {
       /* zásah hráče */
       const dx = r.x - p.x, dy = r.y - p.y;
       if (dx*dx + dy*dy < (r.r + P.R) * (r.r + P.R) && p.stun <= 0){
+        const koule = r.typ === 'koule';
         p.state = 'air';
-        p.vx = (p.x < r.x ? -1 : 1) * 320;
-        p.vy = 120;
-        p.stun = 0.26;
+        p.vx = (p.x < r.x ? -1 : 1) * (koule ? 240 : 320);
+        p.vy = koule ? 80 : 120;
+        p.stun = koule ? 0.30 : 0.26;     // koule omráčí, ale neodhodí tak daleko
         this.shake = 1;
-        this.burst(r.x, r.y, 14, ledovy ? '#cdefff' : '#8a7d6c', 1.3);
+        this.flash = koule ? 0.6 : 0.8;
+        this.hitStop = 0.07;
+        this.burst(r.x, r.y, koule ? 20 : 14,
+                   koule ? '#ffffff' : ledovy ? '#cdefff' : '#8a7d6c',
+                   koule ? 1.5 : 1.3);
+        Z('zasah', r.typ);
         this.rocks.splice(i, 1);
         continue;
       }
@@ -237,17 +283,24 @@ const Game = {
     const y = this.camY - 60;
     const x = this.rng.range(World.leftWall(y) + 22, World.rightWall(y) - 22);
 
-    /* v ledové části padají místo kamenů rampouchy — rychlejší a tišší */
-    const ledovy = this.height > World.ICE_FROM_M && this.rng.chance(0.45);
+    /* co padá, se řídí výškou: dole kameny, od ledu rampouchy,
+       ve sněhu k tomu velké sněhové koule */
+    let typ = 'kamen';
+    if (this.height > World.SNOW_FROM_M && this.rng.chance(0.55)) typ = 'koule';
+    else if (this.height > World.ICE_FROM_M && this.rng.chance(0.45)) typ = 'rampouch';
 
     this.rocks.push({
       x, y,
-      typ: ledovy ? 'rampouch' : 'kamen',
-      vy: ledovy ? this.rng.range(280, 460) : this.rng.range(150, 320),
-      r:  ledovy ? this.rng.range(7, 12)    : this.rng.range(9, 19),
-      dl: ledovy ? this.rng.range(30, 52)   : 0,
-      rot: ledovy ? 0 : this.rng() * 6.28,
-      spin: ledovy ? 0 : this.rng.range(-3, 3),
+      typ,
+      vy: typ === 'rampouch' ? this.rng.range(280, 460)
+        : typ === 'koule'    ? this.rng.range(170, 260)
+        :                      this.rng.range(150, 320),
+      r:  typ === 'rampouch' ? this.rng.range(7, 12)
+        : typ === 'koule'    ? this.rng.range(15, 23)
+        :                      this.rng.range(9, 19),
+      dl: typ === 'rampouch' ? this.rng.range(30, 52) : 0,
+      rot: typ === 'rampouch' ? 0 : this.rng() * 6.28,
+      spin: typ === 'rampouch' ? 0 : this.rng.range(-3, 3),
       shape: Math.floor(this.rng.range(0, 3)),
     });
   },

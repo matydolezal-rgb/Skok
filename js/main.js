@@ -15,7 +15,7 @@
     tabMe: $('tab-me'), tabFriends: $('tab-friends'),
     boardList: $('board-list'), boardEmpty: $('board-empty'), boardBack: $('btn-board-back'),
     overNum: $('over-num'), overBest: $('over-best'), overCause: $('over-cause'),
-    retry: $('btn-retry'), toMenu: $('btn-menu'),
+    retry: $('btn-retry'), toMenu: $('btn-menu'), sound: $('btn-sound'),
   };
 
   /* ---------- ukládání ---------- */
@@ -159,10 +159,13 @@
     fit();
     Game.reset(W, H, seed);
     overDelay = 0;
+    Zvuk.probud();
+    Zvuk.vodaStart();
     show('play');
   }
 
   function konecBehu(){
+    Zvuk.vodaStop();
     const m = Game.meters();
     const best = getBest();
     ui.overNum.textContent = m;
@@ -202,6 +205,21 @@
     }
   });
 
+  /* ---------- zvuk ---------- */
+  const KEY_ZVUK = 'skok.zvuk';
+  function obnovZvukTlacitko(){
+    ui.sound.textContent = Zvuk.vypnuto ? '🔇 Zvuk vypnutý' : '🔊 Zvuk zapnutý';
+  }
+  Zvuk.vypnuto = load(KEY_ZVUK, '1') === '0';
+
+  ui.sound.addEventListener('click', () => {
+    Zvuk.probud();
+    Zvuk.ztlum(!Zvuk.vypnuto);
+    save(KEY_ZVUK, Zvuk.vypnuto ? '0' : '1');
+    obnovZvukTlacitko();
+    if (!Zvuk.vypnuto) Zvuk.klik();
+  });
+
   ui.daily.addEventListener('click', startDaily);
   ui.free.addEventListener('click', startFree);
   ui.boardBtn.addEventListener('click', () => { zalozka = 'me'; obnovZebricek(); show('board'); });
@@ -224,9 +242,15 @@
     if (dt > 0.25) dt = 0.25;
 
     if (obrazovka === 'play'){
-      acc += dt;
-      let guard = 0;
-      while (acc >= STEP && guard++ < 60){ Game.update(STEP); acc -= STEP; }
+      /* při ráně na okamžik zamrzne čas — rána je pak cítit */
+      if (Game.hitStop > 0){
+        Game.hitStop -= dt;
+        acc = 0;
+      } else {
+        acc += dt;
+        let guard = 0;
+        while (acc >= STEP && guard++ < 60){ Game.update(STEP); acc -= STEP; }
+      }
 
       ui.mNum.textContent = Game.meters();
       Render.draw(ctx, Game, getBest());
@@ -245,6 +269,7 @@
 
   fit();
   Game.reset(W, H, todaySeed());
+  obnovZvukTlacitko();
   obnovMenu();
   requestAnimationFrame(frame);
 

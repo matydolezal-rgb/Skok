@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>frame</title>
-<style>body{margin:0;background:#000;display:flex;gap:10px}canvas,iframe{width:400px;height:850px;border:0}</style>
+<style>body{margin:0;background:#000;display:flex;gap:10px}canvas{width:400px;height:850px}</style>
 </head><body>
-<iframe id="menu" src="../index.html"></iframe>
+<canvas id="c1" width="400" height="850"></canvas>
 <canvas id="c2" width="400" height="850"></canvas>
 <canvas id="c3" width="400" height="850"></canvas>
 <script src="../js/rng.js"></script>
@@ -22,12 +22,11 @@ function predictLanding(){
   return null;
 }
 
-/* vyšplhá do zadané výšky; voda je po dobu přípravy vypnutá, ať se tam robot dostane */
 function vyskej(metry, seed){
   Game.reset(W, H, seed);
   var puvodni = Game.waterSpeed;
   Game.waterSpeed = function(){ return 0; };
-  for (var i = 0; i < 120*400 && Game.height < metry && !Game.over; i++){
+  for (var i = 0; i < 120*600 && Game.height < metry && !Game.over; i++){
     var p = Game.player;
     if (p.state === 'cling' && p.stun <= 0){
       var land = predictLanding();
@@ -38,14 +37,26 @@ function vyskej(metry, seed){
   Game.waterSpeed = puvodni;
 }
 
-vyskej(150, 'led-1');
+/* 1 — ledová část */
+vyskej(150, 'ukazka-led');
+Render.draw(document.getElementById('c1').getContext('2d'), Game, 120);
+
+/* 2 — sněžná část se sněhovými koulemi */
+vyskej(235, 'ukazka-snih');
+Game.rocks.length = 0;
+for (var k = 0; k < 3; k++){ Game.spawnRock(); }
+Game.rocks.forEach(function(r, i){
+  r.typ = 'koule'; r.r = 17 + i * 3;
+  r.y = Game.camY + 140 + i * 230;
+  r.x = World.leftWall(r.y) + (World.rightWall(r.y) - World.leftWall(r.y)) * (0.3 + i * 0.2);
+});
+Game.update(STEP);
 Render.draw(document.getElementById('c2').getContext('2d'), Game, 120);
 
-vyskej(190, 'led-2');
-/* nasypeme rampouchy, ať je na snímku vidět, jak vypadají */
-for (var k = 0; k < 4; k++) Game.spawnRock();
-Game.rocks.forEach(function(r, i){ r.typ = 'rampouch'; r.dl = 34 + i*6; r.r = 8 + i; r.y = Game.camY + 120 + i*150; });
-Game.waterY = Game.player.y + 420;
+/* 3 — vstup do sněžné části: nápis a voda v zádech */
+vyskej(205, 'ukazka-snih2');
+Game.zonaText = 'SNÍH'; Game.zonaCas = 1.6;
+Game.waterY = Game.player.y + 430;
 Game.update(STEP);
 Render.draw(document.getElementById('c3').getContext('2d'), Game, 120);
 
