@@ -138,7 +138,10 @@ const Game = {
 
     /* hukot vody sílí, jak se blíží */
     const odstup = this.waterY - p.y;
-    Z('voda', Math.max(0, Math.min(1, 1 - odstup / 900)));
+    const blizko = Math.max(0, Math.min(1, 1 - odstup / 900));
+    Z('voda', blizko);
+    /* hudba se řídí tím, co je zrovna napínavější — výška, nebo voda za zády */
+    Z('napeti', Math.max(blizko, Math.min(1, this.height / 200)));
 
     /* kamera */
     const target = p.y - this.H * 0.58;

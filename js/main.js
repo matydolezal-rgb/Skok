@@ -15,7 +15,8 @@
     tabMe: $('tab-me'), tabFriends: $('tab-friends'),
     boardList: $('board-list'), boardEmpty: $('board-empty'), boardBack: $('btn-board-back'),
     overNum: $('over-num'), overBest: $('over-best'), overCause: $('over-cause'),
-    retry: $('btn-retry'), toMenu: $('btn-menu'), sound: $('btn-sound'),
+    retry: $('btn-retry'), toMenu: $('btn-menu'),
+    sound: $('btn-sound'), music: $('btn-music'),
   };
 
   /* ---------- ukládání ---------- */
@@ -78,6 +79,8 @@
 
   /* ---------- menu ---------- */
   function obnovMenu(){
+    Zvuk.vodaStop();
+    Zvuk.hudbaStop();
     const dnes = todaySeed();
     const hotovo = getDaily(dnes);
     ui.dailyNote.textContent = hotovo === null
@@ -163,11 +166,13 @@
     overDelay = 0;
     Zvuk.probud();
     Zvuk.vodaStart();
+    Zvuk.hudbaStart();
     show('play');
   }
 
   function konecBehu(){
     Zvuk.vodaStop();
+    Zvuk.hudbaStop();
     const m = Game.meters();
     const best = getBest();
     ui.overNum.textContent = m;
@@ -207,19 +212,35 @@
     }
   });
 
-  /* ---------- zvuk ---------- */
-  const KEY_ZVUK = 'skok.zvuk';
-  function obnovZvukTlacitko(){
-    ui.sound.textContent = Zvuk.vypnuto ? '🔇 Zvuk vypnutý' : '🔊 Zvuk zapnutý';
+  /* ---------- zvuk a hudba ---------- */
+  const KEY_ZVUK   = 'skok.zvuk';
+  const KEY_HUDBA  = 'skok.hudba';
+
+  Zvuk.vypnuto       = load(KEY_ZVUK,  '1') === '0';
+  Zvuk.hudbaVypnuta  = load(KEY_HUDBA, '1') === '0';
+
+  function obnovPrepinace(){
+    ui.sound.textContent = (Zvuk.vypnuto ? '🔇' : '🔊') + ' Zvuky';
+    ui.music.textContent = (Zvuk.hudbaVypnuta ? '🔈' : '🎵') + ' Hudba';
+    ui.sound.classList.toggle('on', !Zvuk.vypnuto);
+    ui.music.classList.toggle('on', !Zvuk.hudbaVypnuta);
   }
-  Zvuk.vypnuto = load(KEY_ZVUK, '1') === '0';
 
   ui.sound.addEventListener('click', () => {
     Zvuk.probud();
     Zvuk.ztlum(!Zvuk.vypnuto);
     save(KEY_ZVUK, Zvuk.vypnuto ? '0' : '1');
-    obnovZvukTlacitko();
+    obnovPrepinace();
     if (!Zvuk.vypnuto) Zvuk.klik();
+  });
+
+  ui.music.addEventListener('click', () => {
+    Zvuk.probud();
+    Zvuk.hudbaZtlum(!Zvuk.hudbaVypnuta);
+    save(KEY_HUDBA, Zvuk.hudbaVypnuta ? '0' : '1');
+    obnovPrepinace();
+    /* ukázka rovnou v menu, ať slyšíš, co jsi zapnul */
+    if (!Zvuk.hudbaVypnuta) Zvuk.hudbaStart();
   });
 
   ui.daily.addEventListener('click', startDaily);
@@ -271,7 +292,7 @@
 
   fit();
   Game.reset(W, H, todaySeed());
-  obnovZvukTlacitko();
+  obnovPrepinace();
   obnovMenu();
   requestAnimationFrame(frame);
 

@@ -53,6 +53,23 @@ f.onload = function(){
            ', zvýrazněný: ' + (d.querySelectorAll('#board-list .row.today').length === 1));
     L.push('skóre v řádku: ' + (d.querySelector('.row-score') || {}).textContent);
 
+    /* přepínače zvuku a hudby */
+    d.getElementById('btn-board-back').click();
+    var pred = txt('btn-music');
+    d.getElementById('btn-music').click();
+    var po = txt('btn-music');
+    L.push('hudba se přepíná: ' + (pred !== po) + ' (' + pred + ' → ' + po + ')');
+    d.getElementById('btn-music').click();
+    d.getElementById('btn-sound').click();
+    L.push('zvuk se přepíná: ' + (txt('btn-sound').indexOf('🔇') > -1));
+    d.getElementById('btn-sound').click();
+
+    /* běh se zapnutou hudbou */
+    d.getElementById('btn-free').click();
+    for (var j = 0; j < 10; j++) d.getElementById('cv').dispatchEvent(new w.PointerEvent('pointerdown', { bubbles:true }));
+    d.getElementById('btn-menu').click();
+    L.push('běh s hudbou proběhl bez chyby: ' + (errors.length === 0));
+
     L.push('chyby: ' + (errors.length ? errors.join(' | ') : 'žádné'));
   } catch(e){
     L.push('VÝJIMKA: ' + e.message + ' | ' + (e.stack||'').split('\n')[1]);

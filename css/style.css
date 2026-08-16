@@ -96,12 +96,14 @@ body{
 .card-title{ font-weight:800; font-size:1.15rem; letter-spacing:.01em; }
 .card-note{ font-size:.82rem; color:#7f95b0; }
 
+.toggles{ display:flex; gap:6px; margin-top:2px; }
 .sound-toggle{
   font:inherit; font-size:.82rem; cursor:pointer;
-  background:none; border:none; color:#6d8099;
-  padding:8px 14px; margin-top:2px;
+  background:none; border:1px solid transparent; border-radius:10px;
+  color:#4e5d70; padding:8px 14px;
 }
-.sound-toggle:active{ color:#a8c6e8; }
+.sound-toggle.on{ color:#a8c6e8; border-color:#24344b; }
+.sound-toggle:active{ color:#cfe4ff; }
 
 /* ---------- žebříček ---------- */
 .overlay-top{ justify-content:flex-start; padding-top:calc(30px + env(safe-area-inset-top)); gap:14px; }

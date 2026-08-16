@@ -18,7 +18,9 @@ const Zvuk = {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
 
-    this.ctx = new AC();
+    /* na některých zařízeních se zvuk nepodaří spustit vůbec —
+       hra kvůli tomu nesmí spadnout, prostě bude tichá */
+    try { this.ctx = new AC(); } catch(e){ return; }
     this.master = this.ctx.createGain();
     this.master.gain.value = this.vypnuto ? 0 : 0.55;
     this.master.connect(this.ctx.destination);
@@ -71,20 +73,23 @@ const Zvuk = {
 
   /* ---------- herní zvuky ---------- */
 
+  /* Měkké šustnutí místo pípnutí. Skok je nejčastější zvuk ve hře —
+     když je ostrý, po deseti kolech bolí uši. */
   skok(){
-    this.ton(300, 0.16, 'triangle', 0.30, 700);
-    this.sum(0.07, 0.10, 1800, 'highpass');
+    this.sum(0.13, 0.075, 700, 'bandpass', 2100);
+    this.ton(190, 0.09, 'sine', 0.055, 260);
   },
 
+  /* dopad zní taky často — držíme ho tiše, rozliší se barvou, ne hlasitostí */
   dopad(povrch){
     if (povrch === 'led'){
-      this.ton(900, 0.10, 'sine', 0.16, 1300);
-      this.sum(0.16, 0.13, 3200, 'highpass');
+      this.ton(860, 0.09, 'sine', 0.075, 1200);
+      this.sum(0.14, 0.070, 3200, 'highpass');
     } else if (povrch === 'snih'){
-      this.sum(0.20, 0.20, 900, 'lowpass', 400);
+      this.sum(0.20, 0.105, 800, 'lowpass', 380);
     } else {
-      this.ton(150, 0.10, 'sine', 0.26, 80);
-      this.sum(0.10, 0.16, 900, 'lowpass');
+      this.ton(140, 0.10, 'sine', 0.130, 80);
+      this.sum(0.10, 0.075, 900, 'lowpass');
     }
   },
 
@@ -152,5 +157,123 @@ const Zvuk = {
     const cil = Math.max(0, Math.min(1, blizkost));
     /* plynule, ať to nelupe */
     this.vodaGain.gain.value += (cil * 0.32 - this.vodaGain.gain.value) * 0.08;
+  },
+
+  /* ================= HUDBA =================
+     Skládá se za běhu z jednoduchých tónů — žádný soubor ke stažení
+     a žádná cizí autorská práva. Záměrně bez melodie, kterou by šlo
+     po pár kolech nenávidět: pomalé akordy a řídké kapky tónů.
+     S rostoucím napětím se rozsvítí a zhoustne.                       */
+
+  hudbaVypnuta: false,
+  hudbaBezi: false,
+  hudbaGain: null,
+  hudbaFiltr: null,
+  hudbaCasovac: null,
+  hudbaKrok: 0,
+  hudbaCas: 0,
+  hudbaNapeti: 0,
+
+  /* Am – F – C – G, v nízké poloze, ať to nepřebíjí zvuky hry */
+  AKORDY: [
+    [110.00, 164.81, 261.63],
+    [ 87.31, 174.61, 261.63],
+    [130.81, 196.00, 329.63],
+    [ 98.00, 196.00, 293.66],
+  ],
+
+  hudbaStart(){
+    this.probud();
+    if (!this.ctx || this.hudbaBezi || this.hudbaVypnuta) return;
+
+    this.hudbaGain = this.ctx.createGain();
+    this.hudbaGain.gain.value = 0;
+    this.hudbaFiltr = this.ctx.createBiquadFilter();
+    this.hudbaFiltr.type = 'lowpass';
+    this.hudbaFiltr.frequency.value = 900;
+    this.hudbaFiltr.connect(this.hudbaGain);
+    this.hudbaGain.connect(this.master);
+
+    /* pomalý náběh, ať hudba nezačne ranou */
+    this.hudbaGain.gain.linearRampToValueAtTime(0.16, this.ctx.currentTime + 2.5);
+
+    this.hudbaBezi = true;
+    this.hudbaKrok = 0;
+    this.hudbaCas = this.ctx.currentTime + 0.15;
+    this.hudbaCasovac = setInterval(() => this.hudbaPlanuj(), 220);
+  },
+
+  hudbaStop(){
+    if (this.hudbaCasovac){ clearInterval(this.hudbaCasovac); this.hudbaCasovac = null; }
+    if (this.hudbaGain && this.ctx){
+      const g = this.hudbaGain, t = this.ctx.currentTime;
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.linearRampToValueAtTime(0, t + 0.6);
+      setTimeout(() => { try { g.disconnect(); } catch(e){} }, 900);
+    }
+    this.hudbaGain = null;
+    this.hudbaFiltr = null;
+    this.hudbaBezi = false;
+  },
+
+  /* napětí 0–1: čím výš a čím blíž voda, tím je hudba světlejší a hustší */
+  napeti(x){
+    this.hudbaNapeti = Math.max(0, Math.min(1, x));
+    if (this.hudbaFiltr){
+      const cil = 700 + this.hudbaNapeti * 2600;
+      this.hudbaFiltr.frequency.value += (cil - this.hudbaFiltr.frequency.value) * 0.05;
+    }
+  },
+
+  /* naplánuje, co zazní v nejbližší půlvteřině */
+  hudbaPlanuj(){
+    if (!this.ctx || !this.hudbaBezi) return;
+    const dopredu = this.ctx.currentTime + 0.6;
+    const doba = 0.5;                       // délka jednoho kroku
+
+    while (this.hudbaCas < dopredu){
+      const t = this.hudbaCas;
+      const akord = this.AKORDY[Math.floor(this.hudbaKrok / 8) % this.AKORDY.length];
+
+      /* každých osm kroků nový akord — dlouhý, měkký, tichý */
+      if (this.hudbaKrok % 8 === 0){
+        akord.forEach((f, i) => this.hudbaTon(f, t, 4.6, 'sine', 0.055 - i * 0.008, true));
+      }
+
+      /* kapky tónů nad akordem, řidší v klidu, hustší v napětí */
+      const sance = 0.14 + this.hudbaNapeti * 0.40;
+      if (Math.random() < sance){
+        const f = akord[Math.floor(Math.random() * akord.length)] * (Math.random() < 0.5 ? 4 : 2);
+        this.hudbaTon(f, t, 1.4, 'triangle', 0.030 + this.hudbaNapeti * 0.020, false);
+      }
+
+      /* tep, který se ozve jen když je zle */
+      if (this.hudbaNapeti > 0.55 && this.hudbaKrok % 4 === 0){
+        this.hudbaTon(58, t, 0.5, 'sine', 0.06 * this.hudbaNapeti, false);
+      }
+
+      this.hudbaCas += doba;
+      this.hudbaKrok++;
+    }
+  },
+
+  hudbaTon(freq, kdy, delka, typ, hlasitost, dlouhyNabeh){
+    if (!this.ctx || !this.hudbaFiltr) return;
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = typ;
+    o.frequency.value = freq;
+    const nabeh = dlouhyNabeh ? delka * 0.35 : 0.02;
+    g.gain.setValueAtTime(0.0001, kdy);
+    g.gain.exponentialRampToValueAtTime(hlasitost, kdy + nabeh);
+    g.gain.exponentialRampToValueAtTime(0.0001, kdy + delka);
+    o.connect(g); g.connect(this.hudbaFiltr);
+    o.start(kdy); o.stop(kdy + delka + 0.05);
+  },
+
+  hudbaZtlum(stav){
+    this.hudbaVypnuta = stav;
+    if (stav) this.hudbaStop();
   },
 };
