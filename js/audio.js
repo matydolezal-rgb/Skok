@@ -93,27 +93,29 @@ const Zvuk = {
     }
   },
 
+  /* Nárazy musí být cítit, ne bolet. Proto tiše a bez pilových průběhů —
+     ránu už stejně sděluje probliknutí a zamrznutí obrazu. */
   trny(){
-    this.ton(220, 0.28, 'sawtooth', 0.26, 70);
-    this.sum(0.22, 0.24, 2600, 'highpass');
+    this.ton(190, 0.22, 'triangle', 0.085, 75);
+    this.sum(0.18, 0.075, 1500, 'bandpass', 480);
   },
 
   zasah(typ){
     if (typ === 'rampouch'){
-      this.ton(1400, 0.14, 'triangle', 0.22, 500);
-      this.sum(0.24, 0.20, 4200, 'highpass');
+      this.ton(980, 0.12, 'sine', 0.060, 480);
+      this.sum(0.18, 0.055, 3000, 'highpass');
     } else if (typ === 'koule'){
-      this.sum(0.30, 0.30, 700, 'lowpass', 200);
-      this.ton(110, 0.20, 'sine', 0.20, 60);
+      this.sum(0.28, 0.105, 620, 'lowpass', 190);
+      this.ton(105, 0.18, 'sine', 0.075, 60);
     } else {
-      this.ton(90, 0.26, 'square', 0.22, 45);
-      this.sum(0.26, 0.26, 1200, 'lowpass');
+      this.ton(88, 0.24, 'sine', 0.105, 45);
+      this.sum(0.22, 0.085, 1000, 'lowpass');
     }
   },
 
   konec(){
-    this.sum(0.9, 0.34, 2600, 'lowpass', 180);
-    this.ton(320, 0.7, 'sine', 0.20, 60);
+    this.sum(0.9, 0.20, 2400, 'lowpass', 180);
+    this.ton(300, 0.7, 'sine', 0.115, 60);
   },
 
   zona(){
