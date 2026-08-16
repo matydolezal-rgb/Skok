@@ -252,7 +252,56 @@ const Render = {
       ctx.lineWidth = 2;
       ctx.stroke();
 
+      this.ice(ctx, g, H, cam, side);
       this.spikes(ctx, g, H, cam, side);
+    }
+  },
+
+  /* namrzlé úseky stěny — musí být poznat na první pohled, ne až po pádu */
+  ice(ctx, g, H, cam, side){
+    const b0 = Math.floor((cam - 40) / World.BAND);
+    const b1 = Math.floor((cam + H + 40) / World.BAND);
+
+    for (let b = b0; b <= b1; b++){
+      const band = World.iceBand(b, side);
+      if (!band) continue;
+
+      ctx.save();
+      ctx.beginPath();
+      const edge = side < 0 ? -4 : g.W + 4;
+      ctx.moveTo(edge, band.y0 - cam);
+      for (let y = band.y0; y <= band.y1; y += 8) ctx.lineTo(World.wallAt(y, side), y - cam);
+      ctx.lineTo(edge, band.y1 - cam);
+      ctx.closePath();
+
+      const gr = ctx.createLinearGradient(side < 0 ? 0 : g.W, 0, side < 0 ? g.W * 0.4 : g.W * 0.6, 0);
+      gr.addColorStop(0, 'rgba(150,215,255,.14)');
+      gr.addColorStop(1, 'rgba(205,240,255,.60)');
+      ctx.fillStyle = gr;
+      ctx.fill();
+
+      /* lesklé pruhy, ať to vypadá kluzce */
+      ctx.clip();
+      ctx.strokeStyle = 'rgba(255,255,255,.55)';
+      ctx.lineWidth = 2;
+      for (let y = band.y0; y < band.y1; y += 26){
+        const w = 10 + hash1(y) * 26;
+        ctx.beginPath();
+        ctx.moveTo(World.wallAt(y, side) - side * 2, y - cam);
+        ctx.lineTo(World.wallAt(y, side) - side * w, y - cam + 16);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      /* ostrá modrá hrana */
+      ctx.beginPath();
+      for (let y = band.y0; y <= band.y1; y += 8){
+        const x = World.wallAt(y, side);
+        if (y === band.y0) ctx.moveTo(x, y - cam); else ctx.lineTo(x, y - cam);
+      }
+      ctx.strokeStyle = 'rgba(235,252,255,.95)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
     }
   },
 
@@ -338,6 +387,28 @@ const Render = {
     for (const r of g.rocks){
       const y = r.y - cam;
       if (y < -60 || y > g.H + 60) continue;
+
+      if (r.typ === 'rampouch'){
+        ctx.save();
+        ctx.translate(r.x, y);
+        ctx.beginPath();
+        ctx.moveTo(-r.r, -r.dl * 0.5);
+        ctx.lineTo(r.r, -r.dl * 0.5);
+        ctx.lineTo(0, r.dl * 0.6);
+        ctx.closePath();
+        const ig = ctx.createLinearGradient(-r.r, 0, r.r, 0);
+        ig.addColorStop(0, 'rgba(190,235,255,.95)');
+        ig.addColorStop(0.5, 'rgba(255,255,255,.98)');
+        ig.addColorStop(1, 'rgba(120,190,235,.95)');
+        ctx.fillStyle = ig;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(70,140,190,.8)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+        continue;
+      }
+
       ctx.save();
       ctx.translate(r.x, y);
       ctx.rotate(r.rot);

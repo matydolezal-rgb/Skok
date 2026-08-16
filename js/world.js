@@ -61,6 +61,30 @@ const World = {
     return y > top + off && y < top + off + len;
   },
 
+  /* ---------- led ----------
+     Od 120 metrů výš jsou některé úseky stěny namrzlé. Nezabíjejí,
+     ale sjíždíš po nich skoro třikrát rychleji — nedá se na nich čekat. */
+
+  ICE_FROM_M: 120,
+
+  iceStartY(){ return -this.ICE_FROM_M * 50; },
+
+  bandIsIcy(band, side){
+    if (band * this.BAND > this.iceStartY()) return false;      // ještě nízko
+    if (this.bandHasSpikes(band, side)) return false;           // trny mají přednost
+    const hloubka = Math.min(1, (this.iceStartY() - band * this.BAND) / 12000);
+    return hash1(band * 4409 + (side < 0 ? 91 : 137) + this.seedNum) < 0.22 + hloubka * 0.28;
+  },
+
+  iceAt(y, side){
+    return this.bandIsIcy(Math.floor(y / this.BAND), side);
+  },
+
+  iceBand(band, side){
+    if (!this.bandIsIcy(band, side)) return null;
+    return { y0: band * this.BAND, y1: (band + 1) * this.BAND };
+  },
+
   /* rozsah trnového pásma pro vykreslení, nebo null */
   spikeBand(band, side){
     if (!this.bandHasSpikes(band, side)) return null;

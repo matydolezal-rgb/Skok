@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>frame</title>
-<style>body{margin:0;background:#000;display:flex;gap:10px}canvas{width:400px;height:850px}</style>
+<style>body{margin:0;background:#000;display:flex;gap:10px}canvas,iframe{width:400px;height:850px;border:0}</style>
 </head><body>
-<canvas id="c1" width="400" height="850"></canvas>
+<iframe id="menu" src="../index.html"></iframe>
 <canvas id="c2" width="400" height="850"></canvas>
 <canvas id="c3" width="400" height="850"></canvas>
 <script src="../js/rng.js"></script>
@@ -22,10 +22,12 @@ function predictLanding(){
   return null;
 }
 
-/* rozehraje hru chytrým hráčem na zadaný počet vteřin */
-function playFor(seconds, seed){
+/* vyšplhá do zadané výšky; voda je po dobu přípravy vypnutá, ať se tam robot dostane */
+function vyskej(metry, seed){
   Game.reset(W, H, seed);
-  for (var i = 0; i < seconds*120 && !Game.over; i++){
+  var puvodni = Game.waterSpeed;
+  Game.waterSpeed = function(){ return 0; };
+  for (var i = 0; i < 120*400 && Game.height < metry && !Game.over; i++){
     var p = Game.player;
     if (p.state === 'cling' && p.stun <= 0){
       var land = predictLanding();
@@ -33,28 +35,20 @@ function playFor(seconds, seed){
     }
     Game.update(STEP);
   }
+  Game.waterSpeed = puvodni;
 }
 
-/* zkracuje běh, dokud hráč nepřežije — mrtvý hráč není hezký náhled */
-function playSafe(seconds, seed){
-  for (var s = seconds; s > 0.5; s -= 1.5){
-    playFor(s, seed);
-    if (!Game.over) return;
-  }
-}
+vyskej(150, 'led-1');
+Render.draw(document.getElementById('c2').getContext('2d'), Game, 120);
 
-playSafe(0.6, 'ukazka-1');
-Render.draw(document.getElementById('c1').getContext('2d'), Game, 0);
-
-playSafe(9, 'ukazka-2');
-Render.draw(document.getElementById('c2').getContext('2d'), Game, 40);
-
-playSafe(14, 'ukazka-3');
-/* voda těsně pod patami — ať je vidět, jak vypadá krize */
-Game.waterY = Game.player.y + 330;
+vyskej(190, 'led-2');
+/* nasypeme rampouchy, ať je na snímku vidět, jak vypadají */
+for (var k = 0; k < 4; k++) Game.spawnRock();
+Game.rocks.forEach(function(r, i){ r.typ = 'rampouch'; r.dl = 34 + i*6; r.r = 8 + i; r.y = Game.camY + 120 + i*150; });
+Game.waterY = Game.player.y + 420;
 Game.update(STEP);
-Render.draw(document.getElementById('c3').getContext('2d'), Game, 40);
+Render.draw(document.getElementById('c3').getContext('2d'), Game, 120);
 
-document.title = 'hotovo ' + Game.meters() + ' m';
+document.title = 'hotovo';
 </script>
 </body></html>

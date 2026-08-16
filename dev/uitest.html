@@ -9,31 +9,53 @@ f.onload = function(){
   var d = f.contentDocument, w = f.contentWindow;
   var errors = [];
   w.onerror = function(m){ errors.push(m); };
-
   function vis(id){ return !d.getElementById(id).classList.contains('hidden'); }
+  function txt(id){ return d.getElementById(id).textContent.trim(); }
 
   try {
-    L.push('plátno má rozměr: ' + (d.getElementById('cv').width > 0));
-    L.push('úvod vidět: ' + vis('ui-title') + ', ukazatel skrytý: ' + !vis('hud'));
+    try { w.localStorage.clear(); } catch(e){}
 
-    d.getElementById('btn-play').click();
-    L.push('po startu — ukazatel: ' + vis('hud') + ', úvod skrytý: ' + !vis('ui-title'));
+    L.push('menu vidět: ' + vis('ui-menu') + ', ukazatel skrytý: ' + !vis('hud'));
+    L.push('popisek denní výzvy: "' + txt('daily-note') + '"');
+    L.push('popisek volného letu: "' + txt('free-note') + '"');
 
-    /* klepání do plátna nesmí nic shodit */
+    /* žebříček prázdný */
+    d.getElementById('btn-board').click();
+    L.push('žebříček se otevřel: ' + vis('ui-board') + ', prázdná hláška: ' + vis('board-empty'));
+    d.getElementById('tab-friends').click();
+    L.push('záložka kamarádi vysvětluje stav: ' + (txt('board-empty').indexOf('server') > -1));
+    d.getElementById('tab-me').click();
+    d.getElementById('btn-board-back').click();
+    L.push('zpět v menu: ' + vis('ui-menu'));
+
+    /* volný let */
+    d.getElementById('btn-free').click();
+    L.push('volný let běží: ' + vis('hud') + ', štítek: "' + txt('hud-mode') + '"');
     var cv = d.getElementById('cv');
-    for (var i = 0; i < 30; i++) cv.dispatchEvent(new w.PointerEvent('pointerdown', { bubbles:true }));
-    L.push('30 klepnutí přežilo: ' + (errors.length === 0));
+    for (var i = 0; i < 20; i++) cv.dispatchEvent(new w.PointerEvent('pointerdown', { bubbles:true }));
 
-    /* mezerník na úvodní obrazovce taky spouští hru */
     d.getElementById('btn-menu').click();
-    L.push('tlačítko Zpět vrací na úvod: ' + vis('ui-title'));
-    w.dispatchEvent(new w.KeyboardEvent('keydown', { code:'Space' }));
-    L.push('mezerník spustil hru: ' + vis('hud'));
+    L.push('z běhu zpět do menu: ' + vis('ui-menu'));
 
-    L.push('rekord se ukládá: ' + (w.localStorage.getItem('skok.best') !== undefined));
+    /* denní výzva */
+    d.getElementById('btn-daily').click();
+    L.push('denní výzva běží: ' + vis('hud') + ', štítek: "' + txt('hud-mode') + '"');
+
+    /* ručně dopíšeme výsledek dne a ověříme, že se menu i žebříček změní */
+    var dnes = w.todaySeed();
+    w.localStorage.setItem('skok.daily.' + dnes, '77');
+    d.getElementById('btn-menu').click();
+    L.push('menu ví o hotové výzvě: ' + (txt('daily-note').indexOf('77') > -1));
+
+    d.getElementById('btn-daily').click();
+    L.push('druhý pokus vede na žebříček: ' + vis('ui-board'));
+    L.push('v seznamu je dnešek: ' + (d.querySelectorAll('#board-list .row').length === 1) +
+           ', zvýrazněný: ' + (d.querySelectorAll('#board-list .row.today').length === 1));
+    L.push('skóre v řádku: ' + (d.querySelector('.row-score') || {}).textContent);
+
     L.push('chyby: ' + (errors.length ? errors.join(' | ') : 'žádné'));
   } catch(e){
-    L.push('VÝJIMKA: ' + e.message);
+    L.push('VÝJIMKA: ' + e.message + ' | ' + (e.stack||'').split('\n')[1]);
   }
   document.getElementById('out').textContent = L.join('\n');
 };

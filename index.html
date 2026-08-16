@@ -20,28 +20,55 @@
 
   <!-- ukazatel výšky -->
   <div id="hud" class="hud hidden">
+    <div id="hud-mode" class="hud-mode">denní výzva</div>
     <div class="meters"><span id="m-num">0</span><span class="m-unit">m</span></div>
   </div>
 
-  <!-- úvod -->
-  <div id="ui-title" class="overlay">
+  <!-- MENU -->
+  <div id="ui-menu" class="overlay">
     <h1 class="logo">SKOK</h1>
     <p class="sub">Voda stoupá. Nahoru, nebo nic.</p>
-    <button id="btn-play" class="btn">Skočit</button>
-    <div class="hint">
-      <span>Klepni kamkoliv — odrazíš se na druhou stěnu.</span>
-      <span class="hint-dim">Pozor na trny a padající kameny.</span>
+
+    <div class="menu">
+      <button id="btn-daily" class="card card-main">
+        <span class="card-title">Denní výzva</span>
+        <span class="card-note" id="daily-note">jeden pokus denně</span>
+      </button>
+
+      <button id="btn-free" class="card">
+        <span class="card-title">Volný let</span>
+        <span class="card-note" id="free-note">trénuj, kolikrát chceš</span>
+      </button>
+
+      <button id="btn-board" class="card card-slim">
+        <span class="card-title">Žebříček</span>
+        <span class="card-note">výsledky a kamarádi</span>
+      </button>
     </div>
-    <div class="best-line">Nejvýš: <b id="best-title">0 m</b></div>
   </div>
 
-  <!-- konec -->
+  <!-- ŽEBŘÍČEK -->
+  <div id="ui-board" class="overlay overlay-top hidden">
+    <h2 class="board-title">Žebříček</h2>
+
+    <div class="tabs">
+      <button id="tab-me" class="tab tab-on">Moje výzvy</button>
+      <button id="tab-friends" class="tab">Kamarádi</button>
+    </div>
+
+    <div id="board-list" class="board-list"></div>
+    <div id="board-empty" class="board-empty hidden"></div>
+
+    <button id="btn-board-back" class="btn btn-ghost">Zpět</button>
+  </div>
+
+  <!-- KONEC BĚHU -->
   <div id="ui-over" class="overlay hidden">
     <div class="over-cause" id="over-cause">Voda tě dostihla</div>
     <div class="over-score"><span id="over-num">0</span><span class="m-unit">m</span></div>
     <div class="over-best" id="over-best"></div>
     <button id="btn-retry" class="btn">Znovu</button>
-    <button id="btn-menu" class="btn btn-ghost">Zpět</button>
+    <button id="btn-menu" class="btn btn-ghost">Menu</button>
   </div>
 </div>
 

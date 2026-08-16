@@ -85,8 +85,14 @@ const Game = {
     if (p.squash > 0) p.squash = Math.max(0, p.squash - dt * 4);
 
     if (p.state === 'cling'){
-      p.y += P.SLIDE * dt;
+      p.onIce = World.iceAt(p.y, p.side);
+      p.y += P.SLIDE * (p.onIce ? 2.8 : 1) * dt;
       p.x = World.wallAt(p.y, p.side) - p.side * P.R;
+      /* z ledu odlétávají úlomky, ať je hned poznat, že ujíždíš */
+      if (p.onIce && this.rng.chance(dt * 14)){
+        this.parts.push({ x: p.x, y: p.y + P.R, vx: this.rng.range(-40, 40), vy: -this.rng.range(10, 60),
+                          life: 0.5, max: 0.5, r: this.rng.range(1, 2.4), color: '#bfe9ff' });
+      }
       /* sjel jsi do trnů — stěna tě odhodí */
       if (World.spikeAt(p.y, p.side)) this.bounceOffSpikes(p);
     } else {
@@ -195,13 +201,14 @@ const Game = {
     const p = this.player;
     for (let i = this.rocks.length - 1; i >= 0; i--){
       const r = this.rocks[i];
-      r.vy += 420 * dt;
+      const ledovy = r.typ === 'rampouch';
+      r.vy += (ledovy ? 620 : 420) * dt;
       r.y  += r.vy * dt;
       r.rot += r.spin * dt;
 
       /* náraz do stěny */
       if (r.x - r.r < World.leftWall(r.y) || r.x + r.r > World.rightWall(r.y)){
-        this.burst(r.x, r.y, 6, '#6b6257', 0.9);
+        this.burst(r.x, r.y, 6, ledovy ? '#bfe9ff' : '#6b6257', 0.9);
         this.rocks.splice(i, 1);
         continue;
       }
@@ -214,7 +221,7 @@ const Game = {
         p.vy = 120;
         p.stun = 0.26;
         this.shake = 1;
-        this.burst(r.x, r.y, 14, '#8a7d6c', 1.3);
+        this.burst(r.x, r.y, 14, ledovy ? '#cdefff' : '#8a7d6c', 1.3);
         this.rocks.splice(i, 1);
         continue;
       }
@@ -229,12 +236,18 @@ const Game = {
   spawnRock(){
     const y = this.camY - 60;
     const x = this.rng.range(World.leftWall(y) + 22, World.rightWall(y) - 22);
+
+    /* v ledové části padají místo kamenů rampouchy — rychlejší a tišší */
+    const ledovy = this.height > World.ICE_FROM_M && this.rng.chance(0.45);
+
     this.rocks.push({
       x, y,
-      vy: this.rng.range(150, 320),
-      r:  this.rng.range(9, 19),
-      rot: this.rng() * 6.28,
-      spin: this.rng.range(-3, 3),
+      typ: ledovy ? 'rampouch' : 'kamen',
+      vy: ledovy ? this.rng.range(280, 460) : this.rng.range(150, 320),
+      r:  ledovy ? this.rng.range(7, 12)    : this.rng.range(9, 19),
+      dl: ledovy ? this.rng.range(30, 52)   : 0,
+      rot: ledovy ? 0 : this.rng() * 6.28,
+      spin: ledovy ? 0 : this.rng.range(-3, 3),
       shape: Math.floor(this.rng.range(0, 3)),
     });
   },
