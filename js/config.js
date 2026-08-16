@@ -7,5 +7,5 @@
    Ten klíč je určený do prohlížeče, není to heslo — sám o sobě nic neumí,
    protože tabulky jsou chráněné (viz server/schema.sql). */
 
-const SIT_URL  = '';
-const SIT_KLIC = '';
+const SIT_URL  = 'https://jzxedbxhjecpzsoadekk.supabase.co';
+const SIT_KLIC = 'sb_publishable_jVW6MgYhQBPxdkELVuqV7Q_SLbJ42Tp';
