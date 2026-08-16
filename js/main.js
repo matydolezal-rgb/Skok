@@ -94,7 +94,14 @@
     e.preventDefault();
     Game.jump();
   }
-  cv.addEventListener('pointerdown', tap, { passive:false });
+  /* Starší iPhony neumí Pointer Events — tam bereme dotyk napřímo.
+     Nikdy oboje naráz, jinak by jedno klepnutí skočilo dvakrát. */
+  if (window.PointerEvent) cv.addEventListener('pointerdown', tap, { passive:false });
+  else cv.addEventListener('touchstart', tap, { passive:false });
+
+  /* Safari na iOS jinak při rychlém dvojklepnutí přiblíží stránku */
+  document.addEventListener('dblclick', (e) => e.preventDefault(), { passive:false });
+  document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive:false });
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.code === 'ArrowUp'){
       e.preventDefault();
