@@ -191,6 +191,17 @@ for (var i = 0; i < 5; i++){
 }
 L.push('pět různých roklin do 400 m: ' + vysledky.join(', ') + ' m');
 
+/* ---------- 6) otřes musí doznít i po smrti ---------- */
+Game.reset(W, H, 'otres');
+Game.player.y = Game.waterY + 10;      // utopíme hráče
+Game.update(STEP);
+var otresPoSmrti = Game.shake;
+for (var s = 0; s < 120; s++) Game.utlum(STEP);   // vteřina doznívání
+L.push('');
+L.push('otřes po smrti: ' + otresPoSmrti.toFixed(2) + ' → po vteřině ' + Game.shake.toFixed(2));
+if (!(otresPoSmrti > 0)) chyby.push('smrt nevyvolala otřes');
+if (Game.shake > 0.01) chyby.push('otřes po smrti nedozněl — obrazovka by se klepala i v menu');
+
 L.push('');
 L.push(chyby.length ? 'NALEZENÉ CHYBY:\n' + chyby.join('\n') : 'ŽÁDNÉ CHYBY');
 document.getElementById('out').textContent = L.join('\n');

@@ -347,5 +347,12 @@ const Game = {
     }
   },
 
+  /* Doznívání otřesu a probliknutí. Musí běžet i po konci běhu a v pauze —
+     update() se tam zastaví, a zaseknutý otřes by obrazovkou klepal pořád. */
+  utlum(dt){
+    if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 3.2);
+    if (this.flash > 0) this.flash = Math.max(0, this.flash - dt * 3.4);
+  },
+
   meters(){ return Math.floor(this.height); },
 };

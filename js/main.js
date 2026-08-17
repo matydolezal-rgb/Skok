@@ -88,6 +88,9 @@
   function obnovMenu(){
     Zvuk.vodaStop();
     Zvuk.hudbaStop();
+    /* pojistka: do menu se nikdy nesmí přenést rozjetý otřes */
+    Game.shake = 0;
+    Game.flash = 0;
     const dnes = todaySeed();
     const nejlepsi = getDaily(dnes);
     ui.dailyNote.textContent = nejlepsi === null
@@ -475,15 +478,19 @@
       Render.draw(ctx, Game, getBest());
 
       if (Game.over){
+        /* výpočet už stojí, ale otřes po dopadu musí doznít */
+        Game.utlum(dt);
         overDelay += dt;
         if (overDelay > 0.9) konecBehu();
       }
     } else if (obrazovka === 'pause'){
       /* v pauze se nic nepohne — obrázek zůstane přesně tam, kde jsi přestal */
+      Game.utlum(dt);
       Render.draw(ctx, Game, getBest());
     } else if (Game.player){
       /* pod nabídkami běží roklina dál jako živé pozadí */
       Game.time += dt;
+      Game.utlum(dt);
       Game.updateParts(dt);
       Render.draw(ctx, Game, 0);
     }
