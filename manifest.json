@@ -1,7 +1,7 @@
 {
-  "name": "Skok",
-  "short_name": "Skok",
-  "description": "The water is rising. Up, or nothing.",
+  "name": "No Way But Up",
+  "short_name": "No Way But Up",
+  "description": "The water is rising. Climb the chasm, one wall jump at a time.",
   "lang": "en",
   "start_url": "./",
   "scope": "./",

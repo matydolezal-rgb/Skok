@@ -1,4 +1,6 @@
-# Skok
+# No Way But Up
+
+*(pracovní název projektu i složky zůstává „skok" — adresa hry se tím nemění)*
 
 Mobilní arkáda na jeden prst. Šplháš roklinou vzhůru, zespodu stoupá voda, shora padají kameny.
 Klepnutí = odraz na protější stěnu. Skóre jsou metry.
