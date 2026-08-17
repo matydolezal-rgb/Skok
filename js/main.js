@@ -16,6 +16,7 @@
     boardList: $('board-list'), boardEmpty: $('board-empty'), boardBack: $('btn-board-back'),
     boardPanel: $('board-panel'), boardSub: $('board-sub'),
     overNum: $('over-num'), overBest: $('over-best'), overCause: $('over-cause'),
+    gemNum: $('gem-num'), gemTotal: $('gem-total'), overGems: $('over-gems'),
     retry: $('btn-retry'), toMenu: $('btn-menu'),
     sound: $('btn-sound'), music: $('btn-music'), haptic: $('btn-haptic'),
     pause: $('ui-pause'), pauseBtn: $('btn-pause'), pauseNum: $('pause-num'),
@@ -29,7 +30,10 @@
   function load(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e){ return d; } }
   function save(k, v){ try { localStorage.setItem(k, String(v)); } catch(e){} }
 
+  const KEY_GEMS = 'skok.krystaly';
+
   function getBest(){ return Number(load(KEY_BEST, 0)) || 0; }
+  function getGems(){ return Number(load(KEY_GEMS, 0)) || 0; }
   function getDaily(datum){ const v = load(KEY_DAILY + datum, null); return v === null ? null : Number(v); }
 
   /* všechny odehrané denní výzvy, od nejnovější */
@@ -99,6 +103,7 @@
 
     const best = getBest();
     ui.freeNote.textContent = best ? 'practice — your record ' + best + ' m' : 'practise as much as you like';
+    ui.gemTotal.textContent = getGems();
     show('menu');
   }
 
@@ -316,6 +321,11 @@
     ui.overNum.textContent = m;
     ui.overCause.textContent = Game.cause || 'Run over';
 
+    /* krystaly z běhu se přičtou do sbírky (ukončený běh se nepočítá) */
+    const nasbirano = Game.krystaly || 0;
+    if (nasbirano > 0) save(KEY_GEMS, getGems() + nasbirano);
+    ui.overGems.textContent = nasbirano > 0 ? '◆ ' + nasbirano + ' crystals collected' : '';
+
     if (rezim === 'daily'){
       const dnes = todaySeed();
       const dosud = getDaily(dnes);
@@ -475,6 +485,7 @@
       }
 
       ui.mNum.textContent = Game.meters();
+      ui.gemNum.textContent = Game.krystaly;
       Render.draw(ctx, Game, getBest());
 
       if (Game.over){

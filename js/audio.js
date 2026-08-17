@@ -127,6 +127,13 @@ const Zvuk = {
     this.ton(680, 0.05, 'square', 0.10, 880);
   },
 
+  /* cinknutí při sebrání krystalu — vzácnější zní výš a se dozvukem */
+  krystal(hodnota){
+    const zaklad = 880 + (hodnota || 1) * 220;
+    this.ton(zaklad, 0.10, 'triangle', 0.075, zaklad * 1.5);
+    this.ton(zaklad * 1.5, 0.22, 'sine', 0.045, zaklad * 2);
+  },
+
   /* ---------- hukot stoupající vody ---------- */
 
   vodaStart(){

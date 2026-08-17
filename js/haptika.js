@@ -21,6 +21,9 @@ const Haptika = {
   /* náraz padající věci — koule je těžší, tak i cuknutí delší */
   zasah(typ){ this.hraj(typ === 'koule' ? [0, 30] : [0, 16]); },
 
+  /* sebraný krystal — sotva znatelné ťuknutí, ne rána */
+  krystal(){ this.hraj([0, 8]); },
+
   /* konec běhu */
   konec(){ this.hraj([0, 45, 70, 110]); },
 

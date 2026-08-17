@@ -22,6 +22,7 @@
   <div id="hud" class="hud hidden">
     <div id="hud-mode" class="hud-mode">daily challenge</div>
     <div class="meters"><span id="m-num">0</span><span class="m-unit">m</span></div>
+    <div class="hud-gems"><span class="gem-ico">◆</span><span id="gem-num">0</span></div>
   </div>
 
   <button id="btn-pause" class="pause-btn hidden" aria-label="Pause">॥</button>
@@ -57,6 +58,8 @@
       </button>
     </div>
 
+    <div class="gem-bank"><span class="gem-ico">◆</span><span id="gem-total">0</span><span class="gem-label">crystals collected</span></div>
+
     <div class="toggles">
       <button id="btn-sound" class="sound-toggle">🔊 Sound</button>
       <button id="btn-music" class="sound-toggle">🎵 Music</button>
@@ -86,6 +89,7 @@
   <div id="ui-over" class="overlay hidden">
     <div class="over-cause" id="over-cause">The water caught you</div>
     <div class="over-score"><span id="over-num">0</span><span class="m-unit">m</span></div>
+    <div class="over-gems" id="over-gems"></div>
     <div class="over-best" id="over-best"></div>
     <button id="btn-retry" class="btn">Again</button>
     <button id="btn-menu" class="btn btn-ghost">Menu</button>

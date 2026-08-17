@@ -191,6 +191,45 @@ for (var i = 0; i < 5; i++){
 }
 L.push('pět různých roklin do 400 m: ' + vysledky.join(', ') + ' m');
 
+/* ---------- 5b) krystaly: dají se vůbec sebrat? ---------- */
+World.init(W, 'krystaly');
+var vzduch = 0, steny = 0, mimo = 0, vzacne = 0, prvni = null;
+/* jen pásma, kam hráč reálně doleze (0–600 m), jinak by statistiku
+   přebila vysokohorská část, kde jsou skoro samé vzácné */
+var bandOd = Math.floor(-600 * P.METER / World.KRYSTAL_PASMO);
+for (var b = bandOd; b < -2; b++){
+  var k = World.krystalVPasmu(b);
+  if (!k) continue;
+  if (k.vzduch) vzduch++; else steny++;
+  if (k.druh === 'vzacny') vzacne++;
+  /* musí ležet uvnitř průrvy, jinak by byl zazděný ve skále */
+  if (k.x < World.leftWall(k.y) - 2 || k.x > World.rightWall(k.y) + 2) mimo++;
+  if (!prvni) prvni = k;
+}
+L.push('');
+L.push('Krystaly do 600 m: ve vzduchu ' + vzduch + ', ve stěně ' + steny +
+       ', z toho vzácných ' + vzacne + ', mimo roklinu ' + mimo);
+if (mimo) chyby.push(mimo + ' krystalů leží ve skále, kam se nedá doletět');
+
+/* kolik jich posbírá hráč, který o ně vůbec neusiluje */
+Game.reset(W, H, 'krystaly');
+Game.waterSpeed = function(){ return 0; };
+Game.waterY = 1e9;
+for (var i = 0; i < 120 * 200 && Game.height < 300; i++){
+  var p = Game.player;
+  if (p.state === 'cling' && p.stun <= 0){
+    var land = predictLanding();
+    if (!(land && World.spikeAt(land.y, land.side))) Game.jump();
+  }
+  Game.update(STEP);
+}
+var vDosahu = World.krystalyKolem(-Game.height * P.METER, 0);
+var bodyCelkem = vDosahu.reduce(function(s, k){ return s + k.hodnota; }, 0);
+L.push('Výstup do ' + Game.height.toFixed(0) + ' m: cestou bylo ' + vDosahu.length +
+       ' krystalů za ' + bodyCelkem + ' bodů, hráč bez snahy sebral ' + Game.krystaly +
+       ' (' + Math.round(Game.krystaly / Math.max(1, bodyCelkem) * 100) + ' %)');
+if (Game.krystaly === 0) chyby.push('hráč cestou nesebral ani jeden krystal — nejsou na dosah');
+
 /* ---------- 6) otřes musí doznít i po smrti ---------- */
 Game.reset(W, H, 'otres');
 Game.player.y = Game.waterY + 10;      // utopíme hráče

@@ -28,6 +28,7 @@ const Render = {
     this.walls(ctx, g, W, H, cam, t);
     this.friendMarks(ctx, g, W, cam);
     if (best > 0) this.bestLine(ctx, g, W, cam, best);
+    this.krystaly(ctx, g, cam);
     this.rocks(ctx, g, cam);
     this.particles(ctx, g, cam);
     this.player(ctx, g, cam);
@@ -554,6 +555,66 @@ const Render = {
     ctx.textAlign = 'center';
     ctx.fillText('your record  ' + best + ' m', W / 2, y - 6);
     ctx.restore();
+  },
+
+  /* Krystaly. Ve vzduchu se pomalu vznášejí a otáčejí, ve stěně jsou
+     zapuštěné a jen se lesknou — ať je hned poznat, co je kde. */
+  KRYSTAL_BARVY: {
+    kremen: { jadro:'#ffe9ab', hrana:'#c9962f', zar:'rgba(255,210,120,' },
+    ledovy: { jadro:'#dcf5ff', hrana:'#5aa8cf', zar:'rgba(150,225,255,' },
+    vzacny: { jadro:'#f0dcff', hrana:'#9a5fd0', zar:'rgba(210,160,255,' },
+  },
+
+  krystaly(ctx, g, cam){
+    const seznam = World.krystalyKolem(cam - 60, cam + g.H + 60);
+
+    for (const k of seznam){
+      if (g.sebrano && g.sebrano[k.id]) continue;
+      const y = k.y - cam;
+      if (y < -40 || y > g.H + 40) continue;
+
+      const barvy = this.KRYSTAL_BARVY[k.druh] || this.KRYSTAL_BARVY.kremen;
+      const puls = 0.75 + 0.25 * Math.sin(g.time * 2.6 + k.y * 0.03);
+      const vzn = k.vzduch ? Math.sin(g.time * 1.8 + k.y * 0.02) * 4 : 0;
+      const r = (k.vzduch ? 9 : 8) + k.hodnota;
+
+      ctx.save();
+      ctx.translate(k.x, y + vzn);
+
+      /* záře kolem */
+      const zar = ctx.createRadialGradient(0, 0, 1, 0, 0, r * 3);
+      zar.addColorStop(0, barvy.zar + (0.5 * puls).toFixed(2) + ')');
+      zar.addColorStop(1, barvy.zar + '0)');
+      ctx.fillStyle = zar;
+      ctx.fillRect(-r * 3, -r * 3, r * 6, r * 6);
+
+      if (k.vzduch) ctx.rotate(g.time * 0.8 + k.y);
+
+      /* broušený kámen: špička nahoře i dole, dvě boční plochy */
+      ctx.beginPath();
+      ctx.moveTo(0, -r * 1.5);
+      ctx.lineTo(r * 0.85, -r * 0.2);
+      ctx.lineTo(0, r * 1.5);
+      ctx.lineTo(-r * 0.85, -r * 0.2);
+      ctx.closePath();
+      ctx.fillStyle = barvy.jadro;
+      ctx.fill();
+      ctx.strokeStyle = barvy.hrana;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      /* vnitřní hrana, ať to vypadá broušené */
+      ctx.beginPath();
+      ctx.moveTo(0, -r * 1.5);
+      ctx.lineTo(0, r * 1.5);
+      ctx.moveTo(-r * 0.85, -r * 0.2);
+      ctx.lineTo(r * 0.85, -r * 0.2);
+      ctx.strokeStyle = 'rgba(255,255,255,.55)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.restore();
+    }
   },
 
   /* ---------- padající kameny ---------- */

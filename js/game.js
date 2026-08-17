@@ -58,6 +58,8 @@ const Game = {
     this.cause  = '';
     this.rockTimer = 1.6;
     this.znacky = [];      // dnešní výsledky kamarádů, kreslí se do rokliny
+    this.krystaly = 0;     // co jsi v tomhle běhu nasbíral
+    this.sebrano = {};     // co už je pryč, ať se nedá sebrat dvakrát
     this.started = false;  // voda se rozjede až prvním skokem
     return this;
   },
@@ -137,6 +139,7 @@ const Game = {
 
     this.updateWater(dt);
     this.updateRocks(dt);
+    this.updateKrystaly();
     this.updateParts(dt);
 
     /* výška se počítá jen z toho, co jsi udržel */
@@ -333,6 +336,29 @@ const Game = {
       spin: typ === 'rampouch' ? 0 : this.rng.range(-3, 3),
       shape: Math.floor(this.rng.range(0, 3)),
     });
+  },
+
+  /* ---------- krystaly ---------- */
+  updateKrystaly(){
+    const p = this.player;
+    /* Dosah schválně těsný. Když je velkorysý, krystaly se sbírají samy
+       jen tím, že lezeš — a pak je to druhé skóre za metry, ne rozhodnutí. */
+    const dosah = 15 + P.R;
+    const blizke = World.krystalyKolem(p.y - 260, p.y + 260);
+
+    for (const k of blizke){
+      if (this.sebrano[k.id]) continue;
+      const dx = k.x - p.x, dy = k.y - p.y;
+      if (dx*dx + dy*dy > dosah*dosah) continue;
+
+      this.sebrano[k.id] = true;
+      this.krystaly += k.hodnota;
+      this.burst(k.x, k.y, 10 + k.hodnota * 3,
+                 k.druh === 'vzacny' ? '#d9b3ff' : k.druh === 'ledovy' ? '#9fe4ff' : '#ffd98a',
+                 1.1);
+      prehraj('krystal', k.hodnota);
+      zavibruj('krystal');
+    }
   },
 
   /* ---------- částice ---------- */

@@ -120,6 +120,53 @@ const World = {
     return { y0: band * this.BAND, y1: (band + 1) * this.BAND };
   },
 
+  /* ---------- krystaly ----------
+     Rozmístění je dané seedem, takže je má každý hráč ve stejné roklině
+     na stejných místech. Dva druhy:
+       • ve vzduchu uprostřed průrvy — sebereš je tím, že se dobře trefíš
+         do okamžiku odrazu, protože letět se dá jen po pevné dráze
+       • ve stěně — sebereš je tím, že se zrovna tam chytíš nebo tudy sjedeš
+     Hodnota roste s výškou: křemen 1, ledový 2, vzácný 3. */
+
+  KRYSTAL_PASMO: 190,
+
+  krystalVPasmu(band){
+    if (band > -2) return null;                 // hned u startu žádné
+    const h = hash1(band * 3301 + this.seedNum);
+    if (h > 0.72) return null;                  // v části pásem nic není
+
+    const y = band * this.KRYSTAL_PASMO + 40 + hash1(band * 77 + this.seedNum) * 100;
+    const druh = y <= this.snowStartY() ? 'vzacny'
+               : y <= this.iceStartY()  ? 'ledovy'
+               : 'kremen';
+    const hodnota = druh === 'vzacny' ? 3 : druh === 'ledovy' ? 2 : 1;
+
+    /* Většina patří do stěny. Krystal ve vzduchu posbírá dráha skoku skoro
+       sama, kdežto pro ten ve stěně musíš přesně dopadnout — a to je teprve
+       rozhodnutí, kvůli kterému sbírání do hry patří. */
+    if (h < 0.25){
+      /* dál od středu — uprostřed průrvy by je posbíral každý skok */
+      const posun = (hash1(band * 131 + this.seedNum) - 0.5) * this.halfGap(y) * 1.5;
+      return { id: 'v' + band, x: this.centerX(y) + posun, y, druh, hodnota, vzduch: true };
+    }
+
+    const side = hash1(band * 191 + this.seedNum) < 0.5 ? -1 : 1;
+    if (this.spikeAt(y, side)) return null;     // v trnech by se nedal sebrat
+    return { id: 's' + band, x: this.wallAt(y, side) - side * 11, y, druh, hodnota, vzduch: false, side };
+  },
+
+  /* krystaly, které můžou být zrovna vidět nebo na dosah */
+  krystalyKolem(odY, doY){
+    const out = [];
+    const b0 = Math.floor(odY / this.KRYSTAL_PASMO) - 1;
+    const b1 = Math.floor(doY / this.KRYSTAL_PASMO) + 1;
+    for (let b = b0; b <= b1; b++){
+      const k = this.krystalVPasmu(b);
+      if (k) out.push(k);
+    }
+    return out;
+  },
+
   /* rozsah trnového pásma pro vykreslení, nebo null */
   spikeBand(band, side){
     if (!this.bandHasSpikes(band, side)) return null;
