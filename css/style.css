@@ -221,7 +221,7 @@ body{
   background:#111a27;
 }
 .skin-card.equipped{ border-color:#3d7cbf; background:#152436; }
-.skin-card canvas{ width:64px; height:64px; }
+.skin-card canvas{ width:64px; height:64px; cursor:pointer; }
 .skin-name{ font-weight:700; font-size:.88rem; }
 .skin-price{ font-size:.8rem; color:#c8a862; font-weight:700; }
 .skin-price .gem-ico{ color:#ffd070; }
@@ -233,6 +233,17 @@ body{
 }
 .skin-btn:disabled{ background:none; border:1px solid #24344b; color:#4e5d70; cursor:default; }
 .skin-btn.equipped-tag{ background:none; border:1px solid #3d7cbf; color:#9fd4ff; cursor:default; }
+
+/* ---------- zvětšený skin ---------- */
+.skin-zoom{
+  position:absolute; inset:0; z-index:20;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  background:rgba(4,6,11,.94); backdrop-filter:blur(4px);
+  cursor:pointer;
+}
+.skin-zoom canvas{ width:min(70vw,320px); height:min(70vw,320px); }
+.skin-zoom-name{ font-weight:800; font-size:1.3rem; }
+.skin-zoom-hint{ color:#6d8099; font-size:.8rem; }
 
 .hint{ display:flex; flex-direction:column; gap:5px; color:#7e91a9; font-size:.85rem; line-height:1.5; max-width:26ch; }
 .hint-dim{ opacity:.6; }

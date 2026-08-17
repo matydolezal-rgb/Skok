@@ -869,11 +869,14 @@ const Render = {
     }
   },
 
-  /* statická ikonka postavy pro obchod — bez fyziky, jen klidová póza */
-  previewSkin(ctx, w, h, skinId){
+  /* statická ikonka postavy pro obchod — bez fyziky, jen klidová póza.
+     scale zvětší jen postavičku (pro zoom náhled), ne velikost plátna. */
+  previewSkin(ctx, w, h, skinId, scale){
+    scale = scale || 1;
     ctx.clearRect(0, 0, w, h);
     ctx.save();
-    ctx.translate(w / 2, h / 2 + P.R * 0.5);
+    ctx.translate(w / 2, h / 2 + P.R * 0.5 * scale);
+    ctx.scale(scale, scale);
 
     /* podklad za postavičkou — jinak tmavé skiny zaniknou na tmavém pozadí karty */
     const bg = ctx.createRadialGradient(0, 0, 0, 0, 0, P.R * 2.1);

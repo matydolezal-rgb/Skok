@@ -56,6 +56,13 @@ f.onload = function(){
     var vsechnyEquipped = Array.prototype.map.call(karty, function(k){ return k.classList.contains('equipped'); });
     L.push('po nákupu všech je přesně jedna equipped: ' + (vsechnyEquipped.filter(Boolean).length === 1));
 
+    /* klik na postavičku otevře zvětšený náhled, klik kamkoliv ho zavře */
+    karty = d.querySelectorAll('#shop-grid .skin-card');
+    karty[3].querySelector('canvas').dispatchEvent(new w.MouseEvent('click', { bubbles:true }));
+    L.push('zoom se otevřel: ' + vis('skin-zoom') + ', jméno: "' + txt('skin-zoom-name') + '"');
+    d.getElementById('skin-zoom').dispatchEvent(new w.MouseEvent('click', { bubbles:true }));
+    L.push('zoom se zavřel: ' + !vis('skin-zoom'));
+
     /* rozjet běh, ať se ověří, že se skin vykreslí i ve hře bez pádu */
     d.getElementById('btn-shop-back').click();
     d.getElementById('btn-free').click();

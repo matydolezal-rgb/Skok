@@ -23,6 +23,7 @@
     resume: $('btn-resume'), quit: $('btn-quit'),
     shop: $('ui-shop'), shopBtn: $('btn-shop'), shopBack: $('btn-shop-back'),
     shopGrid: $('shop-grid'), shopBalance: $('shop-balance'),
+    zoom: $('skin-zoom'), zoomCanvas: $('skin-zoom-canvas'), zoomName: $('skin-zoom-name'),
   };
 
   /* ---------- ukládání ---------- */
@@ -265,6 +266,14 @@
     }
   }
 
+  /* ---------- zvětšený náhled skinu ---------- */
+  function otevriZoom(skin){
+    ui.zoomName.textContent = skin.jmeno;
+    Render.previewSkin(ui.zoomCanvas.getContext('2d'), 320, 320, skin.id, 6);
+    ui.zoom.classList.remove('hidden');
+  }
+  ui.zoom.addEventListener('click', () => ui.zoom.classList.add('hidden'));
+
   /* ---------- obchod se skiny ---------- */
   function obnovObchod(){
     const celkem = getGems();
@@ -282,6 +291,7 @@
       cv.width = 128; cv.height = 128;
       card.appendChild(cv);
       Render.previewSkin(cv.getContext('2d'), 128, 128, s.id);
+      cv.addEventListener('click', () => otevriZoom(s));
 
       const nm = document.createElement('div');
       nm.className = 'skin-name';
