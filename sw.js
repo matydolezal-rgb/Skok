@@ -2,7 +2,7 @@
    Při každé změně hry zvyš VERZI — jinak si telefon nechá starou verzi.
    (Měnit ji Editem, ne PowerShellem, jinak se rozbije diakritika.) */
 
-const VERZE = 'skok-v16';
+const VERZE = 'skok-v17';
 
 const SOUBORY = [
   './',

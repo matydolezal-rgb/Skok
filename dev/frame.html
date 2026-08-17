@@ -20,7 +20,7 @@ var STEP = 1/120, W = 400, H = 850;
 
 function predictLanding(){
   var p = Game.player, side = p.side;
-  var x = p.x, y = p.y, vx = -side * P.JUMP_VX, vy = P.JUMP_VY, dt = STEP;
+  var x = p.x, y = p.y, vx = -side * P.JUMP_VX, vy = Game.odrazVy(p), dt = STEP;
   for (var i = 0; i < 400; i++){
     vy += P.GRAVITY*dt; x += vx*dt; y += vy*dt;
     if (side < 0 ? (x + P.R >= World.rightWall(y)) : (x - P.R <= World.leftWall(y))) return { y:y, side:-side };

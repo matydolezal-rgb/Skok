@@ -62,6 +62,13 @@ const Game = {
     return this;
   },
 
+  /* Síla odrazu podle povrchu. Ze sněhu se odrazíš slaběji — boří se pod
+     nohama a sebere ti část odrazu. Vodorovná rychlost zůstává stejná,
+     takže na druhou stěnu doletíš vždycky; jen získáš míň výšky. */
+  odrazVy(p){
+    return World.snowAt(p.y, p.side) ? P.JUMP_VY * 0.92 : P.JUMP_VY;
+  },
+
   /* ---------- vstup ---------- */
   jump(){
     if (this.over) return;
@@ -70,10 +77,12 @@ const Game = {
     if (p.state !== 'cling') return;
 
     p.state = 'air';
+    const snih = World.snowAt(p.y, p.side);
     p.vx = -p.side * P.JUMP_VX;
-    p.vy = P.JUMP_VY;
+    p.vy = this.odrazVy(p);
     p.face = -p.side;
-    this.burst(p.x, p.y, 7, '#9db4cf', 1);
+    /* ze sněhu odletí místo prachu chomáč sněhu */
+    this.burst(p.x, p.y, snih ? 11 : 7, snih ? '#eaf4ff' : '#9db4cf', snih ? 0.8 : 1);
     prehraj('skok');
   },
 
@@ -108,7 +117,9 @@ const Game = {
     if (p.state === 'cling'){
       p.onIce  = World.iceAt(p.y, p.side);
       p.onSnow = !p.onIce && World.snowAt(p.y, p.side);
-      p.y += P.SLIDE * (p.onIce ? 2.8 : p.onSnow ? 1.8 : 1) * dt;
+      /* Led klouže, sníh naopak drží líp než holá skála.
+         Cenu za to platíš při odrazu — viz odrazVy(). */
+      p.y += P.SLIDE * (p.onIce ? 2.8 : p.onSnow ? 0.65 : 1) * dt;
       p.x = World.wallAt(p.y, p.side) - p.side * P.R;
       /* z ledu odlétávají úlomky, ať je hned poznat, že ujíždíš */
       if (p.onIce && this.rng.chance(dt * 14)){

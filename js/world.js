@@ -107,7 +107,8 @@ const World = {
     if (band * this.BAND > this.snowStartY()) return false;
     if (this.bandHasSpikes(band, side)) return false;
     if (this.bandIsIcy(band, side)) return false;          // led má přednost
-    return hash1(band * 6151 + (side < 0 ? 23 : 71) + this.seedNum) < 0.82;
+    /* ne úplně všude — souvislý sníh přes celou horu dělal z výstupu dřinu */
+    return hash1(band * 6151 + (side < 0 ? 23 : 71) + this.seedNum) < 0.6;
   },
 
   snowAt(y, side){

@@ -11,7 +11,7 @@ var STEP = 1/120, errs = [], W = 420, H = 800;
 /* pozor: hodnoty musí brát z P, jinak robot předpovídá jinou hru, než se hraje */
 function predictLanding(){
   var p = Game.player, side = p.side;
-  var x = p.x, y = p.y, vx = -side * P.JUMP_VX, vy = P.JUMP_VY, dt = 1/120;
+  var x = p.x, y = p.y, vx = -side * P.JUMP_VX, vy = Game.odrazVy(p), dt = 1/120;
   for (var i = 0; i < 400; i++){
     vy += P.GRAVITY * dt; x += vx * dt; y += vy * dt;
     if (side < 0 ? (x + P.R >= World.rightWall(y)) : (x - P.R <= World.leftWall(y))) return { y: y, side: -side };
