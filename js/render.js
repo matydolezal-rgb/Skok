@@ -529,8 +529,23 @@ const Render = {
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
-      /* poušť, vysoké pásmo: zářez na kosti poblíž paty */
+      /* poušť, vysoké pásmo — kost: kloubní hlavička u paty je hlavní poznávací
+         znak (bez ní to čte jako obyčejný bledý hrot), plus pár prasklinek */
       if (m && m.id === 'poust'){
+        ctx.beginPath();
+        for (let y = band.y0; y < band.y1; y += step){
+          const wallY = y + step * 0.5;
+          const bx = World.wallAt(wallY, side) - side * 4;
+          const by = wallY - cam;
+          ctx.moveTo(bx + 3.6, by);
+          ctx.arc(bx, by, 3.6, 0, 6.283);
+        }
+        ctx.fillStyle = m.trnLed.grad[1];
+        ctx.fill();
+        ctx.strokeStyle = m.trnLed.okraj;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
         ctx.beginPath();
         for (let y = band.y0; y < band.y1; y += step){
           const h = 12 + hash1(Math.floor(y) * 7 + (side < 0 ? 3 : 91)) * 7;
@@ -538,7 +553,7 @@ const Render = {
           const tipy = y + step * 0.5 - cam;
           const basex = World.wallAt(y, side) - side * 1;
           const basey = y - cam;
-          const nx = basex + (tipx - basex) * 0.35, ny = basey + (tipy - basey) * 0.35;
+          const nx = basex + (tipx - basex) * 0.55, ny = basey + (tipy - basey) * 0.55;
           ctx.moveTo(nx - side * 3, ny - 2);
           ctx.lineTo(nx + side * 3, ny + 2);
         }
