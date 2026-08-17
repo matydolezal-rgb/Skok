@@ -957,6 +957,37 @@ const Render = {
     ctx.restore();
   },
 
+  /* statická ukázka stopy pro obchod — oblouk jisker jako by po skoku */
+  previewTrail(ctx, w, h, trailId, scale){
+    scale = scale || 1;
+    ctx.clearRect(0, 0, w, h);
+    const t = (typeof Stopy !== 'undefined') ? Stopy.najdi(trailId) : null;
+    if (!t) return;
+
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+
+    const bg = ctx.createRadialGradient(0, 0, 0, 0, 0, 34 * scale);
+    bg.addColorStop(0, 'rgba(180,200,225,.16)');
+    bg.addColorStop(1, 'rgba(180,200,225,0)');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.arc(0, 0, 34 * scale, 0, 6.283); ctx.fill();
+
+    /* deterministická "náhoda" — ať se ikonka nekmitá při každém překreslení */
+    const N = 16;
+    for (let i = 0; i < N; i++){
+      const f = i / (N - 1);
+      const x = (-26 + f * 52) * scale;
+      const y = (Math.sin(f * 3.4) * 14 + (f - 0.5) * 6) * scale;
+      const r = (1.4 + Math.sin(i * 2.7) * 0.7 + f * 1.6) * scale;
+      ctx.globalAlpha = 0.35 + f * 0.65;
+      ctx.fillStyle = t.barvy[i % t.barvy.length];
+      ctx.beginPath(); ctx.arc(x, y, Math.max(0.6, r), 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  },
+
   vignette(ctx, W, H){
     const gr = ctx.createRadialGradient(W/2, H*0.45, H*0.30, W/2, H*0.5, H*0.78);
     gr.addColorStop(0, 'rgba(0,0,0,0)');

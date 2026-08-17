@@ -5,7 +5,6 @@ const Skiny = {
 
   KLIC_VLASTNI:  'skok.skiny.vlastni',
   KLIC_VYBRANY:  'skok.skiny.vybrany',
-  KLIC_UTRACENO: 'skok.skiny.utraceno',
 
   SEZNAM: [
     { id:'default',    jmeno:'Climber',   cena:0,
@@ -53,19 +52,16 @@ const Skiny = {
     return true;
   },
 
-  utraceno(){ return Number(this.nacti(this.KLIC_UTRACENO, 0)) || 0; },
-
-  /* kolik krystalů zbývá na útratu = co jsi kdy nasbíral - co už je utracené */
-  zustatek(celkemNasbirano){ return Math.max(0, celkemNasbirano - this.utraceno()); },
+  zustatek(celkemNasbirano){ return Mena.zustatek(celkemNasbirano); },
 
   koupit(id, celkemNasbirano){
     const s = this.najdi(id);
     if (!s || s.cena <= 0 || this.mam(id)) return { ok:false };
-    if (this.zustatek(celkemNasbirano) < s.cena) return { ok:false, chyba:'not enough crystals' };
+    if (Mena.zustatek(celkemNasbirano) < s.cena) return { ok:false, chyba:'not enough crystals' };
     const pole = this.vlastni();
     pole.push(id);
     this.uloz(this.KLIC_VLASTNI, JSON.stringify(pole));
-    this.uloz(this.KLIC_UTRACENO, this.utraceno() + s.cena);
+    Mena.pripsat(s.cena);
     this.vyber(id);
     return { ok:true };
   },

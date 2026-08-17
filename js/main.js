@@ -23,6 +23,7 @@
     resume: $('btn-resume'), quit: $('btn-quit'),
     shop: $('ui-shop'), shopBtn: $('btn-shop'), shopBack: $('btn-shop-back'),
     shopGrid: $('shop-grid'), shopBalance: $('shop-balance'),
+    shopTabSkiny: $('shop-tab-skiny'), shopTabStopy: $('shop-tab-stopy'),
     zoom: $('skin-zoom'), zoomCanvas: $('skin-zoom-canvas'), zoomName: $('skin-zoom-name'),
   };
 
@@ -107,7 +108,7 @@
 
     const best = getBest();
     ui.freeNote.textContent = best ? 'practice — your record ' + best + ' m' : 'practise as much as you like';
-    ui.gemTotal.textContent = Skiny.zustatek(getGems());
+    ui.gemTotal.textContent = Mena.zustatek(getGems());
     show('menu');
   }
 
@@ -266,23 +267,33 @@
     }
   }
 
-  /* ---------- zvětšený náhled skinu ---------- */
-  function otevriZoom(skin){
-    ui.zoomName.textContent = skin.jmeno;
-    Render.previewSkin(ui.zoomCanvas.getContext('2d'), 320, 320, skin.id, 6);
+  /* ---------- obchod: skiny i stopy sdílí stejnou kasu a stejné UI ---------- */
+  const KATEGORIE = {
+    skiny: { modul: Skiny, preview: (ctx, w, h, id, sc) => Render.previewSkin(ctx, w, h, id, sc) },
+    stopy: { modul: Stopy, preview: (ctx, w, h, id, sc) => Render.previewTrail(ctx, w, h, id, sc) },
+  };
+  let shopKategorie = 'skiny';
+
+  function otevriZoom(kat, polozka){
+    ui.zoomName.textContent = polozka.jmeno;
+    KATEGORIE[kat].preview(ui.zoomCanvas.getContext('2d'), 320, 320, polozka.id, 6);
     ui.zoom.classList.remove('hidden');
   }
   ui.zoom.addEventListener('click', () => ui.zoom.classList.add('hidden'));
 
-  /* ---------- obchod se skiny ---------- */
   function obnovObchod(){
     const celkem = getGems();
-    ui.shopBalance.textContent = Skiny.zustatek(celkem);
+    const k = KATEGORIE[shopKategorie];
+    const modul = k.modul;
+
+    ui.shopTabSkiny.classList.toggle('tab-on', shopKategorie === 'skiny');
+    ui.shopTabStopy.classList.toggle('tab-on', shopKategorie === 'stopy');
+    ui.shopBalance.textContent = modul.zustatek(celkem);
     ui.shopGrid.innerHTML = '';
 
-    Skiny.SEZNAM.forEach((s) => {
-      const vlastnim = Skiny.mam(s.id);
-      const vybrany = Skiny.vybrany() === s.id;
+    modul.SEZNAM.forEach((s) => {
+      const vlastnim = modul.mam(s.id);
+      const vybrany = modul.vybrany() === s.id;
 
       const card = document.createElement('div');
       card.className = 'skin-card' + (vybrany ? ' equipped' : '');
@@ -290,8 +301,8 @@
       const cv = document.createElement('canvas');
       cv.width = 128; cv.height = 128;
       card.appendChild(cv);
-      Render.previewSkin(cv.getContext('2d'), 128, 128, s.id);
-      cv.addEventListener('click', () => otevriZoom(s));
+      k.preview(cv.getContext('2d'), 128, 128, s.id);
+      cv.addEventListener('click', () => otevriZoom(shopKategorie, s));
 
       const nm = document.createElement('div');
       nm.className = 'skin-name';
@@ -311,12 +322,12 @@
         btn.disabled = true;
       } else if (vlastnim){
         btn.textContent = 'Wear';
-        btn.addEventListener('click', () => { Skiny.vyber(s.id); obnovObchod(); });
+        btn.addEventListener('click', () => { modul.vyber(s.id); obnovObchod(); });
       } else {
-        const dost = Skiny.zustatek(celkem) >= s.cena;
+        const dost = modul.zustatek(celkem) >= s.cena;
         btn.textContent = 'Buy';
         btn.disabled = !dost;
-        if (dost) btn.addEventListener('click', () => { Skiny.koupit(s.id, celkem); obnovObchod(); });
+        if (dost) btn.addEventListener('click', () => { modul.koupit(s.id, celkem); obnovObchod(); });
       }
       card.appendChild(btn);
 
@@ -516,8 +527,10 @@
     show('board');
   });
   ui.boardBack.addEventListener('click', obnovMenu);
-  ui.shopBtn.addEventListener('click', () => { obnovObchod(); show('shop'); });
+  ui.shopBtn.addEventListener('click', () => { shopKategorie = 'skiny'; obnovObchod(); show('shop'); });
   ui.shopBack.addEventListener('click', obnovMenu);
+  ui.shopTabSkiny.addEventListener('click', () => { shopKategorie = 'skiny'; obnovObchod(); });
+  ui.shopTabStopy.addEventListener('click', () => { shopKategorie = 'stopy'; obnovObchod(); });
   ui.tabWorld.addEventListener('click',   () => { zalozka = 'world';   obnovZebricek(); });
   ui.tabFriends.addEventListener('click', () => { zalozka = 'friends'; obnovZebricek(); });
   ui.tabMe.addEventListener('click',      () => { zalozka = 'me';      obnovZebricek(); });

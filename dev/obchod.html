@@ -69,7 +69,27 @@ f.onload = function(){
     d.getElementById('skin-zoom').dispatchEvent(new w.MouseEvent('click', { bubbles:true }));
     L.push('zoom se zavřel: ' + !vis('skin-zoom'));
 
-    /* rozjet běh, ať se ověří, že se skin vykreslí i ve hře bez pádu */
+    /* přepnutí na záložku Trails ukáže jinou nabídku, ale stejný sdílený zůstatek */
+    var balancePredStopami = txt('shop-balance');
+    d.getElementById('shop-tab-stopy').click();
+    L.push('záložka Trails je aktivní: ' + d.getElementById('shop-tab-stopy').classList.contains('tab-on'));
+    L.push('zůstatek je stejný jako u skinů: ' + (txt('shop-balance') === balancePredStopami));
+    var stopyKarty = d.querySelectorAll('#shop-grid .skin-card');
+    L.push('počet stop: ' + stopyKarty.length + ' (očekáváno 8)');
+    L.push('první stopa (None) je Equipped: ' + stopyKarty[0].querySelector('.skin-btn').textContent);
+
+    /* koupíme Embers (druhá karta) a ověříme, že to ubere ze SDÍLENÉ kasy */
+    stopyKarty[1].querySelector('.skin-btn').click();
+    stopyKarty = d.querySelectorAll('#shop-grid .skin-card');
+    L.push('Embers po koupi equipped: ' + stopyKarty[1].classList.contains('equipped'));
+    var zustatekPoStope = Number(txt('shop-balance'));
+    L.push('zůstatek klesl přesně o cenu stopy (30): ' + (Number(balancePredStopami) - zustatekPoStope === 30));
+
+    /* zpátky na skiny — koupená stopa se neprojeví jako nová equipped skin karta */
+    d.getElementById('shop-tab-skiny').click();
+    L.push('zůstatek na kartě skinů odpovídá kartě stop: ' + (txt('shop-balance') === String(zustatekPoStope)));
+
+    /* rozjet běh, ať se ověří, že se skin i stopa vykreslí ve hře bez pádu */
     d.getElementById('btn-shop-back').click();
     d.getElementById('btn-free').click();
     var cv = d.getElementById('cv');

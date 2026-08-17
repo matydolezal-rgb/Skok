@@ -106,6 +106,24 @@ const Game = {
     if (this.parts.length > 260) this.parts.splice(0, this.parts.length - 260);
   },
 
+  /* stopa za postavou ve vzduchu — čistě kosmetická volba z obchodu */
+  trailEmit(dt, p){
+    if (typeof Stopy === 'undefined') return;
+    const t = Stopy.najdi(Stopy.vybrany());
+    if (!t || t.id === 'zadna') return;
+    if (!this.rng.chance(dt * 30)) return;
+    this.parts.push({
+      x: p.x + this.rng.range(-2, 2),
+      y: p.y + this.rng.range(-2, 2),
+      vx: -p.vx * 0.12 + this.rng.range(-15, 15),
+      vy: -p.vy * 0.08 + this.rng.range(-15, 15),
+      life: this.rng.range(0.35, 0.65),
+      max:  0.65,
+      r: this.rng.range(1.4, 3),
+      color: t.barvy[Math.floor(this.rng() * t.barvy.length)],
+    });
+  },
+
   /* ---------- hlavní krok ---------- */
   update(dt){
     if (this.over) return;
@@ -134,6 +152,7 @@ const Game = {
       p.vy += P.GRAVITY * dt;
       p.x  += p.vx * dt;
       p.y  += p.vy * dt;
+      this.trailEmit(dt, p);
       this.tryCling(p);
     }
 
