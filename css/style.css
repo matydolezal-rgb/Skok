@@ -116,7 +116,7 @@ body{
 .card-title{ font-weight:800; font-size:1.15rem; letter-spacing:.01em; }
 .card-note{ font-size:.82rem; color:#7f95b0; }
 
-.toggles{ display:flex; gap:6px; margin-top:2px; }
+.toggles{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:2px; }
 .sound-toggle{
   font:inherit; font-size:.82rem; cursor:pointer;
   background:none; border:1px solid transparent; border-radius:10px;

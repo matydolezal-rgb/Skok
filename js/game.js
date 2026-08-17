@@ -1,4 +1,4 @@
-/* Stav hry a fyzika. Nekreslí — od toho je render.js. */
+﻿/* Stav hry a fyzika. Nekreslí — od toho je render.js. */
 
 const P = {
   R:        15,     // poloměr postavy
@@ -9,9 +9,16 @@ const P = {
   METER:    50,     // kolik bodů je jeden metr
 };
 
-/* Zvuk je nepovinný — testovací stránky ho nenačítají, hra proto nesmí spadnout. */
-function Z(jmeno, arg){
+/* Zvuk i vibrace jsou nepovinné — testovací stránky je nenačítají
+   a ne každé zařízení je umí, hra proto nesmí spadnout.
+   Názvy schválně dlouhé: jednopísmenné globály se snadno přepíšou
+   proměnnou odjinud (stalo se — H jako výška plátna vs. H jako vibrace). */
+function prehraj(jmeno, arg){
   if (typeof Zvuk !== 'undefined' && Zvuk[jmeno]) Zvuk[jmeno](arg);
+}
+
+function zavibruj(jmeno, arg){
+  if (typeof Haptika !== 'undefined' && Haptika[jmeno]) Haptika[jmeno](arg);
 }
 
 const Game = {
@@ -49,6 +56,7 @@ const Game = {
     this.over   = false;
     this.cause  = '';
     this.rockTimer = 1.6;
+    this.znacky = [];      // dnešní výsledky kamarádů, kreslí se do rokliny
     this.started = false;  // voda se rozjede až prvním skokem
     return this;
   },
@@ -65,7 +73,7 @@ const Game = {
     p.vy = P.JUMP_VY;
     p.face = -p.side;
     this.burst(p.x, p.y, 7, '#9db4cf', 1);
-    Z('skok');
+    prehraj('skok');
   },
 
   /* ---------- částice ---------- */
@@ -133,15 +141,15 @@ const Game = {
       this.zona = novaZona;
       this.zonaText = novaZona === 'snih' ? 'SNOW' : novaZona === 'led' ? 'ICE' : '';
       this.zonaCas = 2.6;
-      if (this.zonaText) Z('zona');
+      if (this.zonaText) prehraj('zona');
     }
 
     /* hukot vody sílí, jak se blíží */
     const odstup = this.waterY - p.y;
     const blizko = Math.max(0, Math.min(1, 1 - odstup / 900));
-    Z('voda', blizko);
+    prehraj('voda', blizko);
     /* hudba se řídí tím, co je zrovna napínavější — výška, nebo voda za zády */
-    Z('napeti', Math.max(blizko, Math.min(1, this.height / 200)));
+    prehraj('napeti', Math.max(blizko, Math.min(1, this.height / 200)));
 
     /* kamera */
     const target = p.y - this.H * 0.58;
@@ -154,7 +162,8 @@ const Game = {
       this.cause = 'The water caught you';
       this.burst(p.x, this.waterY, 26, '#6fc9e8', 1.6);
       this.shake = 1;
-      Z('konec');
+      prehraj('konec');
+      zavibruj('konec');
     }
   },
 
@@ -197,7 +206,7 @@ const Game = {
                povrch === 'snih' ? 9 : 6,
                povrch === 'skala' ? '#7d8ea3' : '#dff0ff',
                povrch === 'snih' ? 0.9 : 0.7);
-    Z('dopad', povrch);
+    prehraj('dopad', povrch);
   },
 
   bounceOffSpikes(p){
@@ -209,7 +218,8 @@ const Game = {
     this.flash = 0.75;
     this.hitStop = 0.06;
     this.burst(p.x, p.y, 10, '#e0748a', 1.1);
-    Z('trny');
+    prehraj('trny');
+    zavibruj('trny');
   },
 
   /* ---------- voda ---------- */
@@ -270,7 +280,8 @@ const Game = {
         this.burst(r.x, r.y, koule ? 20 : 14,
                    koule ? '#ffffff' : ledovy ? '#cdefff' : '#8a7d6c',
                    koule ? 1.5 : 1.3);
-        Z('zasah', r.typ);
+        prehraj('zasah', r.typ);
+        zavibruj('zasah', r.typ);
         this.rocks.splice(i, 1);
         continue;
       }

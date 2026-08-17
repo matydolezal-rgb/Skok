@@ -5,6 +5,12 @@
 <canvas id="c1" width="400" height="850"></canvas>
 <canvas id="c2" width="400" height="850"></canvas>
 <canvas id="c3" width="400" height="850"></canvas>
+<pre id="chyba" style="position:fixed;bottom:0;left:0;color:#f88;font:12px monospace;z-index:9"></pre>
+<script>
+window.onerror = function(m, s, l){
+  document.getElementById('chyba').textContent = 'CHYBA: ' + m + ' (řádek ' + l + ')';
+};
+</script>
 <script src="../js/rng.js"></script>
 <script src="../js/world.js"></script>
 <script src="../js/game.js"></script>
@@ -55,8 +61,15 @@ Render.draw(document.getElementById('c1').getContext('2d'), Game, 0);
 najdiTrny(85, 135, 'trny-led');
 Render.draw(document.getElementById('c2').getContext('2d'), Game, 70);
 
-najdiTrny(155, 210, 'trny-snih');
-Render.draw(document.getElementById('c3').getContext('2d'), Game, 70);
+/* třetí snímek: značky kamarádů v roklině */
+vyskej(96, 'znacky');
+Game.znacky = [
+  { jmeno: 'Petr',   metry: 104 },
+  { jmeno: 'Klara',  metry: 118 },
+  { jmeno: 'Honza',  metry: 92  },
+];
+Game.update(STEP);
+Render.draw(document.getElementById('c3').getContext('2d'), Game, 88);
 
 document.title = 'hotovo';
 </script>

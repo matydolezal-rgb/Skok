@@ -86,6 +86,15 @@ f.onload = function(){
     L.push('zvuk se přepíná: ' + (txt('btn-sound').indexOf('🔇') > -1) + ', text: "' + txt('btn-sound') + '"');
     d.getElementById('btn-sound').click();
 
+    /* vibrace — tlačítko se ukazuje jen tam, kde je zařízení umí */
+    var podpora = typeof w.navigator.vibrate === 'function';
+    L.push('vibrace podporované: ' + podpora + ', tlačítko vidět: ' + vis('btn-haptic'));
+    if (podpora){
+      d.getElementById('btn-haptic').click();
+      L.push('vibrace se přepnuly: ' + (txt('btn-haptic').indexOf('📴') > -1));
+      d.getElementById('btn-haptic').click();
+    }
+
     /* běh se zapnutou hudbou */
     d.getElementById('btn-free').click();
     for (var j = 0; j < 10; j++) d.getElementById('cv').dispatchEvent(new w.PointerEvent('pointerdown', { bubbles:true }));

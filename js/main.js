@@ -17,7 +17,7 @@
     boardPanel: $('board-panel'), boardSub: $('board-sub'),
     overNum: $('over-num'), overBest: $('over-best'), overCause: $('over-cause'),
     retry: $('btn-retry'), toMenu: $('btn-menu'),
-    sound: $('btn-sound'), music: $('btn-music'),
+    sound: $('btn-sound'), music: $('btn-music'), haptic: $('btn-haptic'),
     pause: $('ui-pause'), pauseBtn: $('btn-pause'), pauseNum: $('pause-num'),
     resume: $('btn-resume'), quit: $('btn-quit'),
   };
@@ -255,12 +255,38 @@
   }
 
   /* ---------- běh ---------- */
+  /* ---------- značky kamarádů ---------- */
+  const KEY_ZNACKY = 'skok.znacky.';
+
+  /* Nejdřív vezmeme, co máme uložené (funguje i bez signálu),
+     pak na pozadí zkusíme stáhnout čerstvá čísla. */
+  function nactiZnacky(den){
+    let ulozene = [];
+    try { ulozene = JSON.parse(load(KEY_ZNACKY + den, '[]')) || []; } catch(e){}
+    Game.znacky = ulozene;
+
+    if (!Sit.pripojeno() || !Sit.jmeno()) return;
+
+    Sit.kamaradiDne(den).then((data) => {
+      const znacky = data
+        .filter((r) => r.metry > 0 && r.kod !== Sit.kod())
+        .sort((a, b) => b.metry - a.metry)
+        .slice(0, 6)
+        .map((r) => ({ jmeno: r.jmeno, metry: r.metry }));
+      Game.znacky = znacky;
+      save(KEY_ZNACKY + den, JSON.stringify(znacky));
+    }).catch(() => {});
+  }
+
   /* Denní výzvu jde hrát kolikrát chceš — počítá se nejlepší pokus dne.
      Roklina je pro všechny stejná, takže se dá během dne předhánět. */
   function startDaily(){
     rezim = 'daily';
     ui.mode.textContent = 'daily challenge';
-    spust(todaySeed());
+    const dnes = todaySeed();
+    spust(dnes);
+    /* značky dávají smysl jen tady — ve volném letu je roklina pokaždé jiná */
+    nactiZnacky(dnes);
   }
 
   function startFree(){
@@ -364,17 +390,23 @@
   });
 
   /* ---------- zvuk a hudba ---------- */
-  const KEY_ZVUK   = 'skok.zvuk';
-  const KEY_HUDBA  = 'skok.hudba';
+  const KEY_ZVUK    = 'skok.zvuk';
+  const KEY_HUDBA   = 'skok.hudba';
+  const KEY_VIBRACE = 'skok.vibrace';
 
   Zvuk.vypnuto       = load(KEY_ZVUK,  '1') === '0';
   Zvuk.hudbaVypnuta  = load(KEY_HUDBA, '1') === '0';
+  Haptika.vypnuta    = load(KEY_VIBRACE, '1') === '0';
 
   function obnovPrepinace(){
     ui.sound.textContent = (Zvuk.vypnuto ? '🔇' : '🔊') + ' Sound';
     ui.music.textContent = (Zvuk.hudbaVypnuta ? '🔈' : '🎵') + ' Music';
+    ui.haptic.textContent = (Haptika.vypnuta ? '📴' : '📳') + ' Vibration';
     ui.sound.classList.toggle('on', !Zvuk.vypnuto);
     ui.music.classList.toggle('on', !Zvuk.hudbaVypnuta);
+    ui.haptic.classList.toggle('on', !Haptika.vypnuta);
+    /* na zařízeních bez vibrací (iPhone, počítač) tlačítko nemá co dělat */
+    ui.haptic.classList.toggle('hidden', !Haptika.podporovano());
   }
 
   ui.sound.addEventListener('click', () => {
@@ -392,6 +424,13 @@
     obnovPrepinace();
     /* ukázka rovnou v menu, ať slyšíš, co jsi zapnul */
     if (!Zvuk.hudbaVypnuta) Zvuk.hudbaStart();
+  });
+
+  ui.haptic.addEventListener('click', () => {
+    Haptika.ztlum(!Haptika.vypnuta);
+    save(KEY_VIBRACE, Haptika.vypnuta ? '0' : '1');
+    obnovPrepinace();
+    if (!Haptika.vypnuta) Haptika.zasah('kamen');   // ukázka, ať víš, co jsi zapnul
   });
 
   ui.daily.addEventListener('click', startDaily);

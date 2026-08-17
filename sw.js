@@ -2,7 +2,7 @@
    Při každé změně hry zvyš VERZI — jinak si telefon nechá starou verzi.
    (Měnit ji Editem, ne PowerShellem, jinak se rozbije diakritika.) */
 
-const VERZE = 'skok-v14';
+const VERZE = 'skok-v15';
 
 const SOUBORY = [
   './',
@@ -12,6 +12,7 @@ const SOUBORY = [
   './js/config.js',
   './js/sit.js',
   './js/audio.js',
+  './js/haptika.js',
   './js/rng.js',
   './js/world.js',
   './js/game.js',

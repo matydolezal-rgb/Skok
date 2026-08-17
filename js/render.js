@@ -26,6 +26,7 @@ const Render = {
     this.motes(ctx, g, W, H, cam);
     this.water(ctx, g, W, H, cam);
     this.walls(ctx, g, W, H, cam, t);
+    this.friendMarks(ctx, g, W, cam);
     if (best > 0) this.bestLine(ctx, g, W, cam, best);
     this.rocks(ctx, g, cam);
     this.particles(ctx, g, cam);
@@ -508,6 +509,36 @@ const Render = {
     ctx.stroke();
   },
 
+  /* Kam dnes došli kamarádi. Vidíš jejich čáru nad sebou a víš přesně,
+     kolik ti zbývá — to táhne mnohem víc než tabulka po skončení běhu. */
+  friendMarks(ctx, g, W, cam){
+    const znacky = g.znacky || [];
+    if (!znacky.length) return;
+
+    ctx.save();
+    ctx.font = '600 11px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    for (const z of znacky){
+      const y = -z.metry * P.METER - cam;
+      if (y < -20 || y > g.H + 20) continue;
+
+      ctx.setLineDash([5, 9]);
+      ctx.strokeStyle = 'rgba(150,200,255,.40)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      ctx.setLineDash([]);
+
+      const popis = z.jmeno + '  ' + z.metry + ' m';
+      const sirka = ctx.measureText(popis).width;
+      ctx.fillStyle = 'rgba(10,16,26,.72)';
+      ctx.fillRect(8, y - 15, sirka + 14, 15);
+      ctx.fillStyle = 'rgba(190,222,255,.92)';
+      ctx.fillText(popis, 15, y - 4);
+    }
+    ctx.restore();
+  },
+
   /* ---------- značka rekordu ---------- */
   bestLine(ctx, g, W, cam, best){
     const y = -best * P.METER - cam;
@@ -521,7 +552,7 @@ const Render = {
     ctx.fillStyle = 'rgba(255,220,140,.8)';
     ctx.font = '600 11px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('tvůj rekord ' + best + ' m', W / 2, y - 6);
+    ctx.fillText('your record  ' + best + ' m', W / 2, y - 6);
     ctx.restore();
   },
 
