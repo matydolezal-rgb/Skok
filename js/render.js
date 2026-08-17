@@ -723,8 +723,10 @@ const Render = {
   },
 
   /* ---------- postava ---------- */
-  player(ctx, g, cam){
+  player(ctx, g, cam, skinId){
     const p = g.player;
+    const skin = (typeof Skiny !== 'undefined') ? Skiny.najdi(skinId || Skiny.vybrany()) : null;
+    const barvy = skin || { telo:['#f4efe4','#c3b49b'], hlava:'#fdf7ec', sala:'#e0748a' };
     const y = p.y - cam;
     const sq = p.squash;
     const scaleX = 1 + sq * 0.28;
@@ -737,7 +739,7 @@ const Render = {
     const vlen = Math.hypot(p.vx, p.vy);
     const dx = vlen > 20 ? -p.vx / vlen : p.side * 0.6;
     const dy = vlen > 20 ? -p.vy / vlen : -0.4;
-    ctx.strokeStyle = '#e0748a';
+    ctx.strokeStyle = barvy.sala;
     ctx.lineWidth = 4;
     ctx.lineCap = 'round';
     ctx.beginPath();
@@ -759,8 +761,8 @@ const Render = {
 
     /* tělo */
     const bodyGr = ctx.createLinearGradient(0, -P.R, 0, P.R);
-    bodyGr.addColorStop(0, '#f4efe4');
-    bodyGr.addColorStop(1, '#c3b49b');
+    bodyGr.addColorStop(0, barvy.telo[0]);
+    bodyGr.addColorStop(1, barvy.telo[1]);
     ctx.beginPath();
     ctx.ellipse(0, 1, P.R * 0.78, P.R * 0.92, 0, 0, 6.283);
     ctx.fillStyle = bodyGr;
@@ -770,11 +772,15 @@ const Render = {
     ctx.stroke();
 
     /* hlava */
+    const faceX = p.face * 2.5;
     ctx.beginPath();
-    ctx.arc(p.face * 2.5, -P.R * 0.72, P.R * 0.46, 0, 6.283);
-    ctx.fillStyle = '#fdf7ec';
+    ctx.arc(faceX, -P.R * 0.72, P.R * 0.46, 0, 6.283);
+    ctx.fillStyle = barvy.hlava;
     ctx.fill();
     ctx.stroke();
+
+    /* ozdoby podle skinu — uši, čepice, přilba... */
+    if (skin) this.skinOzdoby(ctx, skin.id, faceX);
 
     /* nohy */
     ctx.strokeStyle = '#3d4657';
@@ -794,6 +800,90 @@ const Render = {
       ctx.stroke();
     }
 
+    ctx.restore();
+  },
+
+  /* doplňky nad hlavou/na hlavě podle vybraného skinu */
+  skinOzdoby(ctx, id, faceX){
+    const R = P.R;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(25,30,40,.55)';
+
+    if (id === 'liska'){                          // liška — špičaté uši, bílý čenich
+      ctx.fillStyle = '#e8834a';
+      ctx.beginPath(); ctx.moveTo(faceX - 10, -R * 0.98); ctx.lineTo(faceX - 15, -R * 1.42); ctx.lineTo(faceX - 3, -R * 1.05); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(faceX + 10, -R * 0.98); ctx.lineTo(faceX + 15, -R * 1.42); ctx.lineTo(faceX + 3, -R * 1.05); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#fdf7ec';
+      ctx.beginPath(); ctx.ellipse(faceX + 3, -R * 0.58, R * 0.20, R * 0.15, 0, 0, 6.283); ctx.fill();
+
+    } else if (id === 'tucnak'){                  // tučňák — oranžový zobák, bílé bříško
+      ctx.fillStyle = '#e0a83d';
+      ctx.beginPath(); ctx.moveTo(faceX - 2, -R * 0.66); ctx.lineTo(faceX + 9, -R * 0.60); ctx.lineTo(faceX - 2, -R * 0.50); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#fdf7ec';
+      ctx.beginPath(); ctx.ellipse(0, R * 0.35, R * 0.42, R * 0.55, 0, 0, 6.283); ctx.fill();
+
+    } else if (id === 'policajt'){                // policista — čepice s kšiltem a odznakem
+      ctx.fillStyle = '#1c355c';
+      ctx.beginPath(); ctx.arc(faceX, -R * 1.02, R * 0.50, Math.PI, 0); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(faceX, -R * 1.02, R * 0.52, R * 0.14, 0, 0, 6.283); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffd070';
+      ctx.beginPath(); ctx.arc(faceX, -R * 1.04, R * 0.09, 0, 6.283); ctx.fill();
+
+    } else if (id === 'panda'){                   // panda — černé uši a náplasti přes oči
+      ctx.fillStyle = '#232830';
+      ctx.beginPath(); ctx.arc(faceX - 13, -R * 1.14, R * 0.32, 0, 6.283); ctx.fill();
+      ctx.beginPath(); ctx.arc(faceX + 13, -R * 1.14, R * 0.32, 0, 6.283); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(faceX - 9, -R * 0.72, R * 0.17, R * 0.22, -0.3, 0, 6.283); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(faceX + 9, -R * 0.72, R * 0.17, R * 0.22, 0.3, 0, 6.283); ctx.fill();
+
+    } else if (id === 'kuchar'){                  // kuchař — vysoká bílá čepice
+      ctx.fillStyle = '#fbfaf6';
+      ctx.beginPath(); ctx.ellipse(faceX, -R * 1.10, R * 0.50, R * 0.11, 0, 0, 6.283); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(faceX, -R * 1.54, R * 0.40, R * 0.42, 0, 0, 6.283); ctx.fill(); ctx.stroke();
+
+    } else if (id === 'yeti'){                    // yeti — chlupaté hroty kolem hlavy
+      ctx.fillStyle = '#eaf3fb';
+      for (let i = -2; i <= 2; i++){
+        const a = i * 0.42;
+        const bx = faceX + Math.sin(a) * R * 0.48, by = -R * 0.72 - Math.cos(a) * R * 0.48;
+        ctx.beginPath();
+        ctx.moveTo(bx, by);
+        ctx.lineTo(bx + Math.sin(a) * 9, by - R * 0.52);
+        ctx.lineTo(bx - Math.sin(a) * 9 * 0.4, by + 2);
+        ctx.closePath(); ctx.fill();
+      }
+
+    } else if (id === 'ninja'){                   // nindža — maska přes oči, jen oči svítí
+      ctx.fillStyle = '#15171b';
+      ctx.beginPath(); ctx.ellipse(faceX, -R * 0.78, R * 0.50, R * 0.22, 0, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#c94f4f';
+      ctx.beginPath(); ctx.ellipse(faceX - 6, -R * 0.78, R * 0.08, R * 0.10, 0, 0, 6.283); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(faceX + 6, -R * 0.78, R * 0.08, R * 0.10, 0, 0, 6.283); ctx.fill();
+
+    } else if (id === 'kosmonaut'){               // kosmonaut — kulatá přilba s odleskem
+      ctx.strokeStyle = 'rgba(160,200,235,.9)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(faceX, -R * 0.72, R * 0.62, 0, 6.283); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,.35)';
+      ctx.beginPath(); ctx.ellipse(faceX - 6, -R * 0.92, R * 0.14, R * 0.08, -0.4, 0, 6.283); ctx.fill();
+    }
+  },
+
+  /* statická ikonka postavy pro obchod — bez fyziky, jen klidová póza */
+  previewSkin(ctx, w, h, skinId){
+    ctx.clearRect(0, 0, w, h);
+    ctx.save();
+    ctx.translate(w / 2, h / 2 + P.R * 0.5);
+
+    /* podklad za postavičkou — jinak tmavé skiny zaniknou na tmavém pozadí karty */
+    const bg = ctx.createRadialGradient(0, 0, 0, 0, 0, P.R * 2.1);
+    bg.addColorStop(0, 'rgba(180,200,225,.16)');
+    bg.addColorStop(1, 'rgba(180,200,225,0)');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.arc(0, 0, P.R * 2.1, 0, 6.283); ctx.fill();
+
+    const fakeP = { x:0, y:0, vx:0, vy:0, side:-1, state:'cling', stun:0, squash:0, face:1 };
+    this.player(ctx, { player: fakeP, time: 0 }, 0, skinId);
     ctx.restore();
   },
 

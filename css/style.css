@@ -208,6 +208,32 @@ body{
   border:1px dashed #24344b; border-radius:14px; padding:20px;
 }
 
+/* ---------- obchod ---------- */
+.shop-grid{
+  width:100%; max-width:360px;
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+  max-height:60vh; overflow-y:auto; padding-bottom:2px;
+}
+.skin-card{
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:12px 8px 14px;
+  border-radius:14px; border:1px solid #1e2c3f;
+  background:#111a27;
+}
+.skin-card.equipped{ border-color:#3d7cbf; background:#152436; }
+.skin-card canvas{ width:64px; height:64px; }
+.skin-name{ font-weight:700; font-size:.88rem; }
+.skin-price{ font-size:.8rem; color:#c8a862; font-weight:700; }
+.skin-price .gem-ico{ color:#ffd070; }
+.skin-btn{
+  font:inherit; font-weight:700; font-size:.78rem; cursor:pointer;
+  color:#06101f; width:100%;
+  background:linear-gradient(180deg,#9fd4ff 0%,#4c93e0 100%);
+  border:none; border-radius:9px; padding:7px 6px;
+}
+.skin-btn:disabled{ background:none; border:1px solid #24344b; color:#4e5d70; cursor:default; }
+.skin-btn.equipped-tag{ background:none; border:1px solid #3d7cbf; color:#9fd4ff; cursor:default; }
+
 .hint{ display:flex; flex-direction:column; gap:5px; color:#7e91a9; font-size:.85rem; line-height:1.5; max-width:26ch; }
 .hint-dim{ opacity:.6; }
 

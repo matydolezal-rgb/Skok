@@ -56,6 +56,11 @@
         <span class="card-title">Leaderboard</span>
         <span class="card-note">scores and friends</span>
       </button>
+
+      <button id="btn-shop" class="card card-slim">
+        <span class="card-title">Character</span>
+        <span class="card-note" id="shop-note">customize your climber</span>
+      </button>
     </div>
 
     <div class="gem-bank"><span class="gem-ico">◆</span><span id="gem-total">0</span><span class="gem-label">crystals collected</span></div>
@@ -85,6 +90,16 @@
     <button id="btn-board-back" class="btn btn-ghost">Back</button>
   </div>
 
+  <!-- SHOP -->
+  <div id="ui-shop" class="overlay overlay-top hidden">
+    <h2 class="board-title">Character</h2>
+    <div class="board-sub"><span class="gem-ico">◆</span><span id="shop-balance">0</span> to spend</div>
+
+    <div id="shop-grid" class="shop-grid"></div>
+
+    <button id="btn-shop-back" class="btn btn-ghost">Back</button>
+  </div>
+
   <!-- END OF RUN -->
   <div id="ui-over" class="overlay hidden">
     <div class="over-cause" id="over-cause">The water caught you</div>
@@ -98,6 +113,7 @@
 
 <script src="js/config.js"></script>
 <script src="js/sit.js"></script>
+<script src="js/skins.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/haptika.js"></script>
 <script src="js/rng.js"></script>

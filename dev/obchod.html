@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>obchod</title></head><body>
+<pre id="out">běží…</pre>
+<iframe id="f" src="../index.html" width="420" height="820"></iframe>
+<script>
+var L = [], f = document.getElementById('f');
+
+f.onload = function(){
+  var d = f.contentDocument, w = f.contentWindow;
+  var errors = [];
+  w.onerror = function(m){ errors.push(m); };
+  function vis(id){ return !d.getElementById(id).classList.contains('hidden'); }
+  function txt(id){ return d.getElementById(id).textContent.trim(); }
+
+  try {
+    /* bez krystalů: obchod otevřený, druhý skin zamčený */
+    d.getElementById('btn-shop').click();
+    L.push('obchod se otevřel: ' + vis('ui-shop'));
+    L.push('zůstatek na začátku: ' + txt('shop-balance'));
+    var karty = d.querySelectorAll('#shop-grid .skin-card');
+    L.push('počet karet: ' + karty.length + ' (očekáváno 9)');
+    L.push('první karta je Equipped (default): ' + karty[0].querySelector('.skin-btn').textContent);
+    L.push('druhá karta bez peněz má Buy zakázané: ' + karty[1].querySelector('.skin-btn').disabled);
+
+    /* nasypeme krystaly a znovu otevřeme */
+    w.localStorage.setItem('skok.krystaly', '500');
+    d.getElementById('btn-shop-back').click();
+    d.getElementById('btn-shop').click();
+    karty = d.querySelectorAll('#shop-grid .skin-card');
+    L.push('se 500 krystaly je Buy povolené: ' + !karty[1].querySelector('.skin-btn').disabled);
+
+    /* koupíme lišku (druhá karta, cena 20) */
+    karty[1].querySelector('.skin-btn').click();
+    karty = d.querySelectorAll('#shop-grid .skin-card');
+    L.push('po koupi je liška equipped: ' + karty[1].classList.contains('equipped'));
+    L.push('zůstatek po koupi (500-20=480): ' + txt('shop-balance'));
+
+    /* přepneme zpátky na default */
+    karty[0].querySelector('.skin-btn').click();
+    karty = d.querySelectorAll('#shop-grid .skin-card');
+    L.push('default zpátky equipped: ' + karty[0].classList.contains('equipped'));
+    L.push('liška teď nabízí Wear: ' + karty[1].querySelector('.skin-btn').textContent);
+
+    karty[1].querySelector('.skin-btn').click();
+
+    /* nasypeme hodně krystalů a koupíme + nasadíme úplně všechny skiny */
+    w.localStorage.setItem('skok.krystaly', '9999');
+    d.getElementById('btn-shop-back').click();
+    d.getElementById('btn-shop').click();
+    karty = d.querySelectorAll('#shop-grid .skin-card');
+    for (var i = 0; i < karty.length; i++){
+      var btn = karty[i].querySelector('.skin-btn');
+      if (btn.textContent === 'Buy' || btn.textContent === 'Wear') btn.click();
+      karty = d.querySelectorAll('#shop-grid .skin-card');
+    }
+    var vsechnyEquipped = Array.prototype.map.call(karty, function(k){ return k.classList.contains('equipped'); });
+    L.push('po nákupu všech je přesně jedna equipped: ' + (vsechnyEquipped.filter(Boolean).length === 1));
+
+    /* rozjet běh, ať se ověří, že se skin vykreslí i ve hře bez pádu */
+    d.getElementById('btn-shop-back').click();
+    d.getElementById('btn-free').click();
+    var cv = d.getElementById('cv');
+    for (var j = 0; j < 15; j++) cv.dispatchEvent(new w.PointerEvent('pointerdown', { bubbles:true }));
+    d.getElementById('btn-menu').click();
+
+    L.push('chyby: ' + (errors.length ? errors.join(' | ') : 'žádné'));
+  } catch(e){
+    L.push('VÝJIMKA: ' + e.message + ' | ' + (e.stack||'').split('\n')[1]);
+  }
+  document.getElementById('out').textContent = L.join('\n');
+};
+</script>
+</body></html>

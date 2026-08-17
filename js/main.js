@@ -21,6 +21,8 @@
     sound: $('btn-sound'), music: $('btn-music'), haptic: $('btn-haptic'),
     pause: $('ui-pause'), pauseBtn: $('btn-pause'), pauseNum: $('pause-num'),
     resume: $('btn-resume'), quit: $('btn-quit'),
+    shop: $('ui-shop'), shopBtn: $('btn-shop'), shopBack: $('btn-shop-back'),
+    shopGrid: $('shop-grid'), shopBalance: $('shop-balance'),
   };
 
   /* ---------- ukládání ---------- */
@@ -82,6 +84,7 @@
     window.__skokHraje = (o === 'play' || o === 'pause');
     ui.menu.classList.toggle('hidden',   o !== 'menu');
     ui.board.classList.toggle('hidden',  o !== 'board');
+    ui.shop.classList.toggle('hidden',   o !== 'shop');
     ui.over.classList.toggle('hidden',   o !== 'over');
     ui.pause.classList.toggle('hidden',  o !== 'pause');
     ui.hud.classList.toggle('hidden',    o !== 'play' && o !== 'pause');
@@ -260,6 +263,55 @@
               'will be sent as soon as there is a connection.');
       if (zalozka === 'friends') panelKamaradi();
     }
+  }
+
+  /* ---------- obchod se skiny ---------- */
+  function obnovObchod(){
+    const celkem = getGems();
+    ui.shopBalance.textContent = Skiny.zustatek(celkem);
+    ui.shopGrid.innerHTML = '';
+
+    Skiny.SEZNAM.forEach((s) => {
+      const vlastnim = Skiny.mam(s.id);
+      const vybrany = Skiny.vybrany() === s.id;
+
+      const card = document.createElement('div');
+      card.className = 'skin-card' + (vybrany ? ' equipped' : '');
+
+      const cv = document.createElement('canvas');
+      cv.width = 128; cv.height = 128;
+      card.appendChild(cv);
+      Render.previewSkin(cv.getContext('2d'), 128, 128, s.id);
+
+      const nm = document.createElement('div');
+      nm.className = 'skin-name';
+      nm.textContent = s.jmeno;
+      card.appendChild(nm);
+
+      const price = document.createElement('div');
+      price.className = 'skin-price';
+      price.innerHTML = s.cena > 0 ? '<span class="gem-ico">◆</span> ' + s.cena : 'free';
+      card.appendChild(price);
+
+      const btn = document.createElement('button');
+      btn.className = 'skin-btn';
+      if (vybrany){
+        btn.textContent = 'Equipped';
+        btn.className += ' equipped-tag';
+        btn.disabled = true;
+      } else if (vlastnim){
+        btn.textContent = 'Wear';
+        btn.addEventListener('click', () => { Skiny.vyber(s.id); obnovObchod(); });
+      } else {
+        const dost = Skiny.zustatek(celkem) >= s.cena;
+        btn.textContent = 'Buy';
+        btn.disabled = !dost;
+        if (dost) btn.addEventListener('click', () => { Skiny.koupit(s.id, celkem); obnovObchod(); });
+      }
+      card.appendChild(btn);
+
+      ui.shopGrid.appendChild(card);
+    });
   }
 
   /* ---------- běh ---------- */
@@ -454,6 +506,8 @@
     show('board');
   });
   ui.boardBack.addEventListener('click', obnovMenu);
+  ui.shopBtn.addEventListener('click', () => { obnovObchod(); show('shop'); });
+  ui.shopBack.addEventListener('click', obnovMenu);
   ui.tabWorld.addEventListener('click',   () => { zalozka = 'world';   obnovZebricek(); });
   ui.tabFriends.addEventListener('click', () => { zalozka = 'friends'; obnovZebricek(); });
   ui.tabMe.addEventListener('click',      () => { zalozka = 'me';      obnovZebricek(); });
