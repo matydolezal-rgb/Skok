@@ -25,6 +25,7 @@ const Mapy = {
       rampouch: { grad:['rgba(190,235,255,.95)','rgba(255,255,255,.98)','rgba(120,190,235,.95)'], okraj:'rgba(70,140,190,.8)' },
       koule:    { grad:['#ffffff','#e8f1fb','#a9bed6'], okraj:'rgba(60,85,120,.85)', hrudky:'rgba(140,165,195,.45)' },
       prachSkok:'#9db4cf', prachSnih:'#eaf4ff', ulomky:'#bfe9ff', dopadSkala:'#7d8ea3', dopadMokro:'#dff0ff',
+      zonaLed:'ICE', zonaSnih:'SNOW',
     },
 
     /* poušť — kaktusy dole, kosti nahoře, tekutý písek místo sněhu */
@@ -43,6 +44,7 @@ const Mapy = {
       rampouch: { grad:['#6e4f2a','#8a6a3a','#4a3419'], okraj:'rgba(40,28,14,.8)', odnoz:'#4a3419' },
       koule:    { grad:['#f2ecd8','#e8ddc0','#b9a97e'], okraj:'rgba(70,55,30,.85)', hrudky:'rgba(140,120,85,.45)', socket:'#2a2013' },
       prachSkok:'#e8c98a', prachSnih:'#f2d9a0', ulomky:'#f0d29a', dopadSkala:'#c9a25c', dopadMokro:'#e8c98a',
+      zonaLed:'GLASS', zonaSnih:'QUICKSAND',
     },
   ],
 

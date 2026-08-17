@@ -177,7 +177,10 @@ const Game = {
                    : 'skala';
     if (novaZona !== this.zona){
       this.zona = novaZona;
-      this.zonaText = novaZona === 'snih' ? 'SNOW' : novaZona === 'led' ? 'ICE' : '';
+      const mp = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
+      this.zonaText = novaZona === 'snih' ? (mp ? mp.zonaSnih : 'SNOW')
+                     : novaZona === 'led'  ? (mp ? mp.zonaLed  : 'ICE')
+                     : '';
       this.zonaCas = 2.6;
       if (this.zonaText) prehraj('zona');
     }

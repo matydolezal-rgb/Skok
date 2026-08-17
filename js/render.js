@@ -771,13 +771,26 @@ const Render = {
         ctx.stroke();
 
         if (poust){
-          /* lebka: dva důlky a trojúhelníkový nosní otvor místo náhodných hrudek */
+          /* lebka: velké tmavé důlky výš, úzký nosní otvor, čelist se zuby dole —
+             ne dvě tečky s obloučkem, to čte jako smajlík, ne jako lebka */
           ctx.fillStyle = m.koule.socket;
-          ctx.beginPath(); ctx.ellipse(-r.r * 0.32, -r.r * 0.08, r.r * 0.20, r.r * 0.24, 0, 0, 6.283); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(r.r * 0.32, -r.r * 0.08, r.r * 0.20, r.r * 0.24, 0, 0, 6.283); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(-r.r * 0.30, -r.r * 0.22, r.r * 0.24, r.r * 0.28, 0, 0, 6.283); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(r.r * 0.30, -r.r * 0.22, r.r * 0.24, r.r * 0.28, 0, 0, 6.283); ctx.fill();
           ctx.beginPath();
-          ctx.moveTo(0, r.r * 0.10); ctx.lineTo(-r.r * 0.10, r.r * 0.34); ctx.lineTo(r.r * 0.10, r.r * 0.34);
+          ctx.moveTo(0, -r.r * 0.02); ctx.lineTo(-r.r * 0.08, r.r * 0.20); ctx.lineTo(r.r * 0.08, r.r * 0.20);
           ctx.closePath(); ctx.fill();
+          /* čelist — tmavý pruh dole s krátkými svislými zuby */
+          ctx.beginPath();
+          ctx.ellipse(0, r.r * 0.52, r.r * 0.58, r.r * 0.30, 0, Math.PI, 0);
+          ctx.fill();
+          ctx.strokeStyle = pal.grad[2];
+          ctx.lineWidth = Math.max(1, r.r * 0.06);
+          for (let tx = -r.r * 0.34; tx <= r.r * 0.34; tx += r.r * 0.17){
+            ctx.beginPath();
+            ctx.moveTo(tx, r.r * 0.34);
+            ctx.lineTo(tx, r.r * 0.48);
+            ctx.stroke();
+          }
         } else {
           /* hrudky, ať to není jen kolečko */
           ctx.fillStyle = pal.hrudky;
