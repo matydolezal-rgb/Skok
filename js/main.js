@@ -23,7 +23,7 @@
     resume: $('btn-resume'), quit: $('btn-quit'),
     shop: $('ui-shop'), shopBtn: $('btn-shop'), shopBack: $('btn-shop-back'),
     shopGrid: $('shop-grid'), shopBalance: $('shop-balance'),
-    shopTabSkiny: $('shop-tab-skiny'), shopTabStopy: $('shop-tab-stopy'),
+    shopTabSkiny: $('shop-tab-skiny'), shopTabStopy: $('shop-tab-stopy'), shopTabMapy: $('shop-tab-mapy'),
     zoom: $('skin-zoom'), zoomCanvas: $('skin-zoom-canvas'), zoomName: $('skin-zoom-name'),
   };
 
@@ -271,6 +271,7 @@
   const KATEGORIE = {
     skiny: { modul: Skiny, preview: (ctx, w, h, id, sc) => Render.previewSkin(ctx, w, h, id, sc) },
     stopy: { modul: Stopy, preview: (ctx, w, h, id, sc) => Render.previewTrail(ctx, w, h, id, sc) },
+    mapy:  { modul: Mapy,  preview: (ctx, w, h, id, sc) => Render.previewMapa(ctx, w, h, id, sc) },
   };
   let shopKategorie = 'skiny';
 
@@ -288,6 +289,7 @@
 
     ui.shopTabSkiny.classList.toggle('tab-on', shopKategorie === 'skiny');
     ui.shopTabStopy.classList.toggle('tab-on', shopKategorie === 'stopy');
+    ui.shopTabMapy.classList.toggle('tab-on', shopKategorie === 'mapy');
     ui.shopBalance.textContent = modul.zustatek(celkem);
     ui.shopGrid.innerHTML = '';
 
@@ -531,6 +533,7 @@
   ui.shopBack.addEventListener('click', obnovMenu);
   ui.shopTabSkiny.addEventListener('click', () => { shopKategorie = 'skiny'; obnovObchod(); });
   ui.shopTabStopy.addEventListener('click', () => { shopKategorie = 'stopy'; obnovObchod(); });
+  ui.shopTabMapy.addEventListener('click', () => { shopKategorie = 'mapy'; obnovObchod(); });
   ui.tabWorld.addEventListener('click',   () => { zalozka = 'world';   obnovZebricek(); });
   ui.tabFriends.addEventListener('click', () => { zalozka = 'friends'; obnovZebricek(); });
   ui.tabMe.addEventListener('click',      () => { zalozka = 'me';      obnovZebricek(); });

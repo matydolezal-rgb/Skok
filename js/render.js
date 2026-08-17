@@ -47,22 +47,26 @@ const Render = {
 
   /* ---------- pozadí ---------- */
   sky(ctx, W, H, t){
+    const m = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
+    const p = m ? m.sky : [['#0d1626','#5b6f9c'], ['#0a111d','#2c3a55'], ['#05070c','#0e1524']];
     const gr = ctx.createLinearGradient(0, 0, 0, H);
     /* čím výš, tím světlejší a teplejší — odměna za šplhání */
-    gr.addColorStop(0,    this.mix('#0d1626', '#5b6f9c', t));
-    gr.addColorStop(0.45, this.mix('#0a111d', '#2c3a55', t * 0.8));
-    gr.addColorStop(1,    this.mix('#05070c', '#0e1524', t * 0.6));
+    gr.addColorStop(0,    this.mix(p[0][0], p[0][1], t));
+    gr.addColorStop(0.45, this.mix(p[1][0], p[1][1], t * 0.8));
+    gr.addColorStop(1,    this.mix(p[2][0], p[2][1], t * 0.6));
     ctx.fillStyle = gr;
     ctx.fillRect(0, 0, W, H);
   },
 
   farRocks(ctx, g, W, H, cam, t){
+    const m = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
+    const p = m ? m.farRocks : [['#111a2b','#33405e'], ['#0c1421','#232e46']];
     for (let layer = 0; layer < 2; layer++){
       const par = layer === 0 ? 0.32 : 0.58;
       const off = cam * par;
       ctx.fillStyle = layer === 0
-        ? this.mix('#111a2b', '#33405e', t * 0.7)
-        : this.mix('#0c1421', '#232e46', t * 0.7);
+        ? this.mix(p[0][0], p[0][1], t * 0.7)
+        : this.mix(p[1][0], p[1][1], t * 0.7);
 
       for (let side = 0; side < 2; side++){
         ctx.beginPath();
@@ -86,6 +90,8 @@ const Render = {
   /* Zadní stěna uvnitř průrvy — díky ní není mezi stěnami prázdná díra.
      Posouvá se pomaleji než popředí, takže vzniká dojem hloubky. */
   backWall(ctx, g, W, H, cam, t){
+    const m = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
+    const p = m ? m.backWall : [['#0b1120','#1b2439'], ['#05080f','#0d1422']];
     const par = cam * 0.72;
 
     ctx.save();
@@ -103,8 +109,8 @@ const Render = {
     const gr = ctx.createLinearGradient(0, 0, 0, H);
     /* záměrně tmavší než přední stěny — hráč musí na první pohled poznat,
        kde je skála a kde díra */
-    gr.addColorStop(0, this.mix('#0b1120', '#1b2439', t * 0.6));
-    gr.addColorStop(1, this.mix('#05080f', '#0d1422', t * 0.6));
+    gr.addColorStop(0, this.mix(p[0][0], p[0][1], t * 0.6));
+    gr.addColorStop(1, this.mix(p[1][0], p[1][1], t * 0.6));
     ctx.fillStyle = gr;
     ctx.fill();
 
@@ -197,13 +203,16 @@ const Render = {
   },
 
   walls(ctx, g, W, H, cam, t){
+    const m = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
+    const p = m ? m.wall : [['#242c3d','#49546f'], ['#3c4760','#6a769a']];
+    const hr = m ? m.hrana : ['rgba(140,190,255,', 'rgba(220,238,255,'];
     for (let s = 0; s < 2; s++){
       const side = s === 0 ? -1 : 1;
 
       this.wallPath(ctx, g, H, cam, side, W);
       const gr = ctx.createLinearGradient(side < 0 ? 0 : W, 0, side < 0 ? W * 0.55 : W * 0.45, 0);
-      gr.addColorStop(0, this.mix('#242c3d', '#49546f', t * 0.55));
-      gr.addColorStop(1, this.mix('#3c4760', '#6a769a', t * 0.55));
+      gr.addColorStop(0, this.mix(p[0][0], p[0][1], t * 0.55));
+      gr.addColorStop(1, this.mix(p[1][0], p[1][1], t * 0.55));
       ctx.fillStyle = gr;
       ctx.fill();
 
@@ -255,10 +264,10 @@ const Render = {
         if (y === -20) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       }
       /* dvojitá hrana: měkká záře a ostrá linka — okraj musí být vidět vždy */
-      ctx.strokeStyle = 'rgba(140,190,255,' + (0.16 + t * 0.14).toFixed(3) + ')';
+      ctx.strokeStyle = hr[0] + (0.16 + t * 0.14).toFixed(3) + ')';
       ctx.lineWidth = 7;
       ctx.stroke();
-      ctx.strokeStyle = 'rgba(220,238,255,' + (0.55 + t * 0.25).toFixed(3) + ')';
+      ctx.strokeStyle = hr[1] + (0.55 + t * 0.25).toFixed(3) + ')';
       ctx.lineWidth = 2;
       ctx.stroke();
 
@@ -271,6 +280,8 @@ const Render = {
   /* Zaváté úseky. Sníh je matný a nadýchaný — schválně jinak než lesklý led,
      ať se ty dva povrchy nepletou. */
   snow(ctx, g, H, cam, side){
+    const m = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
+    const p = m ? m.sneh : { fill:['rgba(225,235,248,.30)','rgba(248,252,255,.88)'], stin:'rgba(150,175,205,.30)' };
     const b0 = Math.floor((cam - 40) / World.BAND);
     const b1 = Math.floor((cam + H + 40) / World.BAND);
 
@@ -278,7 +289,7 @@ const Render = {
       const band = World.snowBand(b, side);
       if (!band) continue;
 
-      /* nadýchaný okraj — nepravidelná čepice na hraně skály */
+      /* nadýchaný okraj — nepravidelná čepice na hraně skály (na poušti = návěj písku) */
       ctx.beginPath();
       const edge = side < 0 ? -4 : g.W + 4;
       ctx.moveTo(edge, band.y0 - cam);
@@ -290,20 +301,34 @@ const Render = {
       ctx.closePath();
 
       const gr = ctx.createLinearGradient(side < 0 ? 0 : g.W, 0, side < 0 ? g.W * 0.35 : g.W * 0.65, 0);
-      gr.addColorStop(0, 'rgba(225,235,248,.30)');
-      gr.addColorStop(1, 'rgba(248,252,255,.88)');
+      gr.addColorStop(0, p.fill[0]);
+      gr.addColorStop(1, p.fill[1]);
       ctx.fillStyle = gr;
       ctx.fill();
 
-      /* jemné stíny v závěji, ať to není bílá placka */
+      /* jemné stíny v závěji, ať to není placka jedné barvy */
       ctx.save();
       ctx.clip();
-      ctx.fillStyle = 'rgba(150,175,205,.30)';
+      ctx.fillStyle = p.stin;
       for (let y = band.y0; y < band.y1; y += 19){
         const h = hash1(y * 3 + 1);
         ctx.beginPath();
         ctx.ellipse(World.wallAt(y, side) - side * (10 + h * 26), y - cam, 16 + h * 16, 5, 0, 0, 6.283);
         ctx.fill();
+      }
+
+      /* na poušti navíc pár vln v písku, ať je jasné, že se boří, ne že leží sníh */
+      if (m && m.id === 'poust'){
+        ctx.strokeStyle = 'rgba(90,60,25,.35)';
+        ctx.lineWidth = 1.4;
+        for (let y = band.y0; y < band.y1; y += 15){
+          const h = hash1(y * 5 + 3);
+          const x = World.wallAt(y, side) - side * (6 + h * 22);
+          ctx.beginPath();
+          ctx.moveTo(x - side * 10, y - cam);
+          ctx.quadraticCurveTo(x, y - cam + 4, x + side * 10, y - cam);
+          ctx.stroke();
+        }
       }
       ctx.restore();
     }
@@ -354,6 +379,8 @@ const Render = {
 
   /* namrzlé úseky stěny — musí být poznat na první pohled, ne až po pádu */
   ice(ctx, g, H, cam, side){
+    const m = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
+    const p = m ? m.led : { fill:['rgba(150,215,255,.14)','rgba(205,240,255,.60)'], lesk:'rgba(255,255,255,.55)', hrana:'rgba(235,252,255,.95)' };
     const b0 = Math.floor((cam - 40) / World.BAND);
     const b1 = Math.floor((cam + H + 40) / World.BAND);
 
@@ -370,14 +397,14 @@ const Render = {
       ctx.closePath();
 
       const gr = ctx.createLinearGradient(side < 0 ? 0 : g.W, 0, side < 0 ? g.W * 0.4 : g.W * 0.6, 0);
-      gr.addColorStop(0, 'rgba(150,215,255,.14)');
-      gr.addColorStop(1, 'rgba(205,240,255,.60)');
+      gr.addColorStop(0, p.fill[0]);
+      gr.addColorStop(1, p.fill[1]);
       ctx.fillStyle = gr;
       ctx.fill();
 
-      /* lesklé pruhy, ať to vypadá kluzce */
+      /* lesklé pruhy, ať to vypadá kluzce (na poušti = vypálená sklovitá kůra) */
       ctx.clip();
-      ctx.strokeStyle = 'rgba(255,255,255,.55)';
+      ctx.strokeStyle = p.lesk;
       ctx.lineWidth = 2;
       for (let y = band.y0; y < band.y1; y += 26){
         const w = 10 + hash1(y) * 26;
@@ -386,15 +413,29 @@ const Render = {
         ctx.lineTo(World.wallAt(y, side) - side * w, y - cam + 16);
         ctx.stroke();
       }
+
+      /* na poušti navíc síť prasklin ve vysušené kůře */
+      if (m && m.id === 'poust'){
+        ctx.strokeStyle = 'rgba(90,60,20,.35)';
+        ctx.lineWidth = 1;
+        for (let y = band.y0; y < band.y1; y += 22){
+          const x0 = World.wallAt(y, side) - side * (4 + hash1(y * 9) * 20);
+          ctx.beginPath();
+          ctx.moveTo(x0, y - cam);
+          ctx.lineTo(x0 - side * 6, y - cam + 9);
+          ctx.lineTo(x0 + side * 4, y - cam + 16);
+          ctx.stroke();
+        }
+      }
       ctx.restore();
 
-      /* ostrá modrá hrana */
+      /* ostrá hrana */
       ctx.beginPath();
       for (let y = band.y0; y <= band.y1; y += 8){
         const x = World.wallAt(y, side);
         if (y === band.y0) ctx.moveTo(x, y - cam); else ctx.lineTo(x, y - cam);
       }
-      ctx.strokeStyle = 'rgba(235,252,255,.95)';
+      ctx.strokeStyle = p.hrana;
       ctx.lineWidth = 3;
       ctx.stroke();
     }
@@ -410,6 +451,7 @@ const Render = {
   },
 
   spikes(ctx, g, H, cam, side){
+    const m = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
     const b0 = Math.floor((cam - 40) / World.BAND);
     const b1 = Math.floor((cam + H + 40) / World.BAND);
 
@@ -418,6 +460,7 @@ const Render = {
       if (!band) continue;
 
       const material = this.materialTrnu(b);
+      const pal = m ? (material === 'led' ? m.trnLed : m.trnKamen) : null;
       const step = 17;
 
       /* stín pod trny, ať nesplývají se stěnou */
@@ -444,7 +487,14 @@ const Render = {
 
       const stred = World.wallAt(band.y0, side);
       const gr = ctx.createLinearGradient(stred, 0, stred - side * 20, 0);
-      if (material === 'led'){
+      if (pal){
+        gr.addColorStop(0, pal.grad[0]);
+        gr.addColorStop(0.55, pal.grad[1]);
+        gr.addColorStop(1, pal.grad[2]);
+        ctx.fillStyle = gr;
+        ctx.fill();
+        ctx.strokeStyle = pal.okraj;
+      } else if (material === 'led'){
         gr.addColorStop(0, 'rgba(175,225,250,.95)');
         gr.addColorStop(0.55, 'rgba(240,252,255,.98)');
         gr.addColorStop(1, 'rgba(140,200,235,.95)');
@@ -469,9 +519,34 @@ const Render = {
         ctx.moveTo(World.wallAt(y, side) - side * 1, y - cam);
         ctx.lineTo(World.wallAt(y + step * 0.5, side) - side * h, y + step * 0.5 - cam);
       }
-      ctx.strokeStyle = material === 'led' ? 'rgba(255,255,255,.95)' : 'rgba(215,205,185,.55)';
+      ctx.strokeStyle = pal ? pal.zvyrazneni : (material === 'led' ? 'rgba(255,255,255,.95)' : 'rgba(215,205,185,.55)');
       ctx.lineWidth = 1.2;
       ctx.stroke();
+
+      /* poušť: kaktusová žebra dole, zářez u kosti nahoře */
+      if (m && m.id === 'poust'){
+        ctx.beginPath();
+        for (let y = band.y0; y < band.y1; y += step){
+          const h = 12 + hash1(Math.floor(y) * 7 + (side < 0 ? 3 : 91)) * 7;
+          const tipx = World.wallAt(y + step * 0.5, side) - side * h;
+          const tipy = y + step * 0.5 - cam;
+          const basex = World.wallAt(y, side) - side * 1;
+          const basey = y - cam;
+          if (material === 'kamen'){
+            /* žebro kaktusu — krátká čárka od paty ke špičce */
+            ctx.moveTo(basex + (tipx - basex) * 0.3, basey + (tipy - basey) * 0.3);
+            ctx.lineTo(basex + (tipx - basex) * 0.85, basey + (tipy - basey) * 0.85);
+          } else {
+            /* zářez na kosti, poblíž paty */
+            const nx = basex + (tipx - basex) * 0.35, ny = basey + (tipy - basey) * 0.35;
+            ctx.moveTo(nx - side * 3, ny - 2);
+            ctx.lineTo(nx + side * 3, ny + 2);
+          }
+        }
+        ctx.strokeStyle = material === 'kamen' ? 'rgba(15,25,10,.55)' : 'rgba(120,100,70,.6)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
     }
   },
 
@@ -619,14 +694,17 @@ const Render = {
 
   /* ---------- padající kameny ---------- */
   rocks(ctx, g, cam){
+    const m = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
+    const poust = !!(m && m.id === 'poust');
     for (const r of g.rocks){
       const y = r.y - cam;
       if (y < -60 || y > g.H + 60) continue;
 
-      /* Sněhová koule: velká, ostře ohraničená, se stínem a ocasem.
-         Vedle drobných vloček na pozadí musí být na první pohled jasné,
-         že tohle je věc, která tě srazí. */
+      /* Sněhová koule (na poušti: lebka). Velká, ostře ohraničená, se stínem
+         a ocasem. Vedle drobných vloček na pozadí musí být na první pohled
+         jasné, že tohle je věc, která tě srazí. */
       if (r.typ === 'koule'){
+        const pal = m ? m.koule : { grad:['#ffffff','#e8f1fb','#a9bed6'], okraj:'rgba(60,85,120,.85)', hrudky:'rgba(140,165,195,.45)' };
         ctx.save();
         ctx.translate(r.x, y);
 
@@ -639,31 +717,42 @@ const Render = {
         }
 
         const kg = ctx.createRadialGradient(-r.r * 0.35, -r.r * 0.4, r.r * 0.2, 0, 0, r.r);
-        kg.addColorStop(0, '#ffffff');
-        kg.addColorStop(0.65, '#e8f1fb');
-        kg.addColorStop(1, '#a9bed6');
+        kg.addColorStop(0, pal.grad[0]);
+        kg.addColorStop(0.65, pal.grad[1]);
+        kg.addColorStop(1, pal.grad[2]);
         ctx.beginPath();
         ctx.arc(0, 0, r.r, 0, 6.283);
         ctx.fillStyle = kg;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(60,85,120,.85)';
+        ctx.strokeStyle = pal.okraj;
         ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        /* hrudky, ať to není jen kolečko */
-        ctx.fillStyle = 'rgba(140,165,195,.45)';
-        for (let k = 0; k < 3; k++){
-          const a = hash1(k * 91 + r.shape) * 6.283;
-          const d = r.r * (0.25 + hash1(k * 37) * 0.4);
+        if (poust){
+          /* lebka: dva důlky a trojúhelníkový nosní otvor místo náhodných hrudek */
+          ctx.fillStyle = m.koule.socket;
+          ctx.beginPath(); ctx.ellipse(-r.r * 0.32, -r.r * 0.08, r.r * 0.20, r.r * 0.24, 0, 0, 6.283); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(r.r * 0.32, -r.r * 0.08, r.r * 0.20, r.r * 0.24, 0, 0, 6.283); ctx.fill();
           ctx.beginPath();
-          ctx.arc(Math.cos(a) * d, Math.sin(a) * d, r.r * 0.16, 0, 6.283);
-          ctx.fill();
+          ctx.moveTo(0, r.r * 0.10); ctx.lineTo(-r.r * 0.10, r.r * 0.34); ctx.lineTo(r.r * 0.10, r.r * 0.34);
+          ctx.closePath(); ctx.fill();
+        } else {
+          /* hrudky, ať to není jen kolečko */
+          ctx.fillStyle = pal.hrudky;
+          for (let k = 0; k < 3; k++){
+            const a = hash1(k * 91 + r.shape) * 6.283;
+            const d = r.r * (0.25 + hash1(k * 37) * 0.4);
+            ctx.beginPath();
+            ctx.arc(Math.cos(a) * d, Math.sin(a) * d, r.r * 0.16, 0, 6.283);
+            ctx.fill();
+          }
         }
         ctx.restore();
         continue;
       }
 
       if (r.typ === 'rampouch'){
+        const pal = m ? m.rampouch : { grad:['rgba(190,235,255,.95)','rgba(255,255,255,.98)','rgba(120,190,235,.95)'], okraj:'rgba(70,140,190,.8)' };
         ctx.save();
         ctx.translate(r.x, y);
         ctx.beginPath();
@@ -672,18 +761,29 @@ const Render = {
         ctx.lineTo(0, r.dl * 0.6);
         ctx.closePath();
         const ig = ctx.createLinearGradient(-r.r, 0, r.r, 0);
-        ig.addColorStop(0, 'rgba(190,235,255,.95)');
-        ig.addColorStop(0.5, 'rgba(255,255,255,.98)');
-        ig.addColorStop(1, 'rgba(120,190,235,.95)');
+        ig.addColorStop(0, pal.grad[0]);
+        ig.addColorStop(0.5, pal.grad[1]);
+        ig.addColorStop(1, pal.grad[2]);
         ctx.fillStyle = ig;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(70,140,190,.8)';
+        ctx.strokeStyle = pal.okraj;
         ctx.lineWidth = 1.5;
         ctx.stroke();
+
+        if (poust){
+          /* suchá větvička: dvě krátké odbočky */
+          ctx.strokeStyle = m.rampouch.odnoz;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(0, r.dl * 0.15); ctx.lineTo(-r.r * 0.7, -r.dl * 0.05);
+          ctx.moveTo(0, -r.dl * 0.1); ctx.lineTo(r.r * 0.6, -r.dl * 0.3);
+          ctx.stroke();
+        }
         ctx.restore();
         continue;
       }
 
+      const pal = m ? m.kamen : { barva:'#6e6559', okraj:'rgba(20,18,15,.65)', zvyrazneni:'rgba(255,240,215,.16)' };
       ctx.save();
       ctx.translate(r.x, y);
       ctx.rotate(r.rot);
@@ -696,16 +796,30 @@ const Render = {
         if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
       }
       ctx.closePath();
-      ctx.fillStyle = '#6e6559';
+      ctx.fillStyle = pal.barva;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(20,18,15,.65)';
+      ctx.strokeStyle = pal.okraj;
       ctx.lineWidth = 2;
       ctx.stroke();
-      /* odlesk */
-      ctx.beginPath();
-      ctx.arc(-r.r * 0.25, -r.r * 0.3, r.r * 0.3, 0, 6.283);
-      ctx.fillStyle = 'rgba(255,240,215,.16)';
-      ctx.fill();
+
+      if (poust){
+        /* chuchvalec: pár křížících se stébel přes střed místo kamenného odlesku */
+        ctx.strokeStyle = pal.vlakna;
+        ctx.lineWidth = 1;
+        for (let k = 0; k < 4; k++){
+          const a = hash1(k * 53 + r.shape * 11) * Math.PI;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(a) * r.r * 0.75, Math.sin(a) * r.r * 0.75);
+          ctx.lineTo(-Math.cos(a) * r.r * 0.75, -Math.sin(a) * r.r * 0.75);
+          ctx.stroke();
+        }
+      } else {
+        /* odlesk */
+        ctx.beginPath();
+        ctx.arc(-r.r * 0.25, -r.r * 0.3, r.r * 0.3, 0, 6.283);
+        ctx.fillStyle = pal.zvyrazneni;
+        ctx.fill();
+      }
       ctx.restore();
     }
   },
@@ -985,6 +1099,72 @@ const Render = {
       ctx.beginPath(); ctx.arc(x, y, Math.max(0.6, r), 0, 6.283); ctx.fill();
     }
     ctx.globalAlpha = 1;
+    ctx.restore();
+  },
+
+  /* statická ukázka mapy pro obchod — kus stěny, jeden trn, jeden kámen */
+  previewMapa(ctx, w, h, mapId, scale){
+    scale = scale || 1;
+    ctx.clearRect(0, 0, w, h);
+    const m = (typeof Mapy !== 'undefined') ? Mapy.najdi(mapId) : null;
+    if (!m) return;
+    const poust = m.id === 'poust';
+
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.scale(scale, scale);
+
+    /* kus skály na pozadí */
+    const wg = ctx.createLinearGradient(-30, 0, 30, 0);
+    wg.addColorStop(0, m.wall[0][0]);
+    wg.addColorStop(1, m.wall[1][1]);
+    ctx.fillStyle = wg;
+    ctx.beginPath();
+    ctx.moveTo(-32, -30); ctx.lineTo(32, -30); ctx.lineTo(32, 30); ctx.lineTo(-32, 30);
+    ctx.closePath(); ctx.fill();
+
+    /* pruh zaváté/písečné stěny dole */
+    ctx.fillStyle = m.sneh.fill[1];
+    ctx.beginPath();
+    ctx.moveTo(-32, 16); ctx.lineTo(32, 12); ctx.lineTo(32, 30); ctx.lineTo(-32, 30);
+    ctx.closePath(); ctx.fill();
+
+    /* trn vlevo (nízký materiál — kaktus na poušti) */
+    const tp = m.trnKamen;
+    const tg = ctx.createLinearGradient(-14, 0, -2, 0);
+    tg.addColorStop(0, tp.grad[0]); tg.addColorStop(0.5, tp.grad[1]); tg.addColorStop(1, tp.grad[2]);
+    ctx.beginPath();
+    ctx.moveTo(-14, 8); ctx.lineTo(-3, -6); ctx.lineTo(-14, -20);
+    ctx.closePath();
+    ctx.fillStyle = tg; ctx.fill();
+    ctx.strokeStyle = tp.okraj; ctx.lineWidth = 1.4; ctx.stroke();
+    if (poust){
+      ctx.strokeStyle = 'rgba(15,25,10,.55)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-12, 2); ctx.lineTo(-7, -8); ctx.stroke();
+    }
+
+    /* kámen vpravo (nízký typ — chuchvalec na poušti) */
+    const kp = m.kamen;
+    ctx.save();
+    ctx.translate(14, 10);
+    ctx.beginPath();
+    for (let i = 0; i < 7; i++){
+      const a = (i / 7) * 6.283;
+      const rr = 9 * (0.8 + (i % 2) * 0.3);
+      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = kp.barva; ctx.fill();
+    ctx.strokeStyle = kp.okraj; ctx.lineWidth = 1.4; ctx.stroke();
+    if (poust){
+      ctx.strokeStyle = kp.vlakna; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-7, -4); ctx.lineTo(7, 4); ctx.moveTo(-7, 4); ctx.lineTo(7, -4); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(-3, -4, 3, 0, 6.283); ctx.fillStyle = kp.zvyrazneni; ctx.fill();
+    }
+    ctx.restore();
+
     ctx.restore();
   },
 

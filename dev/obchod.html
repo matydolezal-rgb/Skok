@@ -89,6 +89,28 @@ f.onload = function(){
     d.getElementById('shop-tab-skiny').click();
     L.push('zůstatek na kartě skinů odpovídá kartě stop: ' + (txt('shop-balance') === String(zustatekPoStope)));
 
+    /* záložka Maps — třetí kategorie, sdílí stejnou kasu */
+    d.getElementById('shop-tab-mapy').click();
+    L.push('záložka Maps je aktivní: ' + d.getElementById('shop-tab-mapy').classList.contains('tab-on'));
+    L.push('zůstatek na kartě map odpovídá zbytku: ' + (txt('shop-balance') === String(zustatekPoStope)));
+    var mapyKarty = d.querySelectorAll('#shop-grid .skin-card');
+    L.push('počet map: ' + mapyKarty.length + ' (očekáváno 2)');
+    L.push('výchozí mapa (Rock) je Equipped: ' + mapyKarty[0].querySelector('.skin-btn').textContent);
+
+    /* koupíme Desert (druhá karta) */
+    var predKoupiMapy = Number(txt('shop-balance'));
+    mapyKarty[1].querySelector('.skin-btn').click();
+    mapyKarty = d.querySelectorAll('#shop-grid .skin-card');
+    L.push('Desert po koupi equipped: ' + mapyKarty[1].classList.contains('equipped'));
+    var zustatekPoMape = Number(txt('shop-balance'));
+    L.push('zůstatek klesl přesně o cenu mapy (120): ' + (predKoupiMapy - zustatekPoMape === 120));
+
+    /* zoom na mapu */
+    mapyKarty[1].querySelector('canvas').dispatchEvent(new w.MouseEvent('click', { bubbles:true }));
+    L.push('zoom mapy se otevřel: ' + vis('skin-zoom') + ', jméno: "' + txt('skin-zoom-name') + '"');
+    d.getElementById('skin-zoom').dispatchEvent(new w.MouseEvent('click', { bubbles:true }));
+    L.push('zoom mapy se zavřel: ' + !vis('skin-zoom'));
+
     /* rozjet běh, ať se ověří, že se skin i stopa vykreslí ve hře bez pádu */
     d.getElementById('btn-shop-back').click();
     d.getElementById('btn-free').click();

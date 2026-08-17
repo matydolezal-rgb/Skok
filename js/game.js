@@ -83,8 +83,10 @@ const Game = {
     p.vx = -p.side * P.JUMP_VX;
     p.vy = this.odrazVy(p);
     p.face = -p.side;
-    /* ze sněhu odletí místo prachu chomáč sněhu */
-    this.burst(p.x, p.y, snih ? 11 : 7, snih ? '#eaf4ff' : '#9db4cf', snih ? 0.8 : 1);
+    /* ze sněhu odletí místo prachu chomáč sněhu (na jiné mapě jiná barva prachu) */
+    const mp = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
+    const barvaSnih = mp ? mp.prachSnih : '#eaf4ff', barvaProst = mp ? mp.prachSkok : '#9db4cf';
+    this.burst(p.x, p.y, snih ? 11 : 7, snih ? barvaSnih : barvaProst, snih ? 0.8 : 1);
     prehraj('skok');
   },
 
@@ -143,8 +145,9 @@ const Game = {
       p.x = World.wallAt(p.y, p.side) - p.side * P.R;
       /* z ledu odlétávají úlomky, ať je hned poznat, že ujíždíš */
       if (p.onIce && this.rng.chance(dt * 14)){
+        const mp = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
         this.parts.push({ x: p.x, y: p.y + P.R, vx: this.rng.range(-40, 40), vy: -this.rng.range(10, 60),
-                          life: 0.5, max: 0.5, r: this.rng.range(1, 2.4), color: '#bfe9ff' });
+                          life: 0.5, max: 0.5, r: this.rng.range(1, 2.4), color: mp ? mp.ulomky : '#bfe9ff' });
       }
       /* sjel jsi do trnů — stěna tě odhodí */
       if (World.spikeAt(p.y, p.side)) this.bounceOffSpikes(p);
@@ -237,9 +240,10 @@ const Game = {
     p.squash = 1;
 
     const povrch = World.iceAt(p.y, side) ? 'led' : World.snowAt(p.y, side) ? 'snih' : 'skala';
+    const mp = (typeof Mapy !== 'undefined') ? Mapy.aktivni() : null;
     this.burst(p.x, p.y + P.R * 0.5,
                povrch === 'snih' ? 9 : 6,
-               povrch === 'skala' ? '#7d8ea3' : '#dff0ff',
+               povrch === 'skala' ? (mp ? mp.dopadSkala : '#7d8ea3') : (mp ? mp.dopadMokro : '#dff0ff'),
                povrch === 'snih' ? 0.9 : 0.7);
     prehraj('dopad', povrch);
   },

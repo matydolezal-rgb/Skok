@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>poust-shot</title>
+<style>body{margin:0}iframe{border:0;display:block}</style>
+</head><body>
+<iframe id="f" src="../index.html" width="420" height="820"></iframe>
+<script>
+document.getElementById('f').onload = function(){
+  var d = this.contentDocument, w = this.contentWindow;
+  /* Mapu nastavíme přímo přes localStorage klíče uvnitř iframe okna (ne
+     přes w.Mapy — konstanty modulů nejsou dostupné přes window), ať ji
+     hra hned příští volání Mapy.vybrany() najde. */
+  try {
+    w.localStorage.setItem('skok.mapy.vlastni', '["skala","poust"]');
+    w.localStorage.setItem('skok.mapy.vybrany', 'poust');
+  } catch(e){}
+  d.getElementById('btn-free').click();
+  var cv = d.getElementById('cv');
+  var n = 0;
+  var t = setInterval(function(){
+    cv.dispatchEvent(new w.PointerEvent('pointerdown', { bubbles:true }));
+    n++;
+    if (n > 10) clearInterval(t);
+  }, 45);
+};
+</script>
+</body></html>
