@@ -40,13 +40,22 @@ const World = {
 
   BAND: 250,
 
-  bandHasSpikes(band, side){
+  /* holý los, jestli by pásmo mělo trny — bez ohledu na okolí */
+  losTrnu(band, side){
     if (band > -2) return false;                 // start je čistý
-    const key = band * 7919 + (side < 0 ? 13 : 5711) + this.seedNum;
-    const h = hash1(key);
-    const other = hash1(band * 7919 + (side < 0 ? 5711 : 13) + this.seedNum);
-    if (h >= 0.26) return false;
-    if (other < 0.26 && other < h) return false; // druhá strana má přednost
+    return hash1(band * 7919 + (side < 0 ? 13 : 5711) + this.seedNum) < 0.26;
+  },
+
+  /* Trny nesmí být proti sobě ani v sousedním pásmu. Odraz od trnů totiž
+     míří vzhůru — mezi dvěma řadami proti sobě by šlo pinkat donekonečna
+     a hráč by o běh přišel bez možnosti to zachránit.
+     Přednost má levá stěna, ať je rozhodnutí jednoznačné. */
+  bandHasSpikes(band, side){
+    if (!this.losTrnu(band, side)) return false;
+    if (side < 0) return true;
+    for (let d = -1; d <= 1; d++){
+      if (this.losTrnu(band + d, -1)) return false;
+    }
     return true;
   },
 

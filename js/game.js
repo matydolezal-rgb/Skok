@@ -37,6 +37,7 @@ const Game = {
       side: -1,            // které stěny se drží
       state: 'cling',      // 'cling' | 'air'
       stun: 0,
+      imunita: 0,          // po zásahu chvíli nejde dostat další ránu
       squash: 0,           // deformace při dopadu, 0–1
       face: 1,
     };
@@ -101,6 +102,7 @@ const Game = {
     const p = this.player;
 
     if (p.stun > 0) p.stun -= dt;
+    if (p.imunita > 0) p.imunita -= dt;
     if (p.squash > 0) p.squash = Math.max(0, p.squash - dt * 4);
 
     if (p.state === 'cling'){
@@ -246,7 +248,7 @@ const Game = {
     if (this.started){
       this.rockTimer -= dt;
       if (this.rockTimer <= 0){
-        this.rockTimer = Math.max(0.5, 1.7 - this.height * 0.0048) * this.rng.range(0.7, 1.3);
+        this.rockTimer = Math.max(0.8, 1.7 - this.height * 0.0048) * this.rng.range(0.7, 1.3);
         this.spawnRock();
       }
     }
@@ -268,8 +270,11 @@ const Game = {
 
       /* zásah hráče */
       const dx = r.x - p.x, dy = r.y - p.y;
-      if (dx*dx + dy*dy < (r.r + P.R) * (r.r + P.R) && p.stun <= 0){
+      /* Po ráně chvíli neprůstřelný. Bez toho tě ve výšce, kde padá něco
+         každou půlvteřinu, série zásahů semele bez šance to zachránit. */
+      if (dx*dx + dy*dy < (r.r + P.R) * (r.r + P.R) && p.stun <= 0 && p.imunita <= 0){
         const koule = r.typ === 'koule';
+        p.imunita = 0.8;
         p.state = 'air';
         p.vx = (p.x < r.x ? -1 : 1) * (koule ? 240 : 320);
         p.vy = koule ? 80 : 120;

@@ -32,6 +32,7 @@ function vyskej(metry, seed){
   Game.reset(W, H, seed);
   var puvodni = Game.waterSpeed;
   Game.waterSpeed = function(){ return 0; };
+  Game.waterY = 1e9;                 /* hladina nesmí robota cestou utopit */
   for (var i = 0; i < 120*600 && Game.height < metry && !Game.over; i++){
     var p = Game.player;
     if (p.state === 'cling' && p.stun <= 0){
@@ -55,11 +56,16 @@ function najdiTrny(odMetru, doMetru, seed){
   return false;
 }
 
-najdiTrny(20, 60, 'trny-kamen');
-Render.draw(document.getElementById('c1').getContext('2d'), Game, 0);
+/* jak hra vypadá hodně vysoko */
+vyskej(300, 'vysoko-300');
+Game.waterY = Game.player.y + 520;
+Game.update(STEP);
+Render.draw(document.getElementById('c1').getContext('2d'), Game, 250);
 
-najdiTrny(85, 135, 'trny-led');
-Render.draw(document.getElementById('c2').getContext('2d'), Game, 70);
+vyskej(800, 'vysoko-800');
+Game.waterY = Game.player.y + 600;
+Game.update(STEP);
+Render.draw(document.getElementById('c2').getContext('2d'), Game, 250);
 
 /* třetí snímek: značky kamarádů v roklině */
 vyskej(96, 'znacky');

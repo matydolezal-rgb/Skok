@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>vysoky</title></head><body>
+<pre id="out">běží…</pre>
+<script src="../js/rng.js"></script>
+<script src="../js/world.js"></script>
+<script src="../js/game.js"></script>
+<script>
+/* Kontrola vysokých pater. Voda je vypnutá, ať se robot dostane hodně vysoko —
+   jde nám o svět a fyziku, ne o to, jak dlouho vydrží. */
+
+var STEP = 1/120, W = 420, H = 800, L = [], chyby = [];
+
+function predictLanding(){
+  var p = Game.player, side = p.side;
+  var x = p.x, y = p.y, vx = -side * P.JUMP_VX, vy = P.JUMP_VY, dt = STEP;
+  for (var i = 0; i < 400; i++){
+    vy += P.GRAVITY*dt; x += vx*dt; y += vy*dt;
+    if (side < 0 ? (x + P.R >= World.rightWall(y)) : (x - P.R <= World.leftWall(y))) return { y:y, side:-side };
+  }
+  return null;
+}
+
+/* ---------- 1) dlouhý výstup: drží fyzika i ve velké výšce? ---------- */
+function dlouhyVystup(seed, cil){
+  Game.reset(W, H, seed);
+  /* Voda nestoupá, ale pořád zabíjí — proto ji odsuneme hluboko dolů.
+     Bez toho běh skončí utopením a všechno další měření je nesmysl. */
+  var puvodniVoda = Game.waterSpeed;
+  Game.waterSpeed = function(){ return 0; };
+  Game.waterY = 1e9;
+  var kroky = 0, zaseknuti = 0, vzduchOd = 0, typy = { kamen:0, rampouch:0, koule:0 };
+  var puvodniSpawn = Game.spawnRock.bind(Game);
+  Game.spawnRock = function(){ puvodniSpawn(); var r = Game.rocks[Game.rocks.length-1]; if (r) typy[r.typ]++; };
+
+  while (Game.height < cil && kroky < 120 * 1200 && !Game.over){
+    var p = Game.player;
+    if (p.state === 'cling' && p.stun <= 0){
+      var land = predictLanding();
+      if (!(land && World.spikeAt(land.y, land.side))) Game.jump();
+    }
+    Game.update(STEP);
+    kroky++;
+
+    if (!isFinite(p.x) || !isFinite(p.y)) { chyby.push(seed + ': NaN v ' + Game.height.toFixed(0) + ' m'); break; }
+    if (p.x < -60 || p.x > W + 60) { chyby.push(seed + ': hráč mimo roklinu v ' + Game.height.toFixed(0) + ' m'); break; }
+    if (Game.parts.length > 400) { chyby.push(seed + ': přetekly částice (' + Game.parts.length + ')'); break; }
+    if (Game.rocks.length > 60)  { chyby.push(seed + ': přeteklo padající kamení (' + Game.rocks.length + ')'); break; }
+
+    /* zasekl se? (dlouho ve vzduchu bez zachycení) */
+    if (p.state === 'air'){ vzduchOd += STEP; if (vzduchOd > 6){ zaseknuti++; vzduchOd = 0; } }
+    else vzduchOd = 0;
+  }
+
+  Game.waterSpeed = puvodniVoda;
+  Game.spawnRock = puvodniSpawn;
+  if (Game.height < cil) chyby.push(seed + ': nedolezl do ' + cil + ' m (jen ' + Game.height.toFixed(0) + ')');
+  if (zaseknuti) chyby.push(seed + ': ' + zaseknuti + '× uvízl ve vzduchu déle než 6 s');
+  return { cas: (kroky*STEP).toFixed(0), typy: typy, vyska: Game.height.toFixed(0) };
+}
+
+/* ---------- 0) co hráče zdržuje? vypínáme jednu věc po druhé ---------- */
+/* všechny varianty musí běžet na STEJNÉ roklině, jinak se nedají porovnat */
+var SEED_IZOLACE = 'kontrola-3';
+
+function izolace(popis, pred, po){
+  var predchozi = chyby.length;
+  pred();
+  var r = dlouhyVystup(SEED_IZOLACE, 400);
+  po();
+  var novych = chyby.length - predchozi;
+  chyby.length = predchozi;         // tyhle chyby do závěru nepočítáme
+  L.push('  ' + popis.padEnd(22) + ' → dolezl ' + r.vyska + ' m' +
+         (novych ? '  (' + novych + ' potíží)' : '  (čisté)'));
+}
+
+/* ---------- 0b) rozbor jednoho zaseknutí ---------- */
+function rozborZaseknuti(seed){
+  Game.reset(W, H, seed);
+  var puvVoda = Game.waterSpeed;
+  Game.waterSpeed = function(){ return 0; };
+  Game.waterY = 1e9;
+  var puvTrny = Game.bounceOffSpikes.bind(Game);
+  var trnyPocet = 0;
+  Game.bounceOffSpikes = function(p){ trnyPocet++; return puvTrny(p); };
+
+  var vzduch = 0, zacatekY = 0, trnyNaStart = 0, nejdelsi = null, dotyky = 0;
+  var lastStun = 0;
+  for (var i = 0; i < 120 * 300 && !Game.over; i++){
+    var p = Game.player;
+    if (p.state === 'cling' && p.stun <= 0){
+      var land = predictLanding();
+      if (!(land && World.spikeAt(land.y, land.side))) Game.jump();
+    }
+    var predState = p.state;
+    Game.update(STEP);
+
+    if (p.state === 'air'){
+      if (predState === 'cling'){ vzduch = 0; zacatekY = p.y; trnyNaStart = trnyPocet; dotyky = 0; }
+      vzduch += STEP;
+      if (p.stun > lastStun) dotyky++;
+      if (!nejdelsi || vzduch > nejdelsi.delka){
+        nejdelsi = { delka: vzduch, odY: zacatekY, doY: p.y,
+                     trny: trnyPocet - trnyNaStart, rany: dotyky,
+                     vyska: (-zacatekY / P.METER).toFixed(0) };
+      }
+    }
+    lastStun = p.stun;
+  }
+  Game.waterSpeed = puvVoda;
+  Game.bounceOffSpikes = puvTrny;
+  return nejdelsi;
+}
+
+var z = rozborZaseknuti('kontrola-3');
+L.push('Nejdelší zaseknutí ve vzduchu (roklina kontrola-3):');
+L.push('  trvalo ' + z.delka.toFixed(1) + ' s, začalo v ' + z.vyska + ' m, ' +
+       'propad ' + Math.round(z.doY - z.odY) + ' px, ' +
+       'odrazů od trnů ' + z.trny + ', zásahů ' + z.rany);
+L.push('');
+
+L.push('Co hráče zastavuje (výstup do 400 m, voda vypnutá):');
+var puvSpawn = Game.spawnRock, puvSpike = World.spikeAt, puvIce = World.iceAt, puvSnow = World.snowAt;
+izolace('vše zapnuté',      function(){}, function(){});
+izolace('bez padajících věcí', function(){ Game.spawnRock = function(){}; }, function(){ Game.spawnRock = puvSpawn; });
+izolace('bez trnů',          function(){ World.spikeAt = function(){ return false; }; }, function(){ World.spikeAt = puvSpike; });
+izolace('bez ledu a sněhu',  function(){ World.iceAt = function(){ return false; }; World.snowAt = function(){ return false; }; },
+                             function(){ World.iceAt = puvIce; World.snowAt = puvSnow; });
+L.push('');
+
+var r1 = dlouhyVystup('vysoky-1', 800);
+L.push('Výstup do 800 m: ' + r1.cas + ' s hraní, dosaženo ' + r1.vyska + ' m');
+L.push('  padající věci — kameny ' + r1.typy.kamen + ', rampouchy ' + r1.typy.rampouch + ', koule ' + r1.typy.koule);
+
+/* ---------- 2) jak vypadá svět v jednotlivých výškách ---------- */
+World.init(W, 'vysoky-1');
+L.push('');
+L.push('výška      průrva      trny     led     sníh');
+[10, 50, 90, 130, 180, 260, 400, 600, 800].forEach(function(m){
+  var y = -m * P.METER;
+  var b0 = Math.floor(y / World.BAND) - 12, b1 = b0 + 24;
+  var trny = 0, led = 0, snih = 0, celkem = 0, minG = 1e9, maxG = 0;
+  for (var b = b0; b <= b1; b++){
+    [-1, 1].forEach(function(s){
+      celkem++;
+      if (World.spikeBand(b, s)) trny++;
+      if (World.iceBand(b, s))   led++;
+      if (World.snowBand(b, s))  snih++;
+    });
+    var g = 2 * World.halfGap(b * World.BAND);
+    if (g < minG) minG = g; if (g > maxG) maxG = g;
+  }
+  function pct(n){ return String(Math.round(n / celkem * 100) + ' %').padStart(6); }
+  L.push(String(m + ' m').padStart(6) + '   ' +
+         (Math.round(minG) + '–' + Math.round(maxG) + ' px').padStart(9) + '  ' +
+         pct(trny) + '  ' + pct(led) + '  ' + pct(snih));
+});
+
+/* ---------- 3) je vždycky kudy? ---------- */
+var obeStrany = 0, kontrol = 0;
+World.init(W, 'vysoky-1');
+for (var b = -2000; b < 0; b++){
+  kontrol++;
+  if (World.bandHasSpikes(b, -1) && World.bandHasSpikes(b, 1)) obeStrany++;
+}
+L.push('');
+L.push('pásma s trny na obou stěnách naráz: ' + obeStrany + ' z ' + kontrol + ' (musí být 0)');
+if (obeStrany) chyby.push('někde jsou trny na obou stranách — nedá se projít');
+
+/* ---------- 4) strop rychlosti vody ---------- */
+Game.reset(W, H, 'voda');
+var rychlosti = [0, 100, 200, 400, 800, 2000].map(function(m){
+  Game.height = m; return m + ' m → ' + Math.round(Game.waterSpeed()) + ' px/s';
+});
+L.push('rychlost vody: ' + rychlosti.join(', '));
+
+/* ---------- 5) rozdíly mezi seedy ---------- */
+L.push('');
+var vysledky = [];
+for (var i = 0; i < 5; i++){
+  chyby.length; var r = dlouhyVystup('kontrola-' + i, 400);
+  vysledky.push(r.vyska);
+}
+L.push('pět různých roklin do 400 m: ' + vysledky.join(', ') + ' m');
+
+L.push('');
+L.push(chyby.length ? 'NALEZENÉ CHYBY:\n' + chyby.join('\n') : 'ŽÁDNÉ CHYBY');
+document.getElementById('out').textContent = L.join('\n');
+</script>
+</body></html>
