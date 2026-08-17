@@ -107,7 +107,7 @@
 
     const best = getBest();
     ui.freeNote.textContent = best ? 'practice — your record ' + best + ' m' : 'practise as much as you like';
-    ui.gemTotal.textContent = getGems();
+    ui.gemTotal.textContent = Skiny.zustatek(getGems());
     show('menu');
   }
 

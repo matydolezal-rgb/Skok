@@ -35,6 +35,12 @@ f.onload = function(){
     L.push('po koupi je liška equipped: ' + karty[1].classList.contains('equipped'));
     L.push('zůstatek po koupi (500-20=480): ' + txt('shop-balance'));
 
+    /* menu musí po útratě ukazovat zůstatek, ne celkem nasbírané */
+    d.getElementById('btn-shop-back').click();
+    L.push('menu po útratě ukazuje zůstatek (480, ne 500): ' + txt('gem-total'));
+    d.getElementById('btn-shop').click();
+    karty = d.querySelectorAll('#shop-grid .skin-card');
+
     /* přepneme zpátky na default */
     karty[0].querySelector('.skin-btn').click();
     karty = d.querySelectorAll('#shop-grid .skin-card');
