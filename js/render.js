@@ -463,6 +463,12 @@ const Render = {
       const pal = m ? (material === 'led' ? m.trnLed : m.trnKamen) : null;
       const step = 17;
 
+      /* poušť + nízké pásmo: kulaté kaktusy s drobnými trny, ne dlouhé hroty */
+      if (m && m.id === 'poust' && material === 'kamen'){
+        this.cactusBand(ctx, band, step, cam, side, pal);
+        continue;
+      }
+
       /* stín pod trny, ať nesplývají se stěnou */
       ctx.beginPath();
       for (let y = band.y0; y < band.y1; y += step){
@@ -523,7 +529,7 @@ const Render = {
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
-      /* poušť: kaktusová žebra dole, zářez u kosti nahoře */
+      /* poušť, vysoké pásmo: zářez na kosti poblíž paty */
       if (m && m.id === 'poust'){
         ctx.beginPath();
         for (let y = band.y0; y < band.y1; y += step){
@@ -532,19 +538,55 @@ const Render = {
           const tipy = y + step * 0.5 - cam;
           const basex = World.wallAt(y, side) - side * 1;
           const basey = y - cam;
-          if (material === 'kamen'){
-            /* žebro kaktusu — krátká čárka od paty ke špičce */
-            ctx.moveTo(basex + (tipx - basex) * 0.3, basey + (tipy - basey) * 0.3);
-            ctx.lineTo(basex + (tipx - basex) * 0.85, basey + (tipy - basey) * 0.85);
-          } else {
-            /* zářez na kosti, poblíž paty */
-            const nx = basex + (tipx - basex) * 0.35, ny = basey + (tipy - basey) * 0.35;
-            ctx.moveTo(nx - side * 3, ny - 2);
-            ctx.lineTo(nx + side * 3, ny + 2);
-          }
+          const nx = basex + (tipx - basex) * 0.35, ny = basey + (tipy - basey) * 0.35;
+          ctx.moveTo(nx - side * 3, ny - 2);
+          ctx.lineTo(nx + side * 3, ny + 2);
         }
-        ctx.strokeStyle = material === 'kamen' ? 'rgba(15,25,10,.55)' : 'rgba(120,100,70,.6)';
+        ctx.strokeStyle = 'rgba(120,100,70,.6)';
         ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+  },
+
+  /* kulaté kaktusy s viditelnými drobnými trny — nakreslené jednotlivě,
+     ne jako jeden dlouhý hrot, ať jsou k poznání malé a baculaté */
+  cactusBand(ctx, band, step, cam, side, pal){
+    for (let y = band.y0; y < band.y1; y += step){
+      /* kratší než skalní/kostěné trny — jen malý pahýlek od stěny */
+      const h = 7 + hash1(Math.floor(y) * 7 + (side < 0 ? 3 : 91)) * 5;
+      const wallY = y + step * 0.5;
+      const baseX = World.wallAt(wallY, side) - side * 1;
+      const baseY = wallY - cam;
+      const bodyX = baseX - side * h * 0.7;
+
+      /* stín, ať nesplývá se stěnou */
+      ctx.beginPath();
+      ctx.ellipse(bodyX, baseY + 1, h * 0.55, h * 0.62, 0, 0, 6.283);
+      ctx.fillStyle = 'rgba(0,0,0,.35)';
+      ctx.fill();
+
+      /* kulaté tělo */
+      const bg = ctx.createRadialGradient(bodyX - side * h * 0.2, baseY - h * 0.25, 1, bodyX, baseY, h * 0.65);
+      bg.addColorStop(0, pal.grad[1]);
+      bg.addColorStop(1, pal.grad[0]);
+      ctx.beginPath();
+      ctx.ellipse(bodyX, baseY, h * 0.48, h * 0.58, 0, 0, 6.283);
+      ctx.fillStyle = bg;
+      ctx.fill();
+      ctx.strokeStyle = pal.okraj;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      /* pár drobných trnů okolo, krátké a dobře vidět */
+      ctx.strokeStyle = pal.zvyrazneni;
+      ctx.lineWidth = 1;
+      for (let k = 0; k < 5; k++){
+        const a = (k / 5) * 6.283 + hash1(y * 3 + k * 17) * 0.5;
+        const r0 = h * 0.44, r1 = h * 0.66;
+        ctx.beginPath();
+        ctx.moveTo(bodyX + Math.cos(a) * r0, baseY + Math.sin(a) * r0 * 0.85);
+        ctx.lineTo(bodyX + Math.cos(a) * r1, baseY + Math.sin(a) * r1 * 0.85);
         ctx.stroke();
       }
     }
@@ -1129,18 +1171,30 @@ const Render = {
     ctx.moveTo(-32, 16); ctx.lineTo(32, 12); ctx.lineTo(32, 30); ctx.lineTo(-32, 30);
     ctx.closePath(); ctx.fill();
 
-    /* trn vlevo (nízký materiál — kaktus na poušti) */
+    /* trn vlevo (nízký materiál — kulatý kaktus na poušti, jinak hrot) */
     const tp = m.trnKamen;
-    const tg = ctx.createLinearGradient(-14, 0, -2, 0);
-    tg.addColorStop(0, tp.grad[0]); tg.addColorStop(0.5, tp.grad[1]); tg.addColorStop(1, tp.grad[2]);
-    ctx.beginPath();
-    ctx.moveTo(-14, 8); ctx.lineTo(-3, -6); ctx.lineTo(-14, -20);
-    ctx.closePath();
-    ctx.fillStyle = tg; ctx.fill();
-    ctx.strokeStyle = tp.okraj; ctx.lineWidth = 1.4; ctx.stroke();
     if (poust){
-      ctx.strokeStyle = 'rgba(15,25,10,.55)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(-12, 2); ctx.lineTo(-7, -8); ctx.stroke();
+      const cg = ctx.createRadialGradient(-11, -6, 1, -9, -2, 9);
+      cg.addColorStop(0, tp.grad[1]); cg.addColorStop(1, tp.grad[0]);
+      ctx.beginPath(); ctx.ellipse(-9, -2, 7, 8.4, 0, 0, 6.283);
+      ctx.fillStyle = cg; ctx.fill();
+      ctx.strokeStyle = tp.okraj; ctx.lineWidth = 1.4; ctx.stroke();
+      ctx.strokeStyle = tp.zvyrazneni; ctx.lineWidth = 1;
+      for (let k = 0; k < 5; k++){
+        const a = (k / 5) * 6.283;
+        ctx.beginPath();
+        ctx.moveTo(-9 + Math.cos(a) * 6.4, -2 + Math.sin(a) * 5.6);
+        ctx.lineTo(-9 + Math.cos(a) * 9.6, -2 + Math.sin(a) * 8.4);
+        ctx.stroke();
+      }
+    } else {
+      const tg = ctx.createLinearGradient(-14, 0, -2, 0);
+      tg.addColorStop(0, tp.grad[0]); tg.addColorStop(0.5, tp.grad[1]); tg.addColorStop(1, tp.grad[2]);
+      ctx.beginPath();
+      ctx.moveTo(-14, 8); ctx.lineTo(-3, -6); ctx.lineTo(-14, -20);
+      ctx.closePath();
+      ctx.fillStyle = tg; ctx.fill();
+      ctx.strokeStyle = tp.okraj; ctx.lineWidth = 1.4; ctx.stroke();
     }
 
     /* kámen vpravo (nízký typ — chuchvalec na poušti) */
