@@ -37,28 +37,26 @@ function vyskej(metry, seed){
   Game.waterSpeed = puvodni;
 }
 
-/* 1 — ledová část */
-vyskej(150, 'ukazka-led');
-Render.draw(document.getElementById('c1').getContext('2d'), Game, 120);
+/* hledá výhled, kde jsou zrovna vidět trny — jinak by snímek nic neukázal */
+function najdiTrny(odMetru, doMetru, seed){
+  for (var m = odMetru; m < doMetru; m += 8){
+    vyskej(m, seed);
+    var cam = Game.camY;
+    for (var b = Math.floor(cam/World.BAND); b <= Math.floor((cam+H)/World.BAND); b++){
+      if (World.spikeBand(b, -1) || World.spikeBand(b, 1)) return true;
+    }
+  }
+  return false;
+}
 
-/* 2 — sněžná část se sněhovými koulemi */
-vyskej(235, 'ukazka-snih');
-Game.rocks.length = 0;
-for (var k = 0; k < 3; k++){ Game.spawnRock(); }
-Game.rocks.forEach(function(r, i){
-  r.typ = 'koule'; r.r = 17 + i * 3;
-  r.y = Game.camY + 140 + i * 230;
-  r.x = World.leftWall(r.y) + (World.rightWall(r.y) - World.leftWall(r.y)) * (0.3 + i * 0.2);
-});
-Game.update(STEP);
-Render.draw(document.getElementById('c2').getContext('2d'), Game, 120);
+najdiTrny(20, 60, 'trny-kamen');
+Render.draw(document.getElementById('c1').getContext('2d'), Game, 0);
 
-/* 3 — vstup do sněžné části: nápis a voda v zádech */
-vyskej(205, 'ukazka-snih2');
-Game.zonaText = 'SNÍH'; Game.zonaCas = 1.6;
-Game.waterY = Game.player.y + 430;
-Game.update(STEP);
-Render.draw(document.getElementById('c3').getContext('2d'), Game, 120);
+najdiTrny(85, 135, 'trny-led');
+Render.draw(document.getElementById('c2').getContext('2d'), Game, 70);
+
+najdiTrny(155, 210, 'trny-snih');
+Render.draw(document.getElementById('c3').getContext('2d'), Game, 70);
 
 document.title = 'hotovo';
 </script>

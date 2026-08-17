@@ -398,27 +398,77 @@ const Render = {
     }
   },
 
+  /* Z čeho jsou trny v daném pásmu. Čistě vzhled — chovají se všude stejně.
+     Dole kámen, v ledové části obojí, ve sněhu už jen led. */
+  materialTrnu(band){
+    const y = band * World.BAND;
+    if (y <= World.snowStartY()) return 'led';
+    if (y <= World.iceStartY())  return hash1(band * 8191 + World.seedNum) < 0.5 ? 'led' : 'kamen';
+    return 'kamen';
+  },
+
   spikes(ctx, g, H, cam, side){
     const b0 = Math.floor((cam - 40) / World.BAND);
     const b1 = Math.floor((cam + H + 40) / World.BAND);
+
     for (let b = b0; b <= b1; b++){
       const band = World.spikeBand(b, side);
       if (!band) continue;
 
+      const material = this.materialTrnu(b);
       const step = 17;
+
+      /* stín pod trny, ať nesplývají se stěnou */
       ctx.beginPath();
       for (let y = band.y0; y < band.y1; y += step){
-        const x  = World.wallAt(y, side);
-        const xm = World.wallAt(y + step * 0.5, side);
-        ctx.moveTo(x - side * 1, y - cam);
-        ctx.lineTo(xm - side * 15, y + step * 0.5 - cam);
+        ctx.moveTo(World.wallAt(y, side) - side * 1, y - cam + 2);
+        ctx.lineTo(World.wallAt(y + step * 0.5, side) - side * 16, y + step * 0.5 - cam + 3);
+        ctx.lineTo(World.wallAt(y + step, side) - side * 1, y + step - cam + 2);
+        ctx.closePath();
+      }
+      ctx.fillStyle = 'rgba(0,0,0,.45)';
+      ctx.fill();
+
+      /* samotné trny */
+      ctx.beginPath();
+      for (let y = band.y0; y < band.y1; y += step){
+        /* nepravidelná délka, ať to nevypadá jako pila ze škatulky */
+        const h = 12 + hash1(Math.floor(y) * 7 + (side < 0 ? 3 : 91)) * 7;
+        ctx.moveTo(World.wallAt(y, side) - side * 1, y - cam);
+        ctx.lineTo(World.wallAt(y + step * 0.5, side) - side * h, y + step * 0.5 - cam);
         ctx.lineTo(World.wallAt(y + step, side) - side * 1, y + step - cam);
         ctx.closePath();
       }
-      ctx.fillStyle = '#c2566c';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,190,205,.55)';
-      ctx.lineWidth = 1;
+
+      const stred = World.wallAt(band.y0, side);
+      const gr = ctx.createLinearGradient(stred, 0, stred - side * 20, 0);
+      if (material === 'led'){
+        gr.addColorStop(0, 'rgba(175,225,250,.95)');
+        gr.addColorStop(0.55, 'rgba(240,252,255,.98)');
+        gr.addColorStop(1, 'rgba(140,200,235,.95)');
+        ctx.fillStyle = gr;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(90,160,205,.9)';
+      } else {
+        gr.addColorStop(0, '#7f7a6e');
+        gr.addColorStop(0.5, '#9c968a');
+        gr.addColorStop(1, '#575349');
+        ctx.fillStyle = gr;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(28,25,20,.85)';
+      }
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+
+      /* světlo na hraně každého hrotu */
+      ctx.beginPath();
+      for (let y = band.y0; y < band.y1; y += step){
+        const h = 12 + hash1(Math.floor(y) * 7 + (side < 0 ? 3 : 91)) * 7;
+        ctx.moveTo(World.wallAt(y, side) - side * 1, y - cam);
+        ctx.lineTo(World.wallAt(y + step * 0.5, side) - side * h, y + step * 0.5 - cam);
+      }
+      ctx.strokeStyle = material === 'led' ? 'rgba(255,255,255,.95)' : 'rgba(215,205,185,.55)';
+      ctx.lineWidth = 1.2;
       ctx.stroke();
     }
   },
