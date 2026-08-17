@@ -809,39 +809,80 @@ const Render = {
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'rgba(25,30,40,.55)';
 
-    if (id === 'liska'){                          // liška — špičaté uši, bílý čenich
+    if (id === 'liska'){                          // liška — dvoubarevné uši, čenich, límeček
       ctx.fillStyle = '#e8834a';
       ctx.beginPath(); ctx.moveTo(faceX - 10, -R * 0.98); ctx.lineTo(faceX - 15, -R * 1.42); ctx.lineTo(faceX - 3, -R * 1.05); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(faceX + 10, -R * 0.98); ctx.lineTo(faceX + 15, -R * 1.42); ctx.lineTo(faceX + 3, -R * 1.05); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#fdf7ec';
-      ctx.beginPath(); ctx.ellipse(faceX + 3, -R * 0.58, R * 0.20, R * 0.15, 0, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#2a2116';                  // tmavé špičky uší
+      ctx.beginPath(); ctx.moveTo(faceX - 13.5, -R * 1.20); ctx.lineTo(faceX - 15, -R * 1.42); ctx.lineTo(faceX - 10.5, -R * 1.24); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(faceX + 13.5, -R * 1.20); ctx.lineTo(faceX + 15, -R * 1.42); ctx.lineTo(faceX + 10.5, -R * 1.24); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#fdf7ec';                  // bílý čenich a límeček na hrudi
+      ctx.beginPath(); ctx.ellipse(faceX + 3, -R * 0.58, R * 0.22, R * 0.16, 0, 0, 6.283); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0, R * 0.28, R * 0.30, R * 0.38, 0, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#2a2116';                  // černý čumáček
+      ctx.beginPath(); ctx.arc(faceX + 8, -R * 0.58, 1.6, 0, 6.283); ctx.fill();
 
-    } else if (id === 'tucnak'){                  // tučňák — oranžový zobák, bílé bříško
+    } else if (id === 'tucnak'){                  // tučňák — zobák, bříško, křidélka, žluté obočí
       ctx.fillStyle = '#e0a83d';
-      ctx.beginPath(); ctx.moveTo(faceX - 2, -R * 0.66); ctx.lineTo(faceX + 9, -R * 0.60); ctx.lineTo(faceX - 2, -R * 0.50); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(faceX - 2, -R * 0.68); ctx.lineTo(faceX + 10, -R * 0.60); ctx.lineTo(faceX - 2, -R * 0.50); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#a87a20'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(faceX - 1, -R * 0.60); ctx.lineTo(faceX + 6, -R * 0.60); ctx.stroke();
+      ctx.fillStyle = '#f4c860';                  // žluté chomáčky nad okem
+      ctx.beginPath(); ctx.moveTo(faceX - 14, -R * 1.02); ctx.quadraticCurveTo(faceX - 8, -R * 1.20, faceX - 2, -R * 1.06); ctx.quadraticCurveTo(faceX - 9, -R * 1.02, faceX - 14, -R * 1.02); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#fdf7ec';
       ctx.beginPath(); ctx.ellipse(0, R * 0.35, R * 0.42, R * 0.55, 0, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#14171c';                  // křidélka po stranách těla
+      ctx.beginPath(); ctx.ellipse(-R * 0.72, R * 0.10, R * 0.16, R * 0.42, 0.35, 0, 6.283); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(R * 0.72, R * 0.10, R * 0.16, R * 0.42, -0.35, 0, 6.283); ctx.fill();
 
-    } else if (id === 'policajt'){                // policista — čepice s kšiltem a odznakem
+    } else if (id === 'policajt'){                // policista — čepice, odznak, kravata, opasek
       ctx.fillStyle = '#1c355c';
       ctx.beginPath(); ctx.arc(faceX, -R * 1.02, R * 0.50, Math.PI, 0); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#15294a';
       ctx.beginPath(); ctx.ellipse(faceX, -R * 1.02, R * 0.52, R * 0.14, 0, 0, 6.283); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#ffd070';
       ctx.beginPath(); ctx.arc(faceX, -R * 1.04, R * 0.09, 0, 6.283); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(faceX, -R * 1.02, R * 0.50, Math.PI * 1.08, Math.PI * 1.42); ctx.stroke();
+      ctx.fillStyle = '#15294a';                  // kravata
+      ctx.beginPath(); ctx.moveTo(-3, -R * 0.30); ctx.lineTo(3, -R * 0.30); ctx.lineTo(1.5, R * 0.55); ctx.lineTo(0, R * 0.68); ctx.lineTo(-1.5, R * 0.55); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#0e1a2c'; ctx.lineWidth = 2;    // opasek
+      ctx.beginPath(); ctx.moveTo(-R * 0.62, R * 0.62); ctx.lineTo(R * 0.62, R * 0.62); ctx.stroke();
+      ctx.fillStyle = '#ffd070';
+      ctx.beginPath(); ctx.arc(0, R * 0.62, 2, 0, 6.283); ctx.fill();
 
-    } else if (id === 'panda'){                   // panda — černé uši a náplasti přes oči
+    } else if (id === 'panda'){                   // panda — uši, náplasti, černé packy
       ctx.fillStyle = '#232830';
       ctx.beginPath(); ctx.arc(faceX - 13, -R * 1.14, R * 0.32, 0, 6.283); ctx.fill();
       ctx.beginPath(); ctx.arc(faceX + 13, -R * 1.14, R * 0.32, 0, 6.283); ctx.fill();
       ctx.beginPath(); ctx.ellipse(faceX - 9, -R * 0.72, R * 0.17, R * 0.22, -0.3, 0, 6.283); ctx.fill();
       ctx.beginPath(); ctx.ellipse(faceX + 9, -R * 0.72, R * 0.17, R * 0.22, 0.3, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#1a1e24';
+      ctx.beginPath(); ctx.arc(faceX - 9, -R * 0.70, 1.6, 0, 6.283); ctx.fill();
+      ctx.beginPath(); ctx.arc(faceX + 9, -R * 0.70, 1.6, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#232830';                  // černé packy po stranách bříška
+      ctx.beginPath(); ctx.ellipse(-R * 0.66, R * 0.34, R * 0.20, R * 0.26, 0.25, 0, 6.283); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(R * 0.66, R * 0.34, R * 0.20, R * 0.26, -0.25, 0, 6.283); ctx.fill();
 
-    } else if (id === 'kuchar'){                  // kuchař — vysoká bílá čepice
+    } else if (id === 'kuchar'){                  // kuchař — čepice, zástěra s popruhy, šátek
       ctx.fillStyle = '#fbfaf6';
       ctx.beginPath(); ctx.ellipse(faceX, -R * 1.10, R * 0.50, R * 0.11, 0, 0, 6.283); ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.ellipse(faceX, -R * 1.54, R * 0.40, R * 0.42, 0, 0, 6.283); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(200,195,180,.7)'; ctx.lineWidth = 1.2;   // řasení čepice
+      ctx.beginPath(); ctx.moveTo(faceX - R * 0.18, -R * 1.82); ctx.lineTo(faceX - R * 0.14, -R * 1.28); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(faceX + R * 0.18, -R * 1.82); ctx.lineTo(faceX + R * 0.14, -R * 1.28); ctx.stroke();
+      ctx.fillStyle = '#c94f4f';                  // šátek na krku
+      ctx.beginPath(); ctx.moveTo(-6, -R * 0.34); ctx.lineTo(6, -R * 0.34); ctx.lineTo(0, -R * 0.10); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(251,250,246,.92)';    // zástěra
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.46, R * 0.02); ctx.lineTo(R * 0.46, R * 0.02);
+      ctx.lineTo(R * 0.36, R * 0.86); ctx.lineTo(-R * 0.36, R * 0.86); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(200,195,180,.8)'; ctx.lineWidth = 1.4;   // popruhy
+      ctx.beginPath(); ctx.moveTo(-R * 0.30, R * 0.04); ctx.lineTo(-R * 0.14, -R * 0.36); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(R * 0.30, R * 0.04); ctx.lineTo(R * 0.14, -R * 0.36); ctx.stroke();
 
-    } else if (id === 'yeti'){                    // yeti — chlupaté hroty kolem hlavy
+    } else if (id === 'yeti'){                    // yeti — chlupaté hroty, srst na těle, modrý nos
       ctx.fillStyle = '#eaf3fb';
       for (let i = -2; i <= 2; i++){
         const a = i * 0.42;
@@ -852,20 +893,46 @@ const Render = {
         ctx.lineTo(bx - Math.sin(a) * 9 * 0.4, by + 2);
         ctx.closePath(); ctx.fill();
       }
+      ctx.fillStyle = 'rgba(210,232,248,.85)';    // střapce srsti podél okraje těla
+      for (let i = -3; i <= 3; i++){
+        const a2 = i * 0.34;
+        const ex = Math.sin(a2) * R * 0.80, ey = 1 + Math.cos(a2) * R * 0.92;
+        ctx.beginPath();
+        ctx.moveTo(ex - 3, ey - 2); ctx.lineTo(ex, ey + 7); ctx.lineTo(ex + 3, ey - 2);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = '#4fa3c9';                   // drobný nos, níž, ať nevypadá jako oko
+      ctx.beginPath(); ctx.ellipse(faceX, -R * 0.50, R * 0.09, R * 0.07, 0, 0, 6.283); ctx.fill();
 
-    } else if (id === 'ninja'){                   // nindža — maska přes oči, jen oči svítí
+    } else if (id === 'ninja'){                   // nindža — maska, krátká stuha čelenky, šerpa
+      ctx.strokeStyle = '#c94f4f'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';   // stuha čelenky
+      ctx.beginPath(); ctx.moveTo(faceX - 9, -R * 0.94); ctx.quadraticCurveTo(faceX - 17, -R * 0.88, faceX - 15, -R * 0.68); ctx.stroke();
       ctx.fillStyle = '#15171b';
       ctx.beginPath(); ctx.ellipse(faceX, -R * 0.78, R * 0.50, R * 0.22, 0, 0, 6.283); ctx.fill();
       ctx.fillStyle = '#c94f4f';
       ctx.beginPath(); ctx.ellipse(faceX - 6, -R * 0.78, R * 0.08, R * 0.10, 0, 0, 6.283); ctx.fill();
       ctx.beginPath(); ctx.ellipse(faceX + 6, -R * 0.78, R * 0.08, R * 0.10, 0, 0, 6.283); ctx.fill();
+      ctx.strokeStyle = 'rgba(201,79,79,.85)'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';   // tenká šerpa přes hruď
+      ctx.beginPath(); ctx.moveTo(-R * 0.40, -R * 0.06); ctx.lineTo(R * 0.34, R * 0.62); ctx.stroke();
 
-    } else if (id === 'kosmonaut'){               // kosmonaut — kulatá přilba s odleskem
-      ctx.strokeStyle = 'rgba(160,200,235,.9)';
-      ctx.lineWidth = 3;
+    } else if (id === 'kosmonaut'){               // kosmonaut — přilba, anténa, ovládací panel, švy
+      ctx.strokeStyle = 'rgba(90,110,130,.6)'; ctx.lineWidth = 1.4;    // švy skafandru
+      ctx.beginPath(); ctx.moveTo(0, -R * 0.10); ctx.lineTo(0, R * 0.80); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-R * 0.55, R * 0.15); ctx.lineTo(R * 0.55, R * 0.15); ctx.stroke();
+      ctx.fillStyle = '#dfe6ec';                   // malý ovládací panel na hrudi
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-R * 0.24, -R * 0.05, R * 0.48, R * 0.30, 2) : ctx.rect(-R * 0.24, -R * 0.05, R * 0.48, R * 0.30);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#e0748a'; ctx.beginPath(); ctx.arc(-R * 0.12, R * 0.10, 1.6, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#7fc99a'; ctx.beginPath(); ctx.arc(0, R * 0.10, 1.6, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#ffd070'; ctx.beginPath(); ctx.arc(R * 0.12, R * 0.10, 1.6, 0, 6.283); ctx.fill();
+      ctx.strokeStyle = 'rgba(160,200,235,.9)'; ctx.lineWidth = 3;     // přilba s odleskem
       ctx.beginPath(); ctx.arc(faceX, -R * 0.72, R * 0.62, 0, 6.283); ctx.stroke();
       ctx.fillStyle = 'rgba(255,255,255,.35)';
       ctx.beginPath(); ctx.ellipse(faceX - 6, -R * 0.92, R * 0.14, R * 0.08, -0.4, 0, 6.283); ctx.fill();
+      ctx.strokeStyle = '#c7ccd1'; ctx.lineWidth = 1.6;   // anténa
+      ctx.beginPath(); ctx.moveTo(faceX + 9, -R * 1.28); ctx.lineTo(faceX + 13, -R * 1.55); ctx.stroke();
+      ctx.fillStyle = '#e0748a';
+      ctx.beginPath(); ctx.arc(faceX + 13, -R * 1.55, 2, 0, 6.283); ctx.fill();
     }
   },
 
