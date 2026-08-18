@@ -529,6 +529,31 @@ const Render = {
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
+      /* skála/led (i s koupenou mapou jinou barvou): kamenný hrot dostane
+         prasklinu napříč, ledový svislý záblesk — ať to nejsou hladké klíny */
+      if (!m || m.id !== 'poust'){
+        ctx.beginPath();
+        for (let y = band.y0; y < band.y1; y += step){
+          const h = 12 + hash1(Math.floor(y) * 7 + (side < 0 ? 3 : 91)) * 7;
+          const tipx = World.wallAt(y + step * 0.5, side) - side * h;
+          const tipy = y + step * 0.5 - cam;
+          const basex = World.wallAt(y, side) - side * 1;
+          const basey = y - cam;
+          if (material === 'led'){
+            const gx = basex + (tipx - basex) * 0.5, gy = basey + (tipy - basey) * 0.5;
+            ctx.moveTo(gx, basey + (tipy - basey) * 0.12);
+            ctx.lineTo(gx, basey + (tipy - basey) * 0.78);
+          } else {
+            const fx = basex + (tipx - basex) * 0.42, fy = basey + (tipy - basey) * 0.42;
+            ctx.moveTo(fx - side * 3, fy - 3);
+            ctx.lineTo(fx + side * 2, fy + 4);
+          }
+        }
+        ctx.strokeStyle = material === 'led' ? 'rgba(255,255,255,.65)' : 'rgba(20,18,15,.5)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
       /* poušť, vysoké pásmo — kost: kloubní hlavička u paty je hlavní poznávací
          znak (bez ní to čte jako obyčejný bledý hrot), plus pár prasklinek */
       if (m && m.id === 'poust'){
@@ -788,14 +813,26 @@ const Render = {
         if (poust){
           this.skullFace(ctx, r, pal, m.koule.socket);
         } else {
-          /* hrudky, ať to není jen kolečko */
+          /* hrudky napěchovaného sněhu — nepravidelné, ne dokonalá kolečka */
           ctx.fillStyle = pal.hrudky;
-          for (let k = 0; k < 3; k++){
+          for (let k = 0; k < 5; k++){
             const a = hash1(k * 91 + r.shape) * 6.283;
-            const d = r.r * (0.25 + hash1(k * 37) * 0.4);
+            const d = r.r * (0.2 + hash1(k * 37) * 0.45);
             ctx.beginPath();
-            ctx.arc(Math.cos(a) * d, Math.sin(a) * d, r.r * 0.16, 0, 6.283);
+            ctx.ellipse(Math.cos(a) * d, Math.sin(a) * d,
+                        r.r * (0.12 + hash1(k * 13) * 0.08), r.r * (0.09 + hash1(k * 19) * 0.06),
+                        a, 0, 6.283);
             ctx.fill();
+          }
+          /* pár prasklinek na slehlém povrchu */
+          ctx.strokeStyle = 'rgba(150,175,205,.4)';
+          ctx.lineWidth = 1;
+          for (let k = 0; k < 2; k++){
+            const a = hash1(k * 61 + r.shape * 5) * 6.283;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * r.r * 0.15, Math.sin(a) * r.r * 0.15);
+            ctx.lineTo(Math.cos(a) * r.r * 0.7, Math.sin(a) * r.r * 0.7);
+            ctx.stroke();
           }
         }
         ctx.restore();
@@ -824,6 +861,19 @@ const Render = {
           ctx.strokeStyle = pal.okraj;
           ctx.lineWidth = 1.5;
           ctx.stroke();
+
+          /* svislé rýhy po celé délce, ať je hned poznat, že je to led, ne sklo */
+          ctx.strokeStyle = 'rgba(255,255,255,.6)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-r.r * 0.35, -r.dl * 0.42); ctx.lineTo(-r.r * 0.12, r.dl * 0.45);
+          ctx.moveTo(r.r * 0.3, -r.dl * 0.4); ctx.lineTo(r.r * 0.08, r.dl * 0.4);
+          ctx.stroke();
+          /* kapka na špičce */
+          ctx.fillStyle = 'rgba(230,250,255,.9)';
+          ctx.beginPath();
+          ctx.arc(0, r.dl * 0.62, Math.max(1, r.r * 0.18), 0, 6.283);
+          ctx.fill();
         }
         ctx.restore();
         continue;
@@ -856,6 +906,23 @@ const Render = {
         ctx.beginPath();
         ctx.arc(-r.r * 0.25, -r.r * 0.3, r.r * 0.3, 0, 6.283);
         ctx.fillStyle = pal.zvyrazneni;
+        ctx.fill();
+
+        /* praskliny a otlučené hrany, ať to nevypadá jako hladký balvan */
+        ctx.strokeStyle = 'rgba(0,0,0,.35)';
+        ctx.lineWidth = 1;
+        for (let k = 0; k < 3; k++){
+          const a = hash1(k * 47 + r.shape * 13) * 6.283;
+          const d0 = r.r * (0.15 + hash1(k * 17) * 0.2);
+          const d1 = r.r * (0.55 + hash1(k * 29) * 0.3);
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(a) * d0, Math.sin(a) * d0);
+          ctx.lineTo(Math.cos(a + 0.3) * d1, Math.sin(a + 0.3) * d1);
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(0,0,0,.25)';
+        ctx.beginPath();
+        ctx.arc(r.r * 0.3, r.r * 0.25, r.r * 0.14, 0, 6.283);
         ctx.fill();
       }
       ctx.restore();
