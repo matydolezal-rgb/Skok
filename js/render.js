@@ -857,33 +857,25 @@ const Render = {
       ctx.save();
       ctx.translate(r.x, y);
       ctx.rotate(r.rot);
-      ctx.beginPath();
-      const n = 6 + r.shape;
-      for (let i = 0; i < n; i++){
-        const a = (i / n) * Math.PI * 2;
-        const rr = r.r * (0.78 + hash1(i * 7 + r.shape * 31) * 0.42);
-        const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.fillStyle = pal.barva;
-      ctx.fill();
-      ctx.strokeStyle = pal.okraj;
-      ctx.lineWidth = 2;
-      ctx.stroke();
 
       if (poust){
-        /* chuchvalec: pár křížících se stébel přes střed místo kamenného odlesku */
-        ctx.strokeStyle = pal.vlakna;
-        ctx.lineWidth = 1;
-        for (let k = 0; k < 4; k++){
-          const a = hash1(k * 53 + r.shape * 11) * Math.PI;
-          ctx.beginPath();
-          ctx.moveTo(Math.cos(a) * r.r * 0.75, Math.sin(a) * r.r * 0.75);
-          ctx.lineTo(-Math.cos(a) * r.r * 0.75, -Math.sin(a) * r.r * 0.75);
-          ctx.stroke();
-        }
+        this.tumbleweed(ctx, r, pal);
       } else {
+        ctx.beginPath();
+        const n = 6 + r.shape;
+        for (let i = 0; i < n; i++){
+          const a = (i / n) * Math.PI * 2;
+          const rr = r.r * (0.78 + hash1(i * 7 + r.shape * 31) * 0.42);
+          const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = pal.barva;
+        ctx.fill();
+        ctx.strokeStyle = pal.okraj;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
         /* odlesk */
         ctx.beginPath();
         ctx.arc(-r.r * 0.25, -r.r * 0.3, r.r * 0.3, 0, 6.283);
@@ -892,6 +884,49 @@ const Render = {
       }
       ctx.restore();
     }
+  },
+
+  /* chuchvalec suchých stébel — řídký propletenec, ne hladký kámen s pár čárkami */
+  tumbleweed(ctx, r, pal){
+    /* mlhavý podklad, ať je i z dálky poznat, že je to překážka */
+    ctx.beginPath();
+    ctx.arc(0, 0, r.r * 0.8, 0, 6.283);
+    ctx.fillStyle = 'rgba(138,106,58,.30)';
+    ctx.fill();
+
+    const N = 11;
+    for (let k = 0; k < N; k++){
+      const a = (k / N) * Math.PI * 2 + hash1(k * 53 + r.shape * 11) * 0.6;
+      const len = r.r * (0.7 + hash1(k * 19 + r.shape) * 0.55);
+      const wob = (hash1(k * 7 + r.shape * 3) - 0.5) * r.r * 0.7;
+      const x0 = Math.cos(a) * len, y0 = Math.sin(a) * len;
+      const x1 = -Math.cos(a) * len * 0.85 + wob, y1 = -Math.sin(a) * len * 0.85 - wob;
+      const mx = wob * 0.4, my = -wob * 0.4;
+
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      ctx.quadraticCurveTo(mx, my, x1, y1);
+      ctx.strokeStyle = k % 3 === 0 ? pal.okraj : pal.barva;
+      ctx.lineWidth = 0.8 + hash1(k * 3 + r.shape) * 0.7;
+      ctx.stroke();
+
+      /* drobná odbočka na části stébel, ať to nejsou jen paprsky ze středu */
+      if (k % 2 === 0){
+        const fx = x0 + (mx - x0) * 0.55, fy = y0 + (my - y0) * 0.55;
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.lineTo(fx + Math.cos(a + 1.3) * r.r * 0.22, fy + Math.sin(a + 1.3) * r.r * 0.22);
+        ctx.strokeStyle = pal.barva;
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+    }
+
+    ctx.strokeStyle = pal.okraj;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, 0, r.r * 0.8, 0, 6.283);
+    ctx.stroke();
   },
 
   particles(ctx, g, cam){
@@ -1229,20 +1264,19 @@ const Render = {
     const kp = m.kamen;
     ctx.save();
     ctx.translate(14, 10);
-    ctx.beginPath();
-    for (let i = 0; i < 7; i++){
-      const a = (i / 7) * 6.283;
-      const rr = 9 * (0.8 + (i % 2) * 0.3);
-      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-    ctx.fillStyle = kp.barva; ctx.fill();
-    ctx.strokeStyle = kp.okraj; ctx.lineWidth = 1.4; ctx.stroke();
     if (poust){
-      ctx.strokeStyle = kp.vlakna; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(-7, -4); ctx.lineTo(7, 4); ctx.moveTo(-7, 4); ctx.lineTo(7, -4); ctx.stroke();
+      this.tumbleweed(ctx, { r:9, shape:2 }, kp);
     } else {
+      ctx.beginPath();
+      for (let i = 0; i < 7; i++){
+        const a = (i / 7) * 6.283;
+        const rr = 9 * (0.8 + (i % 2) * 0.3);
+        const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = kp.barva; ctx.fill();
+      ctx.strokeStyle = kp.okraj; ctx.lineWidth = 1.4; ctx.stroke();
       ctx.beginPath(); ctx.arc(-3, -4, 3, 0, 6.283); ctx.fillStyle = kp.zvyrazneni; ctx.fill();
     }
     ctx.restore();

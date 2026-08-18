@@ -40,7 +40,7 @@ const Mapy = {
       led:      { fill:['rgba(255,214,140,.14)','rgba(255,224,170,.55)'], lesk:'rgba(255,250,230,.55)', hrana:'rgba(255,236,190,.95)' },
       trnKamen: { grad:['#3f6b35','#5f9146','#2a4a24'], okraj:'rgba(20,35,15,.85)', zvyrazneni:'rgba(210,255,180,.5)' },
       trnLed:   { grad:['#e8dcc0','#fff8e8','#c9b98a'], okraj:'rgba(90,70,40,.85)', zvyrazneni:'rgba(255,255,255,.9)' },
-      kamen:    { barva:'#8a6a3a', okraj:'rgba(50,36,16,.65)', zvyrazneni:'rgba(255,230,180,.20)', vlakna:'rgba(74,52,25,.6)' },
+      kamen:    { barva:'#8a6a3a', okraj:'rgba(50,36,16,.65)', zvyrazneni:'rgba(255,230,180,.20)' },
       rampouch: { grad:['#6e4f2a','#8a6a3a','#4a3419'], okraj:'rgba(40,28,14,.8)', odnoz:'#4a3419' },
       koule:    { grad:['#f2ecd8','#e8ddc0','#b9a97e'], okraj:'rgba(70,55,30,.85)', hrudky:'rgba(140,120,85,.45)', socket:'#2a2013' },
       prachSkok:'#e8c98a', prachSnih:'#f2d9a0', ulomky:'#f0d29a', dopadSkala:'#c9a25c', dopadMokro:'#e8c98a',
