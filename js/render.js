@@ -786,41 +786,7 @@ const Render = {
         ctx.stroke();
 
         if (poust){
-          /* lebka podle skutečné anatomie: temeno s prasklinou, velké tmavé
-             důlky, úzký nosní otvor, čelist s řadou jednotlivých zubů */
-          ctx.strokeStyle = 'rgba(0,0,0,.18)';
-          ctx.lineWidth = Math.max(1, r.r * 0.05);
-          ctx.beginPath();
-          ctx.moveTo(-r.r * 0.15, -r.r * 0.95);
-          ctx.lineTo(-r.r * 0.28, -r.r * 0.55);
-          ctx.lineTo(-r.r * 0.18, -r.r * 0.25);
-          ctx.stroke();
-
-          ctx.fillStyle = m.koule.socket;
-          ctx.beginPath(); ctx.ellipse(-r.r * 0.30, -r.r * 0.20, r.r * 0.25, r.r * 0.30, -0.15, 0, 6.283); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(r.r * 0.30, -r.r * 0.20, r.r * 0.25, r.r * 0.30, 0.15, 0, 6.283); ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(0, -r.r * 0.04); ctx.lineTo(-r.r * 0.09, r.r * 0.20); ctx.lineTo(r.r * 0.09, r.r * 0.20);
-          ctx.closePath(); ctx.fill();
-
-          /* čelist */
-          ctx.beginPath();
-          ctx.ellipse(0, r.r * 0.50, r.r * 0.60, r.r * 0.32, 0, Math.PI, 0);
-          ctx.fill();
-          ctx.strokeStyle = pal.okraj;
-          ctx.lineWidth = 1;
-          ctx.stroke();
-
-          /* jednotlivé zuby jako drobné obdélníčky, ne jen čárky */
-          const zubu = 6, sirka = r.r * 0.92 / zubu;
-          for (let tz = 0; tz < zubu; tz++){
-            const tx = -r.r * 0.46 + sirka * (tz + 0.5);
-            ctx.fillStyle = tz % 2 === 0 ? pal.grad[0] : pal.grad[1];
-            ctx.fillRect(tx - sirka * 0.36, r.r * 0.30, sirka * 0.72, r.r * 0.24);
-            ctx.strokeStyle = m.koule.socket;
-            ctx.lineWidth = Math.max(0.6, r.r * 0.03);
-            ctx.strokeRect(tx - sirka * 0.36, r.r * 0.30, sirka * 0.72, r.r * 0.24);
-          }
+          this.skullFace(ctx, r, pal, m.koule.socket);
         } else {
           /* hrudky, ať to není jen kolečko */
           ctx.fillStyle = pal.hrudky;
@@ -937,6 +903,81 @@ const Render = {
     ctx.beginPath();
     ctx.arc(0, 0, r.r * 0.8, 0, 6.283);
     ctx.stroke();
+  },
+
+  /* lebka na kruhové "kouli" — protažená čelist přes okraj kruhu, mandlové
+     důlky, srdcovitý nosní otvor, zuby v mírném oblouku, prasklina na temeni */
+  skullFace(ctx, r, pal, socket){
+    const R = r.r;
+
+    /* čelist protažená pod okraj kruhu, ať to není dokonalé kolečko */
+    ctx.beginPath();
+    ctx.ellipse(0, R * 0.60, R * 0.62, R * 0.46, 0, 0, Math.PI);
+    ctx.fillStyle = pal.grad[1];
+    ctx.fill();
+    ctx.strokeStyle = pal.okraj;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    /* prasklina na temeni */
+    ctx.strokeStyle = 'rgba(0,0,0,.18)';
+    ctx.lineWidth = Math.max(1, R * 0.045);
+    ctx.beginPath();
+    ctx.moveTo(-R * 0.14, -R * 0.96);
+    ctx.lineTo(-R * 0.26, -R * 0.58);
+    ctx.lineTo(-R * 0.16, -R * 0.28);
+    ctx.stroke();
+
+    /* stín nadočnicových oblouků */
+    ctx.strokeStyle = 'rgba(0,0,0,.20)';
+    ctx.lineWidth = Math.max(1, R * 0.05);
+    ctx.beginPath();
+    ctx.moveTo(-R * 0.54, -R * 0.40); ctx.quadraticCurveTo(-R * 0.28, -R * 0.56, -R * 0.04, -R * 0.40);
+    ctx.moveTo(R * 0.04, -R * 0.40); ctx.quadraticCurveTo(R * 0.28, -R * 0.56, R * 0.54, -R * 0.40);
+    ctx.stroke();
+
+    /* mandlové důlky */
+    ctx.fillStyle = socket;
+    [-1, 1].forEach((s) => {
+      ctx.beginPath();
+      ctx.moveTo(s * R * 0.09, -R * 0.22);
+      ctx.quadraticCurveTo(s * R * 0.46, -R * 0.38, s * R * 0.50, -R * 0.08);
+      ctx.quadraticCurveTo(s * R * 0.46, R * 0.14, s * R * 0.20, R * 0.02);
+      ctx.quadraticCurveTo(s * R * 0.06, -R * 0.06, s * R * 0.09, -R * 0.22);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    /* srdcovitý nosní otvor */
+    ctx.beginPath();
+    ctx.moveTo(0, R * 0.04);
+    ctx.quadraticCurveTo(-R * 0.11, -R * 0.05, -R * 0.09, R * 0.12);
+    ctx.quadraticCurveTo(-R * 0.04, R * 0.20, 0, R * 0.27);
+    ctx.quadraticCurveTo(R * 0.04, R * 0.20, R * 0.09, R * 0.12);
+    ctx.quadraticCurveTo(R * 0.11, -R * 0.05, 0, R * 0.04);
+    ctx.closePath();
+    ctx.fillStyle = socket;
+    ctx.fill();
+
+    /* švová linka mezi lebkou a čelistí */
+    ctx.strokeStyle = pal.okraj;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(0, R * 0.32, R * 0.58, R * 0.12, 0, Math.PI * 0.08, Math.PI * 0.92);
+    ctx.stroke();
+
+    /* zuby v mírném oblouku */
+    const zubu = 7;
+    for (let tz = 0; tz < zubu; tz++){
+      const t = (tz + 0.5) / zubu - 0.5;
+      const tx = t * R * 1.02;
+      const ty = R * 0.42 + Math.abs(t) * R * 0.14;
+      ctx.fillStyle = tz % 2 === 0 ? pal.grad[0] : pal.grad[1];
+      ctx.fillRect(tx - R * 0.065, ty, R * 0.13, R * 0.24);
+      ctx.strokeStyle = socket;
+      ctx.lineWidth = Math.max(0.6, R * 0.025);
+      ctx.strokeRect(tx - R * 0.065, ty, R * 0.13, R * 0.24);
+    }
   },
 
   /* suchá zprohýbaná větvička s několika odbočkami — ne rovná hůl se dvěma čárkami */
