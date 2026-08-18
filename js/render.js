@@ -847,33 +847,7 @@ const Render = {
         if (poust){
           this.driedBranch(ctx, r, pal);
         } else {
-          ctx.beginPath();
-          ctx.moveTo(-r.r, -r.dl * 0.5);
-          ctx.lineTo(r.r, -r.dl * 0.5);
-          ctx.lineTo(0, r.dl * 0.6);
-          ctx.closePath();
-          const ig = ctx.createLinearGradient(-r.r, 0, r.r, 0);
-          ig.addColorStop(0, pal.grad[0]);
-          ig.addColorStop(0.5, pal.grad[1]);
-          ig.addColorStop(1, pal.grad[2]);
-          ctx.fillStyle = ig;
-          ctx.fill();
-          ctx.strokeStyle = pal.okraj;
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-
-          /* svislé rýhy po celé délce, ať je hned poznat, že je to led, ne sklo */
-          ctx.strokeStyle = 'rgba(255,255,255,.6)';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(-r.r * 0.35, -r.dl * 0.42); ctx.lineTo(-r.r * 0.12, r.dl * 0.45);
-          ctx.moveTo(r.r * 0.3, -r.dl * 0.4); ctx.lineTo(r.r * 0.08, r.dl * 0.4);
-          ctx.stroke();
-          /* kapka na špičce */
-          ctx.fillStyle = 'rgba(230,250,255,.9)';
-          ctx.beginPath();
-          ctx.arc(0, r.dl * 0.62, Math.max(1, r.r * 0.18), 0, 6.283);
-          ctx.fill();
+          this.icicle(ctx, r, pal);
         }
         ctx.restore();
         continue;
@@ -927,6 +901,63 @@ const Render = {
       }
       ctx.restore();
     }
+  },
+
+  /* rampouch s hrbolatým obrysem a "prstýnky" vrstev zmrzlé vody —
+     ne hladký rovný klín */
+  icicle(ctx, r, pal){
+    const top = -r.dl * 0.5, tip = r.dl * 0.6;
+    const SEG = 6;
+    const left = [], right = [];
+    for (let i = 0; i <= SEG; i++){
+      const t = i / SEG;
+      const yy = top + t * (tip - top);
+      const taper = Math.pow(1 - t, 1.25);
+      const wobble = 1 + (hash1(i * 19 + r.shape * 11) - 0.5) * 0.5;
+      const w = i === SEG ? 0 : Math.max(0.6, r.r * taper * wobble);
+      left.push([-w, yy]);
+      right.push([w, yy]);
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(left[0][0], left[0][1]);
+    for (let i = 1; i < left.length; i++) ctx.lineTo(left[i][0], left[i][1]);
+    for (let i = right.length - 2; i >= 0; i--) ctx.lineTo(right[i][0], right[i][1]);
+    ctx.closePath();
+
+    const ig = ctx.createLinearGradient(-r.r, 0, r.r, 0);
+    ig.addColorStop(0, pal.grad[0]);
+    ig.addColorStop(0.5, pal.grad[1]);
+    ig.addColorStop(1, pal.grad[2]);
+    ctx.fillStyle = ig;
+    ctx.fill();
+    ctx.strokeStyle = pal.okraj;
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+
+    /* jemné prstýnky napříč — vrstvy postupně zmrzlé vody */
+    ctx.strokeStyle = 'rgba(255,255,255,.32)';
+    ctx.lineWidth = 0.8;
+    for (let i = 1; i < SEG; i += 2){
+      ctx.beginPath();
+      ctx.moveTo(left[i][0] * 0.65, left[i][1]);
+      ctx.lineTo(right[i][0] * 0.65, right[i][1]);
+      ctx.stroke();
+    }
+
+    /* svislé rýhy po celé délce, ať je hned poznat, že je to led, ne sklo */
+    ctx.strokeStyle = 'rgba(255,255,255,.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-r.r * 0.35, top * 0.84); ctx.lineTo(-r.r * 0.12, tip * 0.75);
+    ctx.moveTo(r.r * 0.3, top * 0.8); ctx.lineTo(r.r * 0.08, tip * 0.67);
+    ctx.stroke();
+
+    /* kapka na špičce */
+    ctx.fillStyle = 'rgba(230,250,255,.9)';
+    ctx.beginPath();
+    ctx.arc(0, tip, Math.max(1, r.r * 0.18), 0, 6.283);
+    ctx.fill();
   },
 
   /* chuchvalec suchých stébel — řídký propletenec, ne hladký kámen s pár čárkami */
