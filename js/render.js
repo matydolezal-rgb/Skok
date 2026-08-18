@@ -840,28 +840,23 @@ const Render = {
         const pal = m ? m.rampouch : { grad:['rgba(190,235,255,.95)','rgba(255,255,255,.98)','rgba(120,190,235,.95)'], okraj:'rgba(70,140,190,.8)' };
         ctx.save();
         ctx.translate(r.x, y);
-        ctx.beginPath();
-        ctx.moveTo(-r.r, -r.dl * 0.5);
-        ctx.lineTo(r.r, -r.dl * 0.5);
-        ctx.lineTo(0, r.dl * 0.6);
-        ctx.closePath();
-        const ig = ctx.createLinearGradient(-r.r, 0, r.r, 0);
-        ig.addColorStop(0, pal.grad[0]);
-        ig.addColorStop(0.5, pal.grad[1]);
-        ig.addColorStop(1, pal.grad[2]);
-        ctx.fillStyle = ig;
-        ctx.fill();
-        ctx.strokeStyle = pal.okraj;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
 
         if (poust){
-          /* suchá větvička: dvě krátké odbočky */
-          ctx.strokeStyle = m.rampouch.odnoz;
-          ctx.lineWidth = 1.2;
+          this.driedBranch(ctx, r, pal);
+        } else {
           ctx.beginPath();
-          ctx.moveTo(0, r.dl * 0.15); ctx.lineTo(-r.r * 0.7, -r.dl * 0.05);
-          ctx.moveTo(0, -r.dl * 0.1); ctx.lineTo(r.r * 0.6, -r.dl * 0.3);
+          ctx.moveTo(-r.r, -r.dl * 0.5);
+          ctx.lineTo(r.r, -r.dl * 0.5);
+          ctx.lineTo(0, r.dl * 0.6);
+          ctx.closePath();
+          const ig = ctx.createLinearGradient(-r.r, 0, r.r, 0);
+          ig.addColorStop(0, pal.grad[0]);
+          ig.addColorStop(0.5, pal.grad[1]);
+          ig.addColorStop(1, pal.grad[2]);
+          ctx.fillStyle = ig;
+          ctx.fill();
+          ctx.strokeStyle = pal.okraj;
+          ctx.lineWidth = 1.5;
           ctx.stroke();
         }
         ctx.restore();
@@ -942,6 +937,51 @@ const Render = {
     ctx.beginPath();
     ctx.arc(0, 0, r.r * 0.8, 0, 6.283);
     ctx.stroke();
+  },
+
+  /* suchá zprohýbaná větvička s několika odbočkami — ne rovná hůl se dvěma čárkami */
+  driedBranch(ctx, r, pal){
+    const half = r.dl * 0.52;
+    const SEG = 5;
+    const body = [];
+    for (let i = 0; i <= SEG; i++){
+      const t = i / SEG;
+      body.push([
+        (hash1(i * 17 + r.shape * 9) - 0.5) * r.r * 0.9 * Math.sin(t * Math.PI),
+        -half + t * half * 2,
+      ]);
+    }
+
+    /* hlavní klikatá haluz */
+    ctx.beginPath();
+    ctx.moveTo(body[0][0], body[0][1]);
+    for (let i = 1; i < body.length; i++) ctx.lineTo(body[i][0], body[i][1]);
+    ctx.strokeStyle = pal.grad[1];
+    ctx.lineWidth = r.r * 0.5;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.strokeStyle = pal.okraj;
+    ctx.lineWidth = r.r * 0.5 + 1.2;
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+
+    /* pár tenčích odboček z náhodných bodů podél haluze */
+    for (let k = 0; k < 4; k++){
+      const idx = 1 + Math.floor(hash1(k * 31 + r.shape * 5) * (body.length - 2));
+      const [bx, by] = body[idx];
+      const side2 = k % 2 === 0 ? 1 : -1;
+      const ang = side2 * (0.55 + hash1(k * 13 + r.shape) * 0.7);
+      const len = r.r * (0.7 + hash1(k * 23) * 0.7);
+      const ex = bx + Math.sin(ang) * len, ey = by + Math.cos(ang) * len * side2;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(ex, ey);
+      ctx.strokeStyle = k % 2 === 0 ? pal.grad[0] : pal.grad[2];
+      ctx.lineWidth = Math.max(1, r.r * 0.16);
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
   },
 
   particles(ctx, g, cam){
