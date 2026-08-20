@@ -1142,9 +1142,9 @@ const Render = {
     for (const r of g.rings){
       const a = Math.max(0, r.life / r.max);
       const rad = r.r0 + (1 - a) * r.grow;
-      ctx.globalAlpha = a * 0.7;
+      ctx.globalAlpha = a * 0.85;
       ctx.strokeStyle = r.color;
-      ctx.lineWidth = Math.max(1, 4 * a);
+      ctx.lineWidth = Math.max(2, 7 * a);
       ctx.beginPath();
       ctx.arc(r.x, r.y - cam, rad, 0, 6.283);
       ctx.stroke();

@@ -92,9 +92,11 @@ const Game = {
   },
 
   /* ---------- částice ---------- */
-  /* color může být jedna barva, nebo pole barev — pak si každá částice vybere svou náhodně */
-  burst(x, y, n, color, spread){
+  /* color může být jedna barva, nebo pole barev — pak si každá částice vybere svou náhodně.
+     rMult zvětšuje jen velikost teček (dostřel řeší spread), výchozí 1 pro běžné efekty hry. */
+  burst(x, y, n, color, spread, rMult){
     const paleta = Array.isArray(color) ? color : null;
+    const rm = rMult || 1;
     for (let i = 0; i < n; i++){
       const a = this.rng() * Math.PI * 2;
       const s = this.rng.range(40, 220) * (spread || 1);
@@ -104,14 +106,16 @@ const Game = {
         vy: Math.sin(a) * s - 40,
         life: this.rng.range(0.25, 0.7),
         max:  0.7,
-        r: this.rng.range(1.5, 3.6),
+        r: this.rng.range(1.5, 3.6) * rm,
         color: paleta ? paleta[Math.floor(this.rng() * paleta.length)] : color,
       });
     }
     if (this.parts.length > 260) this.parts.splice(0, this.parts.length - 260);
   },
 
-  /* dopad do vody na konci běhu — kosmetická volba z obchodu (viz Splash) */
+  /* dopad do vody na konci běhu — kosmetická volba z obchodu (viz Splash).
+     Větší tečky (rMult) a mohutnější prstence než běžné částice ve hře — tohle je
+     poslední věc, co hráč u běhu vidí, má to bouchnout jako gól v Rocket League. */
   splashBurst(x, y){
     const s = (typeof Splash !== 'undefined') ? Splash.najdi(Splash.vybrany()) : null;
     const cfg = s || { barvy:['#6fc9e8'], n:26, spread:1.6, vlny:1, rings:0 };
@@ -119,11 +123,11 @@ const Game = {
     /* celá paleta barev jde do každé vlny — každá částice si vybere svou náhodně,
        jinak by u efektů s jednou vlnou (třeba Rainbow Burst) vyletěla jen jedna barva */
     for (let w = 0; w < cfg.vlny; w++){
-      this.burst(x, y, Math.round(cfg.n / cfg.vlny), cfg.barvy, cfg.spread * (1 + w * 0.25));
+      this.burst(x, y, Math.round(cfg.n / cfg.vlny), cfg.barvy, cfg.spread * (1 + w * 0.25), 1.9);
     }
     for (let i = 0; i < cfg.rings; i++){
-      const zivot = 0.6 - i * 0.12;
-      this.rings.push({ x, y, life: zivot, max: zivot, r0: 6 + i * 14, grow: 170, color: cfg.barvy[i % cfg.barvy.length] });
+      const zivot = 0.65 - i * 0.1;
+      this.rings.push({ x, y, life: zivot, max: zivot, r0: 10 + i * 18, grow: 260, color: cfg.barvy[i % cfg.barvy.length] });
     }
   },
 

@@ -8,17 +8,17 @@ const Splash = {
 
   SEZNAM: [
     { id:'zadny',    jmeno:'Splash',    cena:0,
-      barvy:['#6fc9e8'], n:26, spread:1.6, vlny:1, rings:0 },
+      barvy:['#6fc9e8'], n:34, spread:2.0, vlny:1, rings:1 },
     { id:'ohniva',   jmeno:'Blast',     cena:1,
-      barvy:['#ff8c42','#ffb347','#ffd98a'], n:40, spread:2.0, vlny:2, rings:1 },
+      barvy:['#ff8c42','#ffb347','#ffd98a'], n:56, spread:2.5, vlny:2, rings:2 },
     { id:'zlata',    jmeno:'Gold Rush', cena:1,
-      barvy:['#ffd070','#ffe6a0','#c8a862'], n:34, spread:1.7, vlny:1, rings:2 },
+      barvy:['#ffd070','#ffe6a0','#c8a862'], n:48, spread:2.2, vlny:1, rings:2 },
     { id:'ledova',   jmeno:'Shatter',   cena:1,
-      barvy:['#9fe4ff','#cdf3ff','#ffffff'], n:38, spread:1.4, vlny:1, rings:1 },
+      barvy:['#9fe4ff','#cdf3ff','#ffffff'], n:52, spread:1.9, vlny:1, rings:2 },
     { id:'ohnostroj',jmeno:'Fireworks', cena:1,
-      barvy:['#e0748a','#ffb347','#7fc99a','#9fe4ff'], n:36, spread:1.8, vlny:3, rings:1 },
+      barvy:['#e0748a','#ffb347','#7fc99a','#9fe4ff'], n:54, spread:2.3, vlny:3, rings:2 },
     { id:'duha',     jmeno:'Rainbow Burst', cena:1,
-      barvy:['#e0748a','#ffb347','#ffe98a','#7fc99a','#9fe4ff','#c9a8f2'], n:46, spread:1.9, vlny:1, rings:2 },
+      barvy:['#e0748a','#ffb347','#ffe98a','#7fc99a','#9fe4ff','#c9a8f2'], n:64, spread:2.5, vlny:2, rings:3 },
   ],
 
   nacti(k, v){ try { const x = localStorage.getItem(k); return x === null ? v : x; } catch(e){ return v; } },
