@@ -31,6 +31,7 @@ const Render = {
     this.krystaly(ctx, g, cam);
     this.rocks(ctx, g, cam);
     this.particles(ctx, g, cam);
+    this.rings(ctx, g, cam);
     this.player(ctx, g, cam);
     this.snowfall(ctx, g, W, H, cam);
 
@@ -1135,6 +1136,22 @@ const Render = {
     ctx.globalAlpha = 1;
   },
 
+  /* rázová vlna při dopadu do vody — jen u efektnějších splashů z obchodu */
+  rings(ctx, g, cam){
+    if (!g.rings || !g.rings.length) return;
+    for (const r of g.rings){
+      const a = Math.max(0, r.life / r.max);
+      const rad = r.r0 + (1 - a) * r.grow;
+      ctx.globalAlpha = a * 0.7;
+      ctx.strokeStyle = r.color;
+      ctx.lineWidth = Math.max(1, 4 * a);
+      ctx.beginPath();
+      ctx.arc(r.x, r.y - cam, rad, 0, 6.283);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  },
+
   /* ---------- postava ---------- */
   player(ctx, g, cam, skinId){
     const p = g.player;
@@ -1396,6 +1413,41 @@ const Render = {
       ctx.globalAlpha = 0.35 + f * 0.65;
       ctx.fillStyle = t.barvy[i % t.barvy.length];
       ctx.beginPath(); ctx.arc(x, y, Math.max(0.6, r), 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  },
+
+  /* statická ukázka splashe pro obchod — zamrzlý okamžik výbuchu barev */
+  previewSplash(ctx, w, h, splashId, scale){
+    scale = scale || 1;
+    ctx.clearRect(0, 0, w, h);
+    const s = (typeof Splash !== 'undefined') ? Splash.najdi(splashId) : null;
+    if (!s) return;
+
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+
+    for (const ring of [0, 1].slice(0, s.rings)){
+      ctx.globalAlpha = 0.45 - ring * 0.15;
+      ctx.strokeStyle = s.barvy[ring % s.barvy.length];
+      ctx.lineWidth = 2 * scale;
+      ctx.beginPath();
+      ctx.arc(0, 0, (16 + ring * 10) * scale, 0, 6.283);
+      ctx.stroke();
+    }
+
+    /* deterministická "náhoda" — ať se ikonka nekmitá při každém překreslení */
+    const N = Math.min(24, s.n);
+    for (let i = 0; i < N; i++){
+      const a = (i / N) * 6.283 + i * 0.7;
+      const dist = (10 + (i % 5) * 5) * scale * (s.spread / 1.6);
+      const x = Math.cos(a) * dist;
+      const y = Math.sin(a) * dist * 0.6 - 4 * scale;
+      const r = (1.4 + (i % 3) * 0.7) * scale;
+      ctx.globalAlpha = 0.4 + (i % 4) * 0.15;
+      ctx.fillStyle = s.barvy[i % s.barvy.length];
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.fill();
     }
     ctx.globalAlpha = 1;
     ctx.restore();

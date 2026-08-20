@@ -1,0 +1,33 @@
+{
+  "name": "skok",
+  "version": "1.0.0",
+  "description": "*(pracovní název projektu i složky zůstává „skok\" — adresa hry se tím nemění)*",
+  "main": "sw.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:www": "node scripts/build-www.js",
+    "sync": "npm run build:www && npx cap sync"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matydolezal-rgb/Skok.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/matydolezal-rgb/Skok/issues"
+  },
+  "homepage": "https://github.com/matydolezal-rgb/Skok#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
+    "@revenuecat/purchases-capacitor": "^13.4.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

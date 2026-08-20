@@ -225,6 +225,7 @@ body{
 .skin-name{ font-weight:700; font-size:.88rem; }
 .skin-price{ font-size:.8rem; color:#c8a862; font-weight:700; }
 .skin-price .gem-ico{ color:#ffd070; }
+.bonus-tag{ color:#6fd58a; font-size:.75em; }
 .skin-btn{
   font:inherit; font-weight:700; font-size:.78rem; cursor:pointer;
   color:#06101f; width:100%;

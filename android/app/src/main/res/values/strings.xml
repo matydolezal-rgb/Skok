@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">No Way But Up</string>
+    <string name="title_activity_main">No Way But Up</string>
+    <string name="package_name">com.nowaybutup.game</string>
+    <string name="custom_url_scheme">com.nowaybutup.game</string>
+</resources>

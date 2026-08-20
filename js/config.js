@@ -9,3 +9,9 @@
 
 const SIT_URL  = 'https://jzxedbxhjecpzsoadekk.supabase.co';
 const SIT_KLIC = 'sb_publishable_jVW6MgYhQBPxdkELVuqV7Q_SLbJ42Tp';
+
+/* RevenueCat — veřejné API klíče (jeden pro Android, jeden pro iOS),
+   z app.revenuecat.com/projects/.../apps. Dokud je iOS klíč prázdný,
+   nákup krystalů na iOS zůstane nedostupný, na Androidu funguje. */
+const REVENUECAT_KLIC_ANDROID = 'goog_bDbiJPgILGEXmjkdJUmttSAwlcg';
+const REVENUECAT_KLIC_IOS = '';

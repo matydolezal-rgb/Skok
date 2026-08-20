@@ -48,6 +48,7 @@ const Game = {
     this.time   = 0;
     this.rocks  = [];
     this.parts  = [];
+    this.rings  = [];
     this.shake  = 0;
     this.flash  = 0;      // bílé probliknutí při nárazu
     this.hitStop = 0;     // krátké zastavení času, aby rána byla cítit
@@ -106,6 +107,21 @@ const Game = {
       });
     }
     if (this.parts.length > 260) this.parts.splice(0, this.parts.length - 260);
+  },
+
+  /* dopad do vody na konci běhu — kosmetická volba z obchodu (viz Splash) */
+  splashBurst(x, y){
+    const s = (typeof Splash !== 'undefined') ? Splash.najdi(Splash.vybrany()) : null;
+    const cfg = s || { barvy:['#6fc9e8'], n:26, spread:1.6, vlny:1, rings:0 };
+
+    for (let w = 0; w < cfg.vlny; w++){
+      const barva = cfg.barvy[w % cfg.barvy.length];
+      this.burst(x, y, Math.round(cfg.n / cfg.vlny), barva, cfg.spread * (1 + w * 0.25));
+    }
+    for (let i = 0; i < cfg.rings; i++){
+      const zivot = 0.6 - i * 0.12;
+      this.rings.push({ x, y, life: zivot, max: zivot, r0: 6 + i * 14, grow: 260, color: cfg.barvy[i % cfg.barvy.length] });
+    }
   },
 
   /* stopa za postavou ve vzduchu — čistě kosmetická volba z obchodu */
@@ -201,7 +217,7 @@ const Game = {
     if (p.y > this.waterY){
       this.over  = true;
       this.cause = 'The water caught you';
-      this.burst(p.x, this.waterY, 26, '#6fc9e8', 1.6);
+      this.splashBurst(p.x, this.waterY);
       this.shake = 1;
       prehraj('konec');
       zavibruj('konec');
@@ -396,6 +412,11 @@ const Game = {
       q.y  += q.vy * dt;
       q.life -= dt;
       if (q.life <= 0) this.parts.splice(i, 1);
+    }
+    for (let i = this.rings.length - 1; i >= 0; i--){
+      const r = this.rings[i];
+      r.life -= dt;
+      if (r.life <= 0) this.rings.splice(i, 1);
     }
   },
 

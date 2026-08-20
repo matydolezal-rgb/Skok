@@ -22,8 +22,9 @@
     pause: $('ui-pause'), pauseBtn: $('btn-pause'), pauseNum: $('pause-num'),
     resume: $('btn-resume'), quit: $('btn-quit'),
     shop: $('ui-shop'), shopBtn: $('btn-shop'), shopBack: $('btn-shop-back'),
-    shopGrid: $('shop-grid'), shopBalance: $('shop-balance'),
+    shopGrid: $('shop-grid'), krystalyGrid: $('krystaly-grid'), shopBalance: $('shop-balance'),
     shopTabSkiny: $('shop-tab-skiny'), shopTabStopy: $('shop-tab-stopy'), shopTabMapy: $('shop-tab-mapy'),
+    shopTabSplash: $('shop-tab-splash'), shopTabKrystaly: $('shop-tab-krystaly'),
     zoom: $('skin-zoom'), zoomCanvas: $('skin-zoom-canvas'), zoomName: $('skin-zoom-name'),
   };
 
@@ -272,6 +273,7 @@
     skiny: { modul: Skiny, preview: (ctx, w, h, id, sc) => Render.previewSkin(ctx, w, h, id, sc) },
     stopy: { modul: Stopy, preview: (ctx, w, h, id, sc) => Render.previewTrail(ctx, w, h, id, sc) },
     mapy:  { modul: Mapy,  preview: (ctx, w, h, id, sc) => Render.previewMapa(ctx, w, h, id, sc) },
+    splash:{ modul: Splash,preview: (ctx, w, h, id, sc) => Render.previewSplash(ctx, w, h, id, sc) },
   };
   let shopKategorie = 'skiny';
 
@@ -284,13 +286,25 @@
 
   function obnovObchod(){
     const celkem = getGems();
-    const k = KATEGORIE[shopKategorie];
-    const modul = k.modul;
 
     ui.shopTabSkiny.classList.toggle('tab-on', shopKategorie === 'skiny');
     ui.shopTabStopy.classList.toggle('tab-on', shopKategorie === 'stopy');
     ui.shopTabMapy.classList.toggle('tab-on', shopKategorie === 'mapy');
-    ui.shopBalance.textContent = modul.zustatek(celkem);
+    ui.shopTabSplash.classList.toggle('tab-on', shopKategorie === 'splash');
+    ui.shopTabKrystaly.classList.toggle('tab-on', shopKategorie === 'krystaly');
+    ui.shopBalance.textContent = Mena.zustatek(celkem);
+
+    if (shopKategorie === 'krystaly'){
+      ui.shopGrid.classList.add('hidden');
+      ui.krystalyGrid.classList.remove('hidden');
+      obnovKrystaly();
+      return;
+    }
+    ui.shopGrid.classList.remove('hidden');
+    ui.krystalyGrid.classList.add('hidden');
+
+    const k = KATEGORIE[shopKategorie];
+    const modul = k.modul;
     ui.shopGrid.innerHTML = '';
 
     modul.SEZNAM.forEach((s) => {
@@ -334,6 +348,52 @@
       card.appendChild(btn);
 
       ui.shopGrid.appendChild(card);
+    });
+  }
+
+  /* ---------- obchod: dokoupení krystalů za skutečné peníze ---------- */
+  async function obnovKrystaly(){
+    ui.krystalyGrid.innerHTML = '';
+    const dostupne = Krystaly.dostupne();
+    const ceny = dostupne ? await Krystaly.ceny() : {};
+
+    Krystaly.SEZNAM.forEach((b) => {
+      const card = document.createElement('div');
+      card.className = 'skin-card';
+
+      const nm = document.createElement('div');
+      nm.className = 'skin-name';
+      nm.textContent = b.jmeno;
+      card.appendChild(nm);
+
+      const pocet = document.createElement('div');
+      pocet.className = 'skin-price';
+      pocet.innerHTML = '<span class="gem-ico">◆</span> ' + b.pocet +
+        (b.bonus > 0 ? ' <span class="bonus-tag">+' + b.bonus + '</span>' : '');
+      card.appendChild(pocet);
+
+      const btn = document.createElement('button');
+      btn.className = 'skin-btn';
+      if (!dostupne){
+        btn.textContent = 'App only';
+        btn.disabled = true;
+      } else {
+        btn.textContent = ceny[b.id] || 'Buy';
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          btn.textContent = '…';
+          const vysledek = await Krystaly.koupit(b.id);
+          if (!vysledek.ok && vysledek.chyba !== 'cancelled'){
+            btn.textContent = 'Try again';
+            btn.disabled = false;
+          } else {
+            obnovObchod();
+          }
+        });
+      }
+      card.appendChild(btn);
+
+      ui.krystalyGrid.appendChild(card);
     });
   }
 
@@ -534,6 +594,8 @@
   ui.shopTabSkiny.addEventListener('click', () => { shopKategorie = 'skiny'; obnovObchod(); });
   ui.shopTabStopy.addEventListener('click', () => { shopKategorie = 'stopy'; obnovObchod(); });
   ui.shopTabMapy.addEventListener('click', () => { shopKategorie = 'mapy'; obnovObchod(); });
+  ui.shopTabSplash.addEventListener('click', () => { shopKategorie = 'splash'; obnovObchod(); });
+  ui.shopTabKrystaly.addEventListener('click', () => { shopKategorie = 'krystaly'; obnovObchod(); });
   ui.tabWorld.addEventListener('click',   () => { zalozka = 'world';   obnovZebricek(); });
   ui.tabFriends.addEventListener('click', () => { zalozka = 'friends'; obnovZebricek(); });
   ui.tabMe.addEventListener('click',      () => { zalozka = 'me';      obnovZebricek(); });
@@ -591,6 +653,7 @@
   Game.reset(W, H, todaySeed());
   obnovPrepinace();
   obnovMenu();
+  Krystaly.init();
   requestAnimationFrame(frame);
 
 })();
