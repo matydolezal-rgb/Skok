@@ -131,20 +131,21 @@ const Game = {
     }
   },
 
-  /* stopa za postavou ve vzduchu — čistě kosmetická volba z obchodu */
+  /* stopa za postavou ve vzduchu — čistě kosmetická volba z obchodu.
+     Emise i velikost zvětšené, ať je to vidět i na malém mobilním displeji. */
   trailEmit(dt, p){
     if (typeof Stopy === 'undefined') return;
     const t = Stopy.najdi(Stopy.vybrany());
     if (!t || t.id === 'zadna') return;
-    if (!this.rng.chance(dt * 30)) return;
+    if (!this.rng.chance(dt * 60)) return;
     this.parts.push({
-      x: p.x + this.rng.range(-2, 2),
-      y: p.y + this.rng.range(-2, 2),
-      vx: -p.vx * 0.12 + this.rng.range(-15, 15),
-      vy: -p.vy * 0.08 + this.rng.range(-15, 15),
-      life: this.rng.range(0.35, 0.65),
-      max:  0.65,
-      r: this.rng.range(1.4, 3),
+      x: p.x + this.rng.range(-3, 3),
+      y: p.y + this.rng.range(-3, 3),
+      vx: -p.vx * 0.12 + this.rng.range(-18, 18),
+      vy: -p.vy * 0.08 + this.rng.range(-18, 18),
+      life: this.rng.range(0.4, 0.78),
+      max:  0.78,
+      r: this.rng.range(2.2, 4.6),
       color: t.barvy[Math.floor(this.rng() * t.barvy.length)],
     });
   },
