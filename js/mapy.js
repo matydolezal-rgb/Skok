@@ -30,7 +30,7 @@ const Mapy = {
 
     /* poušť — kaktusy dole, kosti nahoře, tekutý písek místo sněhu */
     {
-      id:'poust', jmeno:'Desert', cena:120,
+      id:'poust', jmeno:'Desert', cena:1,
       sky:      [['#3a1f0d','#f2a552'], ['#2a1508','#c97a2e'], ['#160a03','#7a4418']],
       farRocks: [['#2a1a0c','#5c3d1a'], ['#1e1108','#3f2a12']],
       backWall: [['#1c1006','#3a2410'], ['#120a03','#241407']],
