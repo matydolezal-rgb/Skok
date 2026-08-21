@@ -261,6 +261,38 @@ body{
 
 /* ---------- konec ---------- */
 .over-cause{ color:#e0748a; font-size:1.05rem; font-weight:600; letter-spacing:.02em; }
-.over-score{ display:flex; align-items:baseline; gap:4px; font-size:4.4rem; font-weight:900; line-height:1; }
+.over-score{ position:relative; display:flex; align-items:baseline; gap:4px; font-size:4.4rem; font-weight:900; line-height:1; }
 .over-score .m-unit{ font-size:1.3rem; }
 .over-best{ color:#8fa3bd; font-size:.9rem; min-height:1.2em; }
+
+/* nový rekord — jemné vyskočení čísla, zlatavá záře a pár jisker do stran */
+.over-score.record{ animation: recordPop .6s cubic-bezier(.34,1.56,.64,1); }
+@keyframes recordPop{
+  0%  { transform:scale(1); }
+  35% { transform:scale(1.24); text-shadow:0 0 26px rgba(255,208,112,.85); }
+  65% { transform:scale(.95); }
+  100%{ transform:scale(1); }
+}
+.over-best.record{ animation: recordGlow 1.5s ease-in-out 2; }
+@keyframes recordGlow{
+  0%, 100%{ color:#8fa3bd; text-shadow:none; }
+  50%     { color:#ffd070; text-shadow:0 0 12px rgba(255,208,112,.75); }
+}
+.spark{
+  position:absolute; left:50%; top:50%; width:6px; height:6px; border-radius:50%;
+  background:#ffd070; opacity:0; pointer-events:none;
+}
+.over-score.record .spark{ animation:sparkFly .75s ease-out forwards; }
+@keyframes sparkFly{
+  0%  { opacity:1; transform:translate(-50%,-50%) scale(.5); }
+  55% { opacity:1; }
+  100%{ opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1); }
+}
+.spark.s1{ --dx:-64px; --dy:-46px; background:#ffd070; }
+.spark.s2{ --dx:60px;  --dy:-50px; background:#ffe6a0; }
+.spark.s3{ --dx:-76px; --dy:8px;   background:#ffb347; }
+.spark.s4{ --dx:74px;  --dy:12px;  background:#ffd070; }
+.spark.s5{ --dx:-44px; --dy:54px;  background:#ffe6a0; }
+.spark.s6{ --dx:48px;  --dy:58px;  background:#ffb347; }
+.spark.s7{ --dx:0px;   --dy:-70px; background:#fff4d6; }
+.spark.s8{ --dx:0px;   --dy:70px;  background:#fff4d6; }

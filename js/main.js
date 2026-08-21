@@ -15,7 +15,7 @@
     tabWorld: $('tab-world'), tabFriends: $('tab-friends'), tabMe: $('tab-me'),
     boardList: $('board-list'), boardEmpty: $('board-empty'), boardBack: $('btn-board-back'),
     boardPanel: $('board-panel'), boardSub: $('board-sub'),
-    overNum: $('over-num'), overBest: $('over-best'), overCause: $('over-cause'),
+    overNum: $('over-num'), overBest: $('over-best'), overCause: $('over-cause'), overScore: $('over-score'),
     gemNum: $('gem-num'), gemTotal: $('gem-total'), overGems: $('over-gems'),
     retry: $('btn-retry'), toMenu: $('btn-menu'),
     sound: $('btn-sound'), music: $('btn-music'), haptic: $('btn-haptic'),
@@ -448,6 +448,17 @@
     show('play');
   }
 
+  /* vyskočení čísla, zlatavá záře a pár jisker — jen když je co slavit.
+     Třída se musí sundat a znovu nasadit (s reflow mezi tím), jinak by se
+     u druhého rekordu za sebou animace CSS znovu nespustila. */
+  function oslavRekord(){
+    ui.overScore.classList.remove('record');
+    ui.overBest.classList.remove('record');
+    void ui.overScore.offsetWidth;
+    ui.overScore.classList.add('record');
+    ui.overBest.classList.add('record');
+  }
+
   function konecBehu(){
     Zvuk.vodaStop();
     Zvuk.hudbaStop();
@@ -461,6 +472,8 @@
     if (nasbirano > 0) save(KEY_GEMS, getGems() + nasbirano);
     ui.overGems.textContent = nasbirano > 0 ? '◆ ' + nasbirano + ' crystals collected' : '';
 
+    let novyRekord = false;
+
     if (rezim === 'daily'){
       const dnes = todaySeed();
       const dosud = getDaily(dnes);
@@ -469,6 +482,7 @@
         ui.overBest.textContent = dosud === null
           ? 'Your first run today. Try to beat it.'
           : 'New best today! Previously ' + dosud + ' m.';
+        novyRekord = dosud !== null && m > dosud;
       } else {
         ui.overBest.textContent = 'Best today ' + dosud + ' m. One more?';
       }
@@ -476,12 +490,14 @@
       /* výsledek do žebříčku; bez signálu počká ve frontě */
       if (Sit.pripojeno() && Sit.jmeno()) Sit.posli(dnes, Math.max(m, dosud || 0));
     } else {
-      ui.overBest.textContent = m > best ? 'New record!' : 'Record: ' + best + ' m';
+      novyRekord = m > best;
+      ui.overBest.textContent = novyRekord ? 'New record!' : 'Record: ' + best + ' m';
       ui.retry.textContent = 'Again';
     }
 
     if (m > best) save(KEY_BEST, m);
     show('over');
+    if (novyRekord) oslavRekord();
   }
 
   /* ---------- pauza ---------- */
