@@ -40,7 +40,10 @@ const Game = {
       imunita: 0,          // po zásahu chvíli nejde dostat další ránu
       squash: 0,           // deformace při dopadu, 0–1
       face: 1,
+      spin: 0,             // přemet při gólovém odrazu z vody, jinak 0
+      spinVel: 0,
     };
+    this.odrazCas = 0;     // jak dlouho už doznívá odraz z vody po konci běhu
 
     this.camY   = this.player.y - height * 0.58;
     this.waterY = 720;
@@ -93,12 +96,16 @@ const Game = {
 
   /* ---------- částice ---------- */
   /* color může být jedna barva, nebo pole barev — pak si každá částice vybere svou náhodně.
-     rMult zvětšuje jen velikost teček (dostřel řeší spread), výchozí 1 pro běžné efekty hry. */
-  burst(x, y, n, color, spread, rMult){
+     rMult zvětšuje jen velikost teček (dostřel řeší spread), výchozí 1 pro běžné efekty hry.
+     uhelStred/uhelVysec omezí směr výletu na výsek (v radiánech; -PI/2 = přímo nahoru),
+     bez nich letí částice do všech stran jako dřív. */
+  burst(x, y, n, color, spread, rMult, uhelStred, uhelVysec){
     const paleta = Array.isArray(color) ? color : null;
     const rm = rMult || 1;
     for (let i = 0; i < n; i++){
-      const a = this.rng() * Math.PI * 2;
+      const a = (uhelStred === undefined)
+        ? this.rng() * Math.PI * 2
+        : uhelStred + (this.rng() - 0.5) * uhelVysec;
       const s = this.rng.range(40, 220) * (spread || 1);
       this.parts.push({
         x, y,
@@ -114,21 +121,31 @@ const Game = {
   },
 
   /* dopad do vody na konci běhu — kosmetická volba z obchodu (viz Splash).
-     Větší tečky (rMult) a mohutnější prstence než běžné částice ve hře — tohle je
-     poslední věc, co hráč u běhu vidí, má to bouchnout jako gól v Rocket League. */
+     Částice stříkají nahoru z hladiny (ne do všech stran jako výbuch pod vodou),
+     větší tečky (rMult) a mohutnější prstence — poslední věc, co hráč u běhu vidí,
+     má to bouchnout jako gól v Rocket League. */
   splashBurst(x, y){
     const s = (typeof Splash !== 'undefined') ? Splash.najdi(Splash.vybrany()) : null;
     const cfg = s || { barvy:['#6fc9e8'], n:26, spread:1.6, vlny:1, rings:0 };
 
     /* celá paleta barev jde do každé vlny — každá částice si vybere svou náhodně,
-       jinak by u efektů s jednou vlnou (třeba Rainbow Burst) vyletěla jen jedna barva */
+       jinak by u efektů s jednou vlnou (třeba Rainbow Burst) vyletěla jen jedna barva.
+       Výsek −PI/2 ± 100° = vějíř nahoru a do stran, nikdy dolů do vody. */
     for (let w = 0; w < cfg.vlny; w++){
-      this.burst(x, y, Math.round(cfg.n / cfg.vlny), cfg.barvy, cfg.spread * (1 + w * 0.25), 1.9);
+      this.burst(x, y, Math.round(cfg.n / cfg.vlny), cfg.barvy, cfg.spread * (1 + w * 0.25), 1.9,
+                 -Math.PI / 2, Math.PI * 1.1);
     }
     for (let i = 0; i < cfg.rings; i++){
       const zivot = 0.65 - i * 0.1;
       this.rings.push({ x, y, life: zivot, max: zivot, r0: 10 + i * 18, grow: 260, color: cfg.barvy[i % cfg.barvy.length] });
     }
+
+    /* postavička vystřelí zpátky nahoru z vody a udělá přemet — gólová oslava */
+    const p = this.player;
+    p.vy = -520;
+    p.vx = p.vx * 0.35 + this.rng.range(-60, 60);
+    p.spinVel = (p.vx >= 0 ? 1 : -1) * this.rng.range(9, 13);
+    this.odrazCas = 0;
   },
 
   /* stopa za postavou ve vzduchu — čistě kosmetická volba z obchodu.
@@ -434,6 +451,18 @@ const Game = {
     if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 3.2);
     if (this.flash > 0) this.flash = Math.max(0, this.flash - dt * 3.4);
     this.updateParts(dt);
+
+    /* gólový odraz z vody — postavička krátce vystřelí nahoru a udělá přemet,
+       pak se zastaví, ať to nerozjede do ztracena než naskočí obrazovka konce */
+    if (this.over && this.odrazCas < 0.8){
+      const p = this.player;
+      p.vy += P.GRAVITY * 0.5 * dt;   // slabší gravitace = delší, čitelnější oblouk
+      p.x  += p.vx * dt;
+      p.y  += p.vy * dt;
+      p.spin += (p.spinVel || 0) * dt;
+      p.spinVel = (p.spinVel || 0) * (1 - dt * 0.6);
+      this.odrazCas += dt;
+    }
   },
 
   meters(){ return Math.floor(this.height); },

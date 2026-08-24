@@ -1164,6 +1164,7 @@ const Render = {
 
     ctx.save();
     ctx.translate(p.x, y);
+    if (p.spin) ctx.rotate(p.spin);   // přemet při gólovém odrazu z vody
 
     /* šála letí proti pohybu */
     const vlen = Math.hypot(p.vx, p.vy);
