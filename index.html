@@ -41,6 +41,8 @@
     <h1 class="logo">No Way<br>But Up</h1>
     <p class="sub">The water is rising.</p>
 
+    <button id="btn-krystaly" class="gift-btn" aria-label="Get Crystals">🎁</button>
+
     <div class="menu">
       <button id="btn-daily" class="card card-main">
         <span class="card-title">Daily Challenge</span>
@@ -100,13 +102,21 @@
       <button id="shop-tab-stopy" class="tab">Trails</button>
       <button id="shop-tab-mapy" class="tab">Maps</button>
       <button id="shop-tab-splash" class="tab">Splash</button>
-      <button id="shop-tab-krystaly" class="tab">Get Crystals</button>
     </div>
 
     <div id="shop-grid" class="shop-grid"></div>
-    <div id="krystaly-grid" class="shop-grid hidden"></div>
 
     <button id="btn-shop-back" class="btn btn-ghost">Back</button>
+  </div>
+
+  <!-- KRYSTALY -->
+  <div id="ui-krystaly" class="overlay overlay-top hidden">
+    <h2 class="board-title">Get Crystals</h2>
+    <div class="board-sub"><span class="gem-ico">◆</span><span id="krystaly-balance">0</span> to spend</div>
+
+    <div id="krystaly-grid" class="shop-grid"></div>
+
+    <button id="btn-krystaly-back" class="btn btn-ghost">Back</button>
   </div>
 
   <!-- ZOOM NA SKIN -->

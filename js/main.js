@@ -22,9 +22,11 @@
     pause: $('ui-pause'), pauseBtn: $('btn-pause'), pauseNum: $('pause-num'),
     resume: $('btn-resume'), quit: $('btn-quit'),
     shop: $('ui-shop'), shopBtn: $('btn-shop'), shopBack: $('btn-shop-back'),
-    shopGrid: $('shop-grid'), krystalyGrid: $('krystaly-grid'), shopBalance: $('shop-balance'),
+    shopGrid: $('shop-grid'), shopBalance: $('shop-balance'),
     shopTabSkiny: $('shop-tab-skiny'), shopTabStopy: $('shop-tab-stopy'), shopTabMapy: $('shop-tab-mapy'),
-    shopTabSplash: $('shop-tab-splash'), shopTabKrystaly: $('shop-tab-krystaly'),
+    shopTabSplash: $('shop-tab-splash'),
+    krystalyScreen: $('ui-krystaly'), krystalyBtn: $('btn-krystaly'), krystalyBack: $('btn-krystaly-back'),
+    krystalyGrid: $('krystaly-grid'), krystalyBalance: $('krystaly-balance'),
     zoom: $('skin-zoom'), zoomCanvas: $('skin-zoom-canvas'), zoomName: $('skin-zoom-name'),
   };
 
@@ -88,6 +90,7 @@
     ui.menu.classList.toggle('hidden',   o !== 'menu');
     ui.board.classList.toggle('hidden',  o !== 'board');
     ui.shop.classList.toggle('hidden',   o !== 'shop');
+    ui.krystalyScreen.classList.toggle('hidden', o !== 'krystaly');
     ui.over.classList.toggle('hidden',   o !== 'over');
     ui.pause.classList.toggle('hidden',  o !== 'pause');
     ui.hud.classList.toggle('hidden',    o !== 'play' && o !== 'pause');
@@ -291,17 +294,7 @@
     ui.shopTabStopy.classList.toggle('tab-on', shopKategorie === 'stopy');
     ui.shopTabMapy.classList.toggle('tab-on', shopKategorie === 'mapy');
     ui.shopTabSplash.classList.toggle('tab-on', shopKategorie === 'splash');
-    ui.shopTabKrystaly.classList.toggle('tab-on', shopKategorie === 'krystaly');
     ui.shopBalance.textContent = Mena.zustatek(celkem);
-
-    if (shopKategorie === 'krystaly'){
-      ui.shopGrid.classList.add('hidden');
-      ui.krystalyGrid.classList.remove('hidden');
-      obnovKrystaly();
-      return;
-    }
-    ui.shopGrid.classList.remove('hidden');
-    ui.krystalyGrid.classList.add('hidden');
 
     const k = KATEGORIE[shopKategorie];
     const modul = k.modul;
@@ -351,8 +344,9 @@
     });
   }
 
-  /* ---------- obchod: dokoupení krystalů za skutečné peníze ---------- */
+  /* ---------- samostatná obrazovka: dokoupení krystalů za skutečné peníze ---------- */
   async function obnovKrystaly(){
+    ui.krystalyBalance.textContent = Mena.zustatek(getGems());
     ui.krystalyGrid.innerHTML = '';
     const dostupne = Krystaly.dostupne();
     const ceny = dostupne ? await Krystaly.ceny() : {};
@@ -387,7 +381,7 @@
             btn.textContent = 'Try again';
             btn.disabled = false;
           } else {
-            obnovObchod();
+            obnovKrystaly();
           }
         });
       }
@@ -611,7 +605,8 @@
   ui.shopTabStopy.addEventListener('click', () => { shopKategorie = 'stopy'; obnovObchod(); });
   ui.shopTabMapy.addEventListener('click', () => { shopKategorie = 'mapy'; obnovObchod(); });
   ui.shopTabSplash.addEventListener('click', () => { shopKategorie = 'splash'; obnovObchod(); });
-  ui.shopTabKrystaly.addEventListener('click', () => { shopKategorie = 'krystaly'; obnovObchod(); });
+  ui.krystalyBtn.addEventListener('click', () => { obnovKrystaly(); show('krystaly'); });
+  ui.krystalyBack.addEventListener('click', obnovMenu);
   ui.tabWorld.addEventListener('click',   () => { zalozka = 'world';   obnovZebricek(); });
   ui.tabFriends.addEventListener('click', () => { zalozka = 'friends'; obnovZebricek(); });
   ui.tabMe.addEventListener('click',      () => { zalozka = 'me';      obnovZebricek(); });
