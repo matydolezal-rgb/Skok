@@ -117,7 +117,7 @@ const Game = {
         color: paleta ? paleta[Math.floor(this.rng() * paleta.length)] : color,
       });
     }
-    if (this.parts.length > 260) this.parts.splice(0, this.parts.length - 260);
+    if (this.parts.length > 360) this.parts.splice(0, this.parts.length - 360);
   },
 
   /* dopad do vody na konci běhu — kosmetická volba z obchodu (viz Splash).

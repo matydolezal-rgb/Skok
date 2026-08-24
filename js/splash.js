@@ -16,9 +16,9 @@ const Splash = {
     { id:'ledova',   jmeno:'Shatter',   cena:1,
       barvy:['#9fe4ff','#cdf3ff','#ffffff'], n:52, spread:1.9, vlny:1, rings:2 },
     { id:'ohnostroj',jmeno:'Fireworks', cena:1,
-      barvy:['#e0748a','#ffb347','#7fc99a','#9fe4ff'], n:54, spread:2.3, vlny:3, rings:2 },
+      barvy:['#e0748a','#ffb347','#7fc99a','#9fe4ff'], n:78, spread:2.8, vlny:4, rings:3 },
     { id:'duha',     jmeno:'Rainbow Burst', cena:1,
-      barvy:['#e0748a','#ffb347','#ffe98a','#7fc99a','#9fe4ff','#c9a8f2'], n:64, spread:2.5, vlny:2, rings:3 },
+      barvy:['#e0748a','#ffb347','#ffe98a','#7fc99a','#9fe4ff','#c9a8f2'], n:92, spread:3.0, vlny:3, rings:4 },
   ],
 
   nacti(k, v){ try { const x = localStorage.getItem(k); return x === null ? v : x; } catch(e){ return v; } },
