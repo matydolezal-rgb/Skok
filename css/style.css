@@ -103,6 +103,13 @@ body{
 }
 .gift-btn:active{ transform:scale(.9); }
 
+/* číslo verze v rohu — jen pro ověření, že se appka na telefonu aktualizovala */
+.verze-znacka{
+  position:absolute; bottom:8px; left:10px; z-index:11;
+  font-size:.65rem; color:rgba(143,163,189,.55); letter-spacing:.02em;
+  pointer-events:none;
+}
+
 .btn{
   font:inherit; font-weight:700; font-size:1.05rem; cursor:pointer;
   color:#06101f;

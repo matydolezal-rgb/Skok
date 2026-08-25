@@ -665,6 +665,7 @@
   obnovPrepinace();
   obnovMenu();
   Krystaly.init();
+  $('verze-znacka').textContent = typeof VERZE_ZOBRAZENI !== 'undefined' ? VERZE_ZOBRAZENI : '';
   requestAnimationFrame(frame);
 
 })();

@@ -15,3 +15,7 @@ const SIT_KLIC = 'sb_publishable_jVW6MgYhQBPxdkELVuqV7Q_SLbJ42Tp';
    nákup krystalů na iOS zůstane nedostupný, na Androidu funguje. */
 const REVENUECAT_KLIC_ANDROID = 'goog_bDbiJPgILGEXmjkdJUmttSAwlcg';
 const REVENUECAT_KLIC_IOS = '';
+
+/* Číslo verze v rohu obrazovky — musí sedět s VERZE v sw.js, ať Matyáš
+   na první pohled pozná, jestli se mu appka na telefonu aktualizovala. */
+const VERZE_ZOBRAZENI = 'v46';
