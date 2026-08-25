@@ -342,6 +342,19 @@ const Game = {
       r.y  += r.vy * dt;
       r.rot += r.spin * dt;
 
+      /* Dokud visíš na stěně, kámen na tebe prostě neletí — vyhne se dráze,
+         než se k tobě dostane. Ve vzduchu se nevyhýbá vůbec, tam zásah čekáš. */
+      if (p.state === 'cling'){
+        const bezpVzd = r.r + P.R + 16;
+        const dxSt = r.x - p.x;
+        const blizi = r.y < p.y && r.y > p.y - 260;
+        if (blizi && Math.abs(dxSt) < bezpVzd){
+          const smer = dxSt >= 0 ? 1 : -1;
+          r.x += smer * 90 * dt;
+          r.x = Math.min(Math.max(r.x, World.leftWall(r.y) + r.r + 1), World.rightWall(r.y) - r.r - 1);
+        }
+      }
+
       /* náraz do stěny */
       if (r.x - r.r < World.leftWall(r.y) || r.x + r.r > World.rightWall(r.y)){
         this.burst(r.x, r.y, 6, ledovy ? '#bfe9ff' : '#6b6257', 0.9);
