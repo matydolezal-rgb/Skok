@@ -1,6 +1,9 @@
 node_modules/
 www/
 
+# dočasné zámkové soubory od Wordu/Office, když je otevřený nějaký soubor
+~$*
+
 # Android build output
 android/app/build/
 android/build/
