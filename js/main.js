@@ -167,7 +167,7 @@
           '<input id="in-email" type="email" placeholder="you@example.com" autocomplete="email">' +
           '<button class="panel-btn" id="btn-email">Send code</button>' +
         '</div>' +
-        '<span class="panel-msg" id="msg-email">We\'ll send a 6-digit code, no password needed.</span>';
+        '<span class="panel-msg" id="msg-email">We\'ll send a code by email, no password needed.</span>';
 
       $('btn-email').addEventListener('click', async () => {
         const email = $('in-email').value.trim();
@@ -192,7 +192,7 @@
       ui.boardPanel.innerHTML =
         '<span class="panel-label">Code sent to ' + bezpecne(zadanyEmail) + '</span>' +
         '<div class="panel-row">' +
-          '<input id="in-kod-prihlaseni" maxlength="6" inputmode="numeric" placeholder="123456">' +
+          '<input id="in-kod-prihlaseni" maxlength="8" inputmode="numeric" placeholder="12345678">' +
           '<button class="panel-btn" id="btn-over-kod">Verify</button>' +
         '</div>' +
         '<span class="panel-msg" id="msg-kod-prihlaseni">Check your inbox (and spam folder).</span>' +
