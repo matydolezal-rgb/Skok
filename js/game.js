@@ -342,27 +342,6 @@ const Game = {
       r.y  += r.vy * dt;
       r.rot += r.spin * dt;
 
-      /* Dokud visíš na stěně, kámen na tebe prostě neletí — vyhne se dráze,
-         než se k tobě dostane. Ve vzduchu se nevyhýbá vůbec, tam zásah čekáš.
-         Rychlost úhybu se počítá z toho, kolik času do srážky zbývá (ne pevná
-         hodnota) — i kámen, co se objeví těsně nad tebou, tak stihne uhnout. */
-      if (p.state === 'cling'){
-        const bezpVzd = r.r + P.R + 16;
-        const dxSt = r.x - p.x;
-        const mezera = p.y - r.y;   // kolik zbývá, než mine tvoji výšku
-        if (mezera > 0 && mezera < 260 && Math.abs(dxSt) < bezpVzd){
-          /* kámen během pádu ještě zrychluje — čas do srážky spočti přesně
-             (kvadraticky s gravitací), ne lineárně z aktuální rychlosti,
-             jinak únik nestihne kámen, co se objeví už blízko */
-          const g = ledovy ? 620 : 420;
-          const cas = Math.max(0.03, (-r.vy + Math.sqrt(r.vy * r.vy + 2 * g * mezera)) / g);
-          const potrebna = (bezpVzd - Math.abs(dxSt)) / cas;
-          const smer = dxSt >= 0 ? 1 : -1;
-          r.x += smer * potrebna * dt;
-          r.x = Math.min(Math.max(r.x, World.leftWall(r.y) + r.r + 1), World.rightWall(r.y) - r.r - 1);
-        }
-      }
-
       /* náraz do stěny */
       if (r.x - r.r < World.leftWall(r.y) || r.x + r.r > World.rightWall(r.y)){
         this.burst(r.x, r.y, 6, ledovy ? '#bfe9ff' : '#6b6257', 0.9);
@@ -373,12 +352,8 @@ const Game = {
       /* zásah hráče */
       const dx = r.x - p.x, dy = r.y - p.y;
       /* Po ráně chvíli neprůstřelný. Bez toho tě ve výšce, kde padá něco
-         každou půlvteřinu, série zásahů semele bez šance to zachránit.
-         "p.state !== 'cling'" je tvrdá pojistka k vyhýbání nahoře — i kdyby
-         se kámen objevil tak blízko, že by úhyb nestihl doběhnout (např. ho
-         necháváš za sebou z doby, kdys ještě byl ve vzduchu), na stěně tě
-         prostě nikdy nic netrefí. */
-      if (dx*dx + dy*dy < (r.r + P.R) * (r.r + P.R) && p.stun <= 0 && p.imunita <= 0 && p.state !== 'cling'){
+         každou půlvteřinu, série zásahů semele bez šance to zachránit. */
+      if (dx*dx + dy*dy < (r.r + P.R) * (r.r + P.R) && p.stun <= 0 && p.imunita <= 0){
         const koule = r.typ === 'koule';
         p.imunita = 0.8;
         p.state = 'air';
