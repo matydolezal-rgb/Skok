@@ -11,10 +11,11 @@
 --
 -- DŮLEŽITÉ při přechodu ze starší verze: staré řádky v `hraci` mají
 -- náhodná ID zařízení, ne skutečné auth.users.id, takže nejdou napojit
--- na žádný účet. Než spustíš zbytek souboru, smaž stará data (byla to
--- jen testovací hraní, nic se neztratí):
---   drop table if exists skore;
---   drop table if exists hraci;
+-- na žádný účet. Smaž stará data (byla to jen testovací hraní, nic
+-- se neztratí) — jinak by tabulka `hraci` zůstala se starou strukturou,
+-- protože "create table if not exists" existující tabulku nezmění.
+drop table if exists skore;
+drop table if exists hraci;
 
 -- ---------- tabulky ----------
 
