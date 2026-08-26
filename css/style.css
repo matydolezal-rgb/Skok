@@ -90,9 +90,13 @@ body{
 }
 .sub{ color:#8fa3bd; font-size:.95rem; letter-spacing:.02em; }
 
-/* dáreček v rohu hlavní obrazovky — přímá zkratka na nákup krystalů */
+/* dáreček v rohu hlavní obrazovky — přímá zkratka na nákup krystalů.
+   Odsazení shora musí počítat s výřezem/stavovým řádkem (baterie, hodiny),
+   jinak se s ním na telefonu překrývá — stejně jako to dělá .pause-btn.
+   Základ je o kousek větší než u pauzy, protože tam, kde safe-area hlásí
+   nulu (část Androidu ve fullscreenu), by jinak zůstal pořád moc vysoko. */
 .gift-btn{
-  position:absolute; top:18px; right:18px; z-index:11;
+  position:absolute; top:calc(26px + env(safe-area-inset-top, 0px)); right:18px; z-index:11;
   width:48px; height:48px; border-radius:50%;
   font-size:1.5rem; line-height:1; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
