@@ -118,6 +118,8 @@
 
   /* ---------- žebříček ---------- */
   let zalozka = 'world';
+  let krokPrihlaseni = 'email';   // 'email' | 'kod' | 'jmeno'
+  let zadanyEmail = '';
 
   function bezpecne(s){
     return String(s == null ? '' : s)
@@ -149,31 +151,98 @@
     });
   }
 
-  /* jméno se zadává jen jednou, žádná registrace ani heslo */
-  function panelJmeno(){
+  /* Přihlášení e-mailem — tři kroky: e-mail → 6místný kód z pošty → přezdívka.
+     Žádné heslo, žádný účet mimo hru. */
+  function panelPrihlaseni(){
     ui.boardPanel.classList.remove('hidden');
-    ui.boardPanel.innerHTML =
-      '<span class="panel-label">What name should others see?</span>' +
-      '<div class="panel-row">' +
-        '<input id="in-jmeno" maxlength="16" placeholder="nickname">' +
-        '<button class="panel-btn" id="btn-jmeno">Save</button>' +
-      '</div>' +
-      '<span class="panel-msg" id="msg-jmeno">No email, no password. You can change it any time.</span>';
 
-    $('btn-jmeno').addEventListener('click', async () => {
-      const j = $('in-jmeno').value.trim();
-      const msg = $('msg-jmeno');
-      if (j.length < 2){ msg.className = 'panel-msg chyba'; msg.textContent = 'Use at least two characters.'; return; }
-      msg.className = 'panel-msg'; msg.textContent = 'Saving…';
-      try {
-        await Sit.registruj(j);
-        await Sit.synchronizuj();
-        obnovZebricek();
-      } catch(e){
-        msg.className = 'panel-msg chyba';
-        msg.textContent = 'The server is not responding. Try again later — the game keeps working.';
-      }
-    });
+    if (krokPrihlaseni === 'kod') return krokKod();
+    if (krokPrihlaseni === 'jmeno') return krokJmeno();
+    return krokEmail();
+
+    function krokEmail(){
+      ui.boardPanel.innerHTML =
+        '<span class="panel-label">Log in with your email</span>' +
+        '<div class="panel-row">' +
+          '<input id="in-email" type="email" placeholder="you@example.com" autocomplete="email">' +
+          '<button class="panel-btn" id="btn-email">Send code</button>' +
+        '</div>' +
+        '<span class="panel-msg" id="msg-email">We\'ll send a 6-digit code, no password needed.</span>';
+
+      $('btn-email').addEventListener('click', async () => {
+        const email = $('in-email').value.trim();
+        const msg = $('msg-email');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+          msg.className = 'panel-msg chyba'; msg.textContent = 'That doesn\'t look like a valid email.'; return;
+        }
+        msg.className = 'panel-msg'; msg.textContent = 'Sending…';
+        try {
+          await Sit.posliKod(email);
+          zadanyEmail = email;
+          krokPrihlaseni = 'kod';
+          panelPrihlaseni();
+        } catch(e){
+          msg.className = 'panel-msg chyba';
+          msg.textContent = 'Could not send the code. Try again later.';
+        }
+      });
+    }
+
+    function krokKod(){
+      ui.boardPanel.innerHTML =
+        '<span class="panel-label">Code sent to ' + bezpecne(zadanyEmail) + '</span>' +
+        '<div class="panel-row">' +
+          '<input id="in-kod-prihlaseni" maxlength="6" inputmode="numeric" placeholder="123456">' +
+          '<button class="panel-btn" id="btn-over-kod">Verify</button>' +
+        '</div>' +
+        '<span class="panel-msg" id="msg-kod-prihlaseni">Check your inbox (and spam folder).</span>' +
+        '<button class="panel-link" id="btn-jiny-email">Use a different email</button>';
+
+      $('btn-over-kod').addEventListener('click', async () => {
+        const kod = $('in-kod-prihlaseni').value.trim();
+        const msg = $('msg-kod-prihlaseni');
+        if (kod.length < 4){ msg.className = 'panel-msg chyba'; msg.textContent = 'Enter the code from the email.'; return; }
+        msg.className = 'panel-msg'; msg.textContent = 'Checking…';
+        try {
+          await Sit.overKod(zadanyEmail, kod);
+          krokPrihlaseni = 'jmeno';
+          panelPrihlaseni();
+        } catch(e){
+          msg.className = 'panel-msg chyba';
+          msg.textContent = 'Wrong or expired code. Try again.';
+        }
+      });
+      $('btn-jiny-email').addEventListener('click', () => {
+        krokPrihlaseni = 'email';
+        panelPrihlaseni();
+      });
+    }
+
+    function krokJmeno(){
+      ui.boardPanel.innerHTML =
+        '<span class="panel-label">What name should others see?</span>' +
+        '<div class="panel-row">' +
+          '<input id="in-jmeno" maxlength="16" placeholder="nickname" value="' + bezpecne(Sit.jmeno()) + '">' +
+          '<button class="panel-btn" id="btn-jmeno">Save</button>' +
+        '</div>' +
+        '<span class="panel-msg" id="msg-jmeno">You can change it any time.</span>';
+
+      $('btn-jmeno').addEventListener('click', async () => {
+        const j = $('in-jmeno').value.trim();
+        const msg = $('msg-jmeno');
+        if (j.length < 2){ msg.className = 'panel-msg chyba'; msg.textContent = 'Use at least two characters.'; return; }
+        msg.className = 'panel-msg'; msg.textContent = 'Saving…';
+        try {
+          await Sit.registruj(j);
+          await Sit.synchronizuj();
+          krokPrihlaseni = 'email';
+          obnovZebricek();
+        } catch(e){
+          msg.className = 'panel-msg chyba';
+          msg.textContent = 'The server is not responding. Try again later — the game keeps working.';
+        }
+      });
+    }
   }
 
   function panelKamaradi(){
@@ -185,7 +254,8 @@
         '<input id="in-kod" maxlength="7" placeholder="friend\'s code">' +
         '<button class="panel-btn" id="btn-kod">Add</button>' +
       '</div>' +
-      '<span class="panel-msg" id="msg-kod">Friends are stored on this phone only.</span>';
+      '<span class="panel-msg" id="msg-kod">Friends are stored on this phone only.</span>' +
+      '<button class="panel-link" id="btn-odhlasit">Log out (' + bezpecne(Sit.session() ? Sit.session().email : '') + ')</button>';
 
     $('btn-kod').addEventListener('click', () => {
       const msg = $('msg-kod');
@@ -193,6 +263,11 @@
       if (!v.ok){ msg.className = 'panel-msg chyba'; msg.textContent = v.chyba; return; }
       msg.className = 'panel-msg ok';
       msg.textContent = 'Added: ' + v.kod;
+      obnovZebricek();
+    });
+    $('btn-odhlasit').addEventListener('click', () => {
+      Sit.odhlasit();
+      krokPrihlaseni = 'email';
       obnovZebricek();
     });
   }
@@ -233,9 +308,9 @@
       return;
     }
 
-    if (!Sit.jmeno()){
-      prazdno('Pick a nickname first — that\'s how others will see you.');
-      panelJmeno();
+    if (!Sit.prihlasen() || !Sit.jmeno()){
+      prazdno('Log in to see the leaderboard and appear on it yourself.');
+      panelPrihlaseni();
       return;
     }
 
@@ -402,7 +477,7 @@
     try { ulozene = JSON.parse(load(KEY_ZNACKY + den, '[]')) || []; } catch(e){}
     Game.znacky = ulozene;
 
-    if (!Sit.pripojeno() || !Sit.jmeno()) return;
+    if (!Sit.pripojeno() || !Sit.prihlasen() || !Sit.jmeno()) return;
 
     Sit.kamaradiDne(den).then((data) => {
       const znacky = data
@@ -482,7 +557,7 @@
       }
       ui.retry.textContent = 'Again';
       /* výsledek do žebříčku; bez signálu počká ve frontě */
-      if (Sit.pripojeno() && Sit.jmeno()) Sit.posli(dnes, Math.max(m, dosud || 0));
+      if (Sit.pripojeno() && Sit.prihlasen() && Sit.jmeno()) Sit.posli(dnes, Math.max(m, dosud || 0));
     } else {
       novyRekord = m > best;
       ui.overBest.textContent = novyRekord ? 'New record!' : 'Record: ' + best + ' m';

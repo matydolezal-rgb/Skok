@@ -205,6 +205,10 @@ body{
 .panel-msg{ font-size:.8rem; color:#7f95b0; line-height:1.45; }
 .panel-msg.chyba{ color:#e0748a; }
 .panel-msg.ok{ color:#7fc99a; }
+.panel-link{
+  font:inherit; font-size:.78rem; color:#7f95b0; text-decoration:underline;
+  background:none; border:none; cursor:pointer; padding:2px 0;
+}
 
 .board-list{
   width:100%; max-width:340px;

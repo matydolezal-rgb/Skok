@@ -3,11 +3,23 @@
 --
 -- Zásada: hra se k tabulkám nedostane přímo. Všechno jde přes čtyři funkce
 -- níže, takže z prohlížeče nejde nic smazat ani přepsat cizí výsledek.
+--
+-- Od 21. 8. 2026: hráč = ověřený účet (Supabase Auth, přihlášení e-mailem
+-- + kódem), ne náhodné ID zařízení jako dřív. registruj()/zapis_skore()
+-- si bezpečně berou identitu z auth.uid() (z JWT tokenu), ne z parametru,
+-- který by šel z prohlížeče zfalšovat.
+--
+-- DŮLEŽITÉ při přechodu ze starší verze: staré řádky v `hraci` mají
+-- náhodná ID zařízení, ne skutečné auth.users.id, takže nejdou napojit
+-- na žádný účet. Než spustíš zbytek souboru, smaž stará data (byla to
+-- jen testovací hraní, nic se neztratí):
+--   drop table if exists skore;
+--   drop table if exists hraci;
 
 -- ---------- tabulky ----------
 
 create table if not exists hraci (
-  id        uuid primary key,                    -- náhodné id zařízení, žádný účet
+  id        uuid primary key references auth.users(id) on delete cascade,
   jmeno     text not null,
   kod       text not null unique,                -- kód pro kamarády, např. K7XM2P
   vytvoreno timestamptz not null default now()
@@ -30,25 +42,33 @@ alter table skore enable row level security;
 
 -- ---------- funkce, které hra volá ----------
 
--- Registrace zařízení. Vrátí kód pro kamarády. Volá se jednou.
-create or replace function registruj(p_hrac uuid, p_jmeno text)
+-- Úklid starých verzí funkcí (jiný podpis = jiná funkce v Postgresu,
+-- CREATE OR REPLACE by je jinak nechal ležet vedle sebe).
+drop function if exists registruj(uuid, text);
+drop function if exists zapis_skore(uuid, date, integer);
+
+-- Registrace přihlášeného účtu. Vrátí kód pro kamarády. Volá se po přihlášení.
+create or replace function registruj(p_jmeno text)
 returns text
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
+  v_uid   uuid := auth.uid();
   v_kod   text;
   v_jmeno text;
   i       integer := 0;
 begin
+  if v_uid is null then raise exception 'not authenticated'; end if;
+
   v_jmeno := nullif(btrim(p_jmeno), '');
   if v_jmeno is null then v_jmeno := 'Lezec'; end if;
   v_jmeno := left(v_jmeno, 16);
 
-  select kod into v_kod from hraci where id = p_hrac;
+  select kod into v_kod from hraci where id = v_uid;
   if v_kod is not null then
-    update hraci set jmeno = v_jmeno where id = p_hrac;
+    update hraci set jmeno = v_jmeno where id = v_uid;
     return v_kod;
   end if;
 
@@ -61,7 +81,7 @@ begin
       from generate_series(1, 6)
     );
     begin
-      insert into hraci (id, jmeno, kod) values (p_hrac, v_jmeno, v_kod);
+      insert into hraci (id, jmeno, kod) values (v_uid, v_jmeno, v_kod);
       return v_kod;
     exception when unique_violation then
       if i > 20 then raise exception 'nepodarilo se vygenerovat kod'; end if;
@@ -71,15 +91,17 @@ end;
 $$;
 
 -- Zápis výsledku. Uloží se jen tehdy, když je lepší než dnešní maximum.
-create or replace function zapis_skore(p_hrac uuid, p_den date, p_metry integer)
+create or replace function zapis_skore(p_den date, p_metry integer)
 returns integer
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
+  v_uid   uuid := auth.uid();
   v_metry integer;
 begin
+  if v_uid is null then raise exception 'not authenticated'; end if;
   if p_metry is null or p_metry < 0 or p_metry > 5000 then
     raise exception 'neplatny vysledek';
   end if;
@@ -87,11 +109,11 @@ begin
   if p_den < current_date - 1 or p_den > current_date + 1 then
     raise exception 'neplatne datum';
   end if;
-  if not exists (select 1 from hraci where id = p_hrac) then
+  if not exists (select 1 from hraci where id = v_uid) then
     raise exception 'neznamy hrac';
   end if;
 
-  insert into skore (den, hrac, metry) values (p_den, p_hrac, p_metry)
+  insert into skore (den, hrac, metry) values (p_den, v_uid, p_metry)
   on conflict (den, hrac) do update
     set metry = greatest(skore.metry, excluded.metry),
         zapsano = now()
@@ -131,8 +153,8 @@ as $$
   limit 100;
 $$;
 
--- Hra je anonymní návštěvník — smí volat jen tyhle čtyři funkce.
-grant execute on function registruj(uuid, text)        to anon;
-grant execute on function zapis_skore(uuid, date, int) to anon;
-grant execute on function top_dne(date, int)           to anon;
-grant execute on function skore_kamaradu(date, text[]) to anon;
+-- Číst žebříček může kdokoliv (i bez přihlášení), zapisovat jen přihlášený účet.
+grant execute on function registruj(text)              to authenticated;
+grant execute on function zapis_skore(date, int)       to authenticated;
+grant execute on function top_dne(date, int)           to anon, authenticated;
+grant execute on function skore_kamaradu(date, text[]) to anon, authenticated;
