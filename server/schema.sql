@@ -36,10 +36,22 @@ create table if not exists skore (
 
 create index if not exists skore_den_metry on skore (den, metry desc);
 
+-- Od 21. 8. 2026: záloha postupu (krystaly, koupené skiny/stopy/mapy/splash,
+-- osobní rekord) — ať se po přihlášení na jiném telefonu nic neztratí.
+-- Jeden řádek na hráče, celý postup jako JSON (stejný tvar jako localStorage
+-- v prohlížeči — klíč "skok.xxx" → hodnota), ať se to nemusí štěpit do
+-- sloupců pokaždé, když přibude nová kategorie v obchodě.
+create table if not exists postup (
+  hrac          uuid primary key references hraci(id) on delete cascade,
+  data          jsonb not null default '{}'::jsonb,
+  aktualizovano timestamptz not null default now()
+);
+
 -- Nikdo zvenčí nesmí do tabulek přímo. Zapnutá ochrana bez jediného
 -- povolujícího pravidla znamená: přes REST API se k datům nedostaneš.
 alter table hraci enable row level security;
 alter table skore enable row level security;
+alter table postup enable row level security;
 
 -- ---------- funkce, které hra volá ----------
 
@@ -154,8 +166,42 @@ as $$
   limit 100;
 $$;
 
+-- Uloží (přepíše) celý postup přihlášeného hráče.
+create or replace function uloz_postup(p_data jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then raise exception 'not authenticated'; end if;
+  if not exists (select 1 from hraci where id = v_uid) then
+    raise exception 'neznamy hrac';
+  end if;
+
+  insert into postup (hrac, data, aktualizovano) values (v_uid, p_data, now())
+  on conflict (hrac) do update
+    set data = excluded.data,
+        aktualizovano = now();
+end;
+$$;
+
+-- Načte postup přihlášeného hráče. Prázdný objekt, pokud ještě nic není.
+create or replace function nacti_postup()
+returns jsonb
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce((select data from postup where hrac = auth.uid()), '{}'::jsonb);
+$$;
+
 -- Číst žebříček může kdokoliv (i bez přihlášení), zapisovat jen přihlášený účet.
 grant execute on function registruj(text)              to authenticated;
 grant execute on function zapis_skore(date, int)       to authenticated;
 grant execute on function top_dne(date, int)           to anon, authenticated;
 grant execute on function skore_kamaradu(date, text[]) to anon, authenticated;
+grant execute on function uloz_postup(jsonb)           to authenticated;
+grant execute on function nacti_postup()               to authenticated;

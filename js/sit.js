@@ -65,6 +65,72 @@ const Sit = {
     this.smaz(this.KLIC_KOD);
   },
 
+  /* ---------- záloha postupu (krystaly, nákupy, rekord) ---------- */
+
+  KLIC_PREFIX: 'skok.',
+  /* tohle se nezálohuje — session je tajná, jméno/kód řeší registruj(),
+     fronta je jen dočasná čekárna na odeslání výsledku */
+  KLICE_VYNECHAT: ['skok.session', 'skok.jmeno', 'skok.kod', 'skok.fronta'],
+
+  /* sesbírá všechno "skok.*" z tohohle zařízení do jednoho objektu */
+  posbiratPostup(){
+    const data = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if (k && k.indexOf(this.KLIC_PREFIX) === 0 && this.KLICE_VYNECHAT.indexOf(k) === -1){
+          data[k] = localStorage.getItem(k);
+        }
+      }
+    } catch(e){}
+    return data;
+  },
+
+  /* Sloučí stažený postup s tím, co je na zařízení — nikdy nic neubere:
+     vlastněné věci (*.vlastni) se sjednotí, čísla (krystaly, rekordy…)
+     se vezmou vyšší, vybraný skin/stopa/mapa zůstává podle zařízení. */
+  pouzitPostup(vzdalena){
+    if (!vzdalena || typeof vzdalena !== 'object') return;
+    for (const k in vzdalena){
+      if (k.indexOf(this.KLIC_PREFIX) !== 0 || this.KLICE_VYNECHAT.indexOf(k) > -1) continue;
+      const vzd = vzdalena[k];
+      const mist = this.nacti(k, null);
+
+      if (mist === null){ this.uloz(k, vzd); continue; }
+      if (/\.vybrany$/.test(k)) continue;   // preferuj výběr na tomhle zařízení
+
+      if (/\.vlastni$/.test(k)){
+        try {
+          const a = JSON.parse(mist) || [];
+          const b = JSON.parse(vzd) || [];
+          this.uloz(k, JSON.stringify(Array.from(new Set(a.concat(b)))));
+        } catch(e){ /* nechat, co je na zařízení */ }
+        continue;
+      }
+
+      const a = Number(mist), b = Number(vzd);
+      if (!isNaN(a) && !isNaN(b)) this.uloz(k, String(Math.max(a, b)));
+    }
+  },
+
+  /* Nahraje aktuální postup na server. Neblokující — když se nepovede,
+     zkusí se to znovu při další příležitosti (další nákup, konec běhu…). */
+  async nahrajPostup(){
+    if (!this.prihlasen()) return false;
+    try { await this.rpc('uloz_postup', { p_data: this.posbiratPostup() }, true); return true; }
+    catch(e){ return false; }
+  },
+
+  /* Stáhne postup ze serveru a sloučí ho s tím, co je na zařízení. */
+  async stahniPostup(){
+    if (!this.prihlasen()) return false;
+    try {
+      const vzdalena = await this.rpc('nacti_postup', {}, true);
+      this.pouzitPostup(vzdalena);
+      return true;
+    } catch(e){ return false; }
+  },
+
   /* Pošle na e-mail 6místný kód. Účet se založí sám, když ještě neexistuje. */
   async posliKod(email){
     if (!this.pripojeno()) throw new Error('nepripojeno');

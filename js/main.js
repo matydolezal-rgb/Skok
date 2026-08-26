@@ -235,7 +235,12 @@
         try {
           await Sit.registruj(j);
           await Sit.synchronizuj();
+          /* stáhne a slije postup z účtu (nikdy nic neubere), pak pošle
+             sloučený výsledek zpátky — ať je server i zařízení srovnané */
+          await Sit.stahniPostup();
+          await Sit.nahrajPostup();
           krokPrihlaseni = 'email';
+          obnovMenu();
           obnovZebricek();
         } catch(e){
           msg.className = 'panel-msg chyba';
@@ -411,7 +416,7 @@
         const dost = modul.zustatek(celkem) >= s.cena;
         btn.textContent = 'Buy';
         btn.disabled = !dost;
-        if (dost) btn.addEventListener('click', () => { modul.koupit(s.id, celkem); obnovObchod(); });
+        if (dost) btn.addEventListener('click', () => { modul.koupit(s.id, celkem); obnovObchod(); Sit.nahrajPostup(); });
       }
       card.appendChild(btn);
 
@@ -457,6 +462,7 @@
             btn.disabled = false;
           } else {
             obnovKrystaly();
+            Sit.nahrajPostup();
           }
         });
       }
@@ -567,6 +573,7 @@
     if (m > best) save(KEY_BEST, m);
     show('over');
     if (novyRekord) oslavRekord();
+    if (Sit.prihlasen()) Sit.nahrajPostup();
   }
 
   /* ---------- pauza ---------- */
@@ -741,6 +748,11 @@
   obnovMenu();
   Krystaly.init();
   $('verze-znacka').textContent = typeof VERZE_ZOBRAZENI !== 'undefined' ? VERZE_ZOBRAZENI : '';
+  /* pro případ, že se hráč mezitím přihlásil na jiném zařízení —
+     potichu stáhne a slije postup, žádná chyba (offline) tu nevadí */
+  if (Sit.prihlasen()){
+    Sit.stahniPostup().then((ok) => { if (ok) obnovMenu(); });
+  }
   requestAnimationFrame(frame);
 
 })();
