@@ -312,7 +312,11 @@ revoke execute on function muj_profil()                from public, anon;
 revoke execute on function zapis_skore(date, int)      from public, anon;
 revoke execute on function uloz_postup(jsonb)          from public, anon;
 revoke execute on function nacti_postup()              from public, anon;
-revoke execute on function odmena_vypocet(uuid, date)  from public, anon;
+-- odmena_vypocet i od authenticated: je to vnitřní pomocník, appka ho nevolá.
+-- Supabase dává novým funkcím právo přímo rolím anon a authenticated, takže
+-- samotné "from public, anon" by přihlášeným přístup nechalo. Volání zevnitř
+-- cekajici_odmena/vyzvedni_odmenu projde dál — jsou security definer.
+revoke execute on function odmena_vypocet(uuid, date)  from public, anon, authenticated;
 revoke execute on function cekajici_odmena()           from public, anon;
 revoke execute on function vyzvedni_odmenu(date)       from public, anon;
 

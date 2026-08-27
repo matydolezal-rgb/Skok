@@ -121,7 +121,11 @@ $$;
 -- ---------- práva ----------
 -- Nejdřív odebrat výchozí právo pro všechny (PostgreSQL ho dává automaticky),
 -- teprve pak přidat přihlášeným. Bez revoke by na funkce dosáhl i nepřihlášený.
-revoke execute on function odmena_vypocet(uuid, date) from public, anon;
+-- Pozor: Supabase dává novým funkcím ve schématu public právo přímo rolím
+-- anon a authenticated, ne jen obecné roli PUBLIC. U vnitřního pomocníka
+-- se proto musí odebrat i authenticated, jinak na něj přihlášení dosáhnou.
+-- Volání zevnitř druhých dvou funkcí projde dál — jsou security definer.
+revoke execute on function odmena_vypocet(uuid, date) from public, anon, authenticated;
 revoke execute on function cekajici_odmena()          from public, anon;
 revoke execute on function vyzvedni_odmenu(date)      from public, anon;
 
