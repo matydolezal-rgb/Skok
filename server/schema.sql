@@ -212,6 +212,16 @@ as $$
 $$;
 
 -- Číst žebříček může kdokoliv (i bez přihlášení), zapisovat jen přihlášený účet.
+--
+-- POZOR na past: PostgreSQL dává každé nové funkci právo na spuštění roli
+-- PUBLIC, tedy i nepřihlášenému. Samotný "grant to authenticated" to výchozí
+-- právo NEPŘEBIJE, jen přidá další — proto se musí nejdřív odebrat.
+revoke execute on function registruj(text)             from public, anon;
+revoke execute on function muj_profil()                from public, anon;
+revoke execute on function zapis_skore(date, int)      from public, anon;
+revoke execute on function uloz_postup(jsonb)          from public, anon;
+revoke execute on function nacti_postup()              from public, anon;
+
 grant execute on function registruj(text)              to authenticated;
 grant execute on function muj_profil()                 to authenticated;
 grant execute on function zapis_skore(date, int)       to authenticated;
