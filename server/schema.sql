@@ -198,8 +198,22 @@ as $$
   select coalesce((select data from postup where hrac = auth.uid()), '{}'::jsonb);
 $$;
 
+-- Vrátí přezdívku a kód přihlášeného hráče, nebo nic, když ještě registrovaný
+-- není. Díky tomu se hra po přihlášení ptá na přezdívku jen napoprvé —
+-- vracejícímu se hráči ji vezme z účtu, takže ji nemůže při každém přihlášení
+-- měnit a ostatní ho v žebříčku poznají pořád stejně. Jen čte, nic nezapisuje.
+create or replace function muj_profil()
+returns table (jmeno text, kod text)
+language sql
+security definer
+set search_path = public
+as $$
+  select h.jmeno, h.kod from hraci h where h.id = auth.uid();
+$$;
+
 -- Číst žebříček může kdokoliv (i bez přihlášení), zapisovat jen přihlášený účet.
 grant execute on function registruj(text)              to authenticated;
+grant execute on function muj_profil()                 to authenticated;
 grant execute on function zapis_skore(date, int)       to authenticated;
 grant execute on function top_dne(date, int)           to anon, authenticated;
 grant execute on function skore_kamaradu(date, text[]) to anon, authenticated;

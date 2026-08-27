@@ -232,6 +232,24 @@ const Sit = {
     return kod;
   },
 
+  /* Zeptá se účtu, jestli už přezdívku a kód má, a uloží je do telefonu.
+     Vrátí {jmeno, kod}, nebo null u hráče, který se registruje poprvé.
+     Díky tomu se hra na přezdívku ptá jen napoprvé — po přeinstalaci si ji
+     vezme z účtu místo toho, aby ji nechala zadat (a přepsat) znovu.
+     Když RPC na serveru ještě není (stará databáze bez migrace), vrátí null
+     a přihlášení pokračuje po staru — na přezdívku se zeptá. */
+  async stahniProfil(){
+    if (!this.prihlasen()) return null;
+    try {
+      const odpoved = await this.rpc('muj_profil', {}, true);
+      const p = Array.isArray(odpoved) ? odpoved[0] : odpoved;
+      if (!p || !p.jmeno) return null;
+      this.uloz(this.KLIC_JMENO, p.jmeno);
+      if (p.kod) this.uloz(this.KLIC_KOD, p.kod);
+      return p;
+    } catch(e){ return null; }
+  },
+
   /* ---------- odesílání výsledků ---------- */
 
   fronta(){

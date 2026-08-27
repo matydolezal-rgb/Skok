@@ -205,6 +205,12 @@
         msg.className = 'panel-msg'; msg.textContent = 'Checking…';
         try {
           await Sit.overKod(zadanyEmail, kod);
+          /* Vracející se hráč přezdívku na účtu už má — zeptat se na ni znovu
+             by znamenalo, že si ji při každém přihlášení může přepsat, a lidi
+             v žebříčku by pak nepoznali, kdo je kdo. Ptáme se jen napoprvé. */
+          msg.textContent = 'Logging in…';
+          const profil = await Sit.stahniProfil();
+          if (profil){ await dokonciPrihlaseni(); return; }
           krokPrihlaseni = 'jmeno';
           panelPrihlaseni();
         } catch(e){
@@ -225,7 +231,10 @@
           '<input id="in-jmeno" maxlength="16" placeholder="nickname" value="' + bezpecne(Sit.jmeno()) + '">' +
           '<button class="panel-btn" id="btn-jmeno">Save</button>' +
         '</div>' +
-        '<span class="panel-msg" id="msg-jmeno">You can change it any time.</span>';
+        /* Dřív tu stálo "You can change it any time." — od chvíle, kdy se hra
+           ptá na přezdívku jen napoprvé, to není pravda a byl by to slib,
+           který obrazovka nesplní. */
+        '<span class="panel-msg" id="msg-jmeno">This is how others will see you in the leaderboard.</span>';
 
       $('btn-jmeno').addEventListener('click', async () => {
         const j = $('in-jmeno').value.trim();
@@ -234,19 +243,24 @@
         msg.className = 'panel-msg'; msg.textContent = 'Saving…';
         try {
           await Sit.registruj(j);
-          await Sit.synchronizuj();
-          /* stáhne a slije postup z účtu (nikdy nic neubere), pak pošle
-             sloučený výsledek zpátky — ať je server i zařízení srovnané */
-          await Sit.stahniPostup();
-          await Sit.nahrajPostup();
-          krokPrihlaseni = 'email';
-          obnovMenu();
-          obnovZebricek();
+          await dokonciPrihlaseni();
         } catch(e){
           msg.className = 'panel-msg chyba';
           msg.textContent = 'The server is not responding. Try again later — the game keeps working.';
         }
       });
+    }
+
+    /* Poslední část přihlášení, společná pro nového i vracejícího se hráče. */
+    async function dokonciPrihlaseni(){
+      await Sit.synchronizuj();
+      /* stáhne a slije postup z účtu (nikdy nic neubere), pak pošle
+         sloučený výsledek zpátky — ať je server i zařízení srovnané */
+      await Sit.stahniPostup();
+      await Sit.nahrajPostup();
+      krokPrihlaseni = 'email';
+      obnovMenu();
+      obnovZebricek();
     }
   }
 
