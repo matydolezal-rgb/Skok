@@ -259,7 +259,10 @@
         '<input id="in-kod" maxlength="7" placeholder="friend\'s code">' +
         '<button class="panel-btn" id="btn-kod">Add</button>' +
       '</div>' +
-      '<span class="panel-msg" id="msg-kod">Friends are stored on this phone only.</span>' +
+      /* Tenhle panel vidí jen přihlášený hráč (výš se nepřihlášený odbočí
+         na panelPrihlaseni), a tomu se kamarádi zálohují na účet — dřív tu
+         stálo "stored on this phone only", což od zavedení záloh nebyla pravda. */
+      '<span class="panel-msg" id="msg-kod">Friends are saved to your account.</span>' +
       '<button class="panel-link" id="btn-odhlasit">Log out (' + bezpecne(Sit.session() ? Sit.session().email : '') + ')</button>';
 
     $('btn-kod').addEventListener('click', () => {

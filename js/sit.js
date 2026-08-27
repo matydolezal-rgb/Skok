@@ -91,6 +91,11 @@ const Sit = {
      se vezmou vyšší, vybraný skin/stopa/mapa zůstává podle zařízení. */
   pouzitPostup(vzdalena){
     if (!vzdalena || typeof vzdalena !== 'object') return;
+    /* vrátí pole, jen když hodnota opravdu polem je — jinak null */
+    const jakoPole = (s) => {
+      try { const x = JSON.parse(s); return Array.isArray(x) ? x : null; }
+      catch(e){ return null; }
+    };
     for (const k in vzdalena){
       if (k.indexOf(this.KLIC_PREFIX) !== 0 || this.KLICE_VYNECHAT.indexOf(k) > -1) continue;
       const vzd = vzdalena[k];
@@ -99,12 +104,15 @@ const Sit = {
       if (mist === null){ this.uloz(k, vzd); continue; }
       if (/\.vybrany$/.test(k)) continue;   // preferuj výběr na tomhle zařízení
 
-      if (/\.vlastni$/.test(k)){
-        try {
-          const a = JSON.parse(mist) || [];
-          const b = JSON.parse(vzd) || [];
-          this.uloz(k, JSON.stringify(Array.from(new Set(a.concat(b)))));
-        } catch(e){ /* nechat, co je na zařízení */ }
+      /* Seznamy se sjednotí — z žádného zařízení se nesmí nic ztratit.
+         Poznají se podle toho, že jsou pole na OBOU stranách, ne podle jména
+         klíče: kromě vlastněných věcí (*.vlastni) to platí i pro kódy
+         kamarádů (skok.kamaradi) a pro cokoliv seznamového, co přibude
+         později. Dřív se tady testovalo jen /\.vlastni$/, takže kamarádi
+         z druhého zařízení propadli do číselné větve níž a tiše se zahodili. */
+      const a1 = jakoPole(mist), b1 = jakoPole(vzd);
+      if (a1 && b1){
+        this.uloz(k, JSON.stringify(Array.from(new Set(a1.concat(b1)))));
         continue;
       }
 
