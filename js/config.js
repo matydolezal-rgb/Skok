@@ -18,4 +18,4 @@ const REVENUECAT_KLIC_IOS = '';
 
 /* Číslo verze v rohu obrazovky — musí sedět s VERZE v sw.js, ať Matyáš
    na první pohled pozná, jestli se mu appka na telefonu aktualizovala. */
-const VERZE_ZOBRAZENI = 'v54';
+const VERZE_ZOBRAZENI = 'v55';

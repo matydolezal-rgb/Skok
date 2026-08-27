@@ -58,6 +58,13 @@ const Game = {
     this.zona   = 'skala';
     this.zonaText = '';
     this.zonaCas  = 0;
+    /* rekord, který se v tomhle běhu překonává — nastavuje ho main.js podle
+       uložené hodnoty, ať Game nemusí sahat do localStorage. 0 = zatím žádný
+       (první hraní), pak se čára nekreslí a není co slavit. */
+    this.best      = 0;
+    this.rekordPadl = false;   // ať oslava proběhne jen jednou za běh
+    this.rekordCas  = 0;       // doznívání efektu, v sekundách
+    this.rekordY    = 0;       // výška čáry, na které se to stalo
     this.over   = false;
     this.cause  = '';
     this.rockTimer = 1.6;
@@ -208,6 +215,24 @@ const Game = {
     /* výška se počítá jen z toho, co jsi udržel */
     const h = Math.max(0, -p.y / P.METER);
     if (h > this.height) this.height = h;
+
+    /* Překonání rekordu — nejlepší okamžik celého běhu, tak ať je ho vidět
+       hned, ne až na obrazovce konce. Schválně nic, co by zdržovalo (žádný
+       hitStop ani zpomalení): ve výšce je čas nepřítel a zdržení by hráče
+       vystavilo většímu počtu padajících věcí. Jen se to rozzáří a cinkne. */
+    if (this.best > 0 && !this.rekordPadl && this.height > this.best){
+      this.rekordPadl = true;
+      this.rekordCas  = 1.1;
+      this.rekordY    = -this.best * P.METER;
+      const zlate = ['#ffd070', '#ffe6a0', '#ffb347', '#fff4d6'];
+      this.burst(p.x, this.rekordY, 24, zlate, 1.6);
+      this.rings.push({ x: p.x, y: this.rekordY, life: 0.55, max: 0.55,
+                        r0: 12, grow: 190, color: '#ffd070' });
+      this.flash = Math.max(this.flash, 0.35);
+      prehraj('rekord');
+      zavibruj('rekord');
+    }
+    if (this.rekordCas > 0) this.rekordCas = Math.max(0, this.rekordCas - dt);
 
     if (this.flash > 0)   this.flash = Math.max(0, this.flash - dt * 3.4);
     if (this.zonaCas > 0) this.zonaCas = Math.max(0, this.zonaCas - dt);
@@ -450,6 +475,11 @@ const Game = {
   utlum(dt){
     if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 3.2);
     if (this.flash > 0) this.flash = Math.max(0, this.flash - dt * 3.4);
+    /* Musí doznívat i tady, ne jen v update(): kdo překoná rekord a hned nato
+       spadne do vody, by jinak měl čáru rozzářenou napořád — update() se po
+       konci běhu vůbec nespustí. (Přesně na tomhle jsem se spálil u splash
+       efektů, viz komentář u splashBurst.) */
+    if (this.rekordCas > 0) this.rekordCas = Math.max(0, this.rekordCas - dt);
     this.updateParts(dt);
 
     /* gólový odraz z vody — postavička krátce vystřelí nahoru a udělá přemet,

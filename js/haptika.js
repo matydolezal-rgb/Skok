@@ -24,6 +24,9 @@ const Haptika = {
   /* sebraný krystal — sotva znatelné ťuknutí, ne rána */
   krystal(){ this.hraj([0, 8]); },
 
+  /* rekord — dvě krátká cvaknutí, ať se to nesplete se zásahem (jedna dlouhá) */
+  rekord(){ this.hraj([0, 14, 60, 22]); },
+
   /* konec běhu */
   konec(){ this.hraj([0, 45, 70, 110]); },
 

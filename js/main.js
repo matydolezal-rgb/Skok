@@ -533,6 +533,10 @@
   function spust(seed){
     fit();
     Game.reset(W, H, seed);
+    /* Rekord, který se v tomhle běhu překonává — stejná hodnota, ze které se
+       kreslí oranžová čára, takže oslava padne přesně na ni. Game si ho nečte
+       sám, ať nesahá do localStorage. */
+    Game.best = getBest();
     overDelay = 0;
     Zvuk.probud();
     Zvuk.vodaStart();

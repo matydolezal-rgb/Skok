@@ -33,6 +33,8 @@ const Render = {
     this.particles(ctx, g, cam);
     this.rings(ctx, g, cam);
     this.player(ctx, g, cam);
+    /* až za postavičkou, ať ho nic nepřekryje v tom nejdůležitějším okamžiku */
+    this.recordPopisek(ctx, g, W, cam);
     this.snowfall(ctx, g, W, H, cam);
 
     ctx.restore();
@@ -702,16 +704,52 @@ const Render = {
   bestLine(ctx, g, W, cam, best){
     const y = -best * P.METER - cam;
     if (y < -10 || y > g.H + 10) return;
+
+    /* 0 = klidová čára, 1 = právě jsi ji protnul. Podle toho čára zesílí,
+       rozsvítí se a přestane být čárkovaná — ať je průlet vidět i koutkem
+       oka, když se zrovna soustředíš na to, co padá shora. */
+    const zar = g.rekordCas > 0 ? Math.min(1, g.rekordCas / 1.1) : 0;
+
     ctx.save();
-    ctx.setLineDash([7, 7]);
-    ctx.strokeStyle = 'rgba(255,220,140,.55)';
-    ctx.lineWidth = 1.5;
+    if (zar > 0){
+      ctx.shadowColor = 'rgba(255,208,112,' + (zar * 0.9).toFixed(3) + ')';
+      ctx.shadowBlur  = 18 * zar;
+    } else {
+      ctx.setLineDash([7, 7]);
+    }
+    ctx.strokeStyle = 'rgba(255,220,140,' + (0.55 + zar * 0.45).toFixed(3) + ')';
+    ctx.lineWidth = 1.5 + zar * 2.5;
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+
     ctx.fillStyle = 'rgba(255,220,140,.8)';
     ctx.font = '600 11px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('your record  ' + best + ' m', W / 2, y - 6);
+    ctx.restore();
+  },
+
+  /* Nápis RECORD u protnuté čáry. Stoupá vzhůru a rozplývá se, takže
+     nepřekáží v tom, co je nad hráčem — a je pryč dřív, než by mohl zdržet. */
+  recordPopisek(ctx, g, W, cam){
+    if (!g.rekordCas || g.rekordCas <= 0) return;
+    const a = Math.min(1, g.rekordCas / 1.1);          // 1 → 0
+    const y = g.rekordY - cam - (1 - a) * 34;          // odplouvá nahoru
+    if (y < -40 || y > g.H + 40) return;
+
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.textAlign = 'center';
+    /* krátké nadskočení na začátku, pak zpátky na normál */
+    const skok = 1 + Math.max(0, (a - 0.75)) * 1.2;
+    ctx.translate(W / 2, y);
+    ctx.scale(skok, skok);
+    ctx.shadowColor = 'rgba(255,208,112,.9)';
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = '#fff4d6';
+    ctx.font = '900 21px system-ui, sans-serif';
+    ctx.fillText('RECORD', 0, 0);
     ctx.restore();
   },
 

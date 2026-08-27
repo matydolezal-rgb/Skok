@@ -127,6 +127,15 @@ const Zvuk = {
     this.ton(680, 0.05, 'square', 0.10, 880);
   },
 
+  /* překonaný rekord — krátká stoupavá fanfára. Musí být slyšet přes hukot
+     vody, ale nesmí trvat dlouho: hraje se uprostřed běhu, kdy hráč potřebuje
+     poslouchat, co padá shora. */
+  rekord(){
+    this.ton(660,  0.16, 'triangle', 0.13, 880);
+    this.ton(880,  0.20, 'triangle', 0.12, 1170);
+    this.ton(1320, 0.34, 'sine',     0.10, 1760);
+  },
+
   /* cinknutí při sebrání krystalu — vzácnější zní výš a se dozvukem */
   krystal(hodnota){
     const zaklad = 880 + (hodnota || 1) * 220;
