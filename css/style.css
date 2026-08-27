@@ -214,6 +214,46 @@ body{
   background:none; border:none; cursor:pointer; padding:2px 0;
 }
 
+/* ---------- dárek za umístění v denním žebříčku ---------- */
+/* Zlatavý panel, ať se na první pohled odliší od běžných modrých —
+   je to jednou za čas a má to být vidět hned po otevření žebříčku. */
+.board-panel.darek{
+  background:linear-gradient(180deg,#2a2313 0%,#161a26 100%);
+  border-color:#6b5524;
+  align-items:center; text-align:center;
+}
+.darek-misto{
+  font-size:1.5rem; font-weight:900; letter-spacing:.04em; color:#ffd070;
+  text-shadow:0 0 18px rgba(255,208,112,.45);
+}
+.darek-den{ font-size:.75rem; color:#a08c5e; letter-spacing:.05em; text-transform:uppercase; }
+/* samotný dárek — na tenhle klikáš */
+.darek-btn{
+  font:inherit; font-size:2.6rem; line-height:1; cursor:pointer;
+  width:88px; height:88px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(180deg,#3b2f16 0%,#241b0d 100%);
+  border:1px solid #7a5f28;
+  box-shadow:0 6px 22px rgba(0,0,0,.45), 0 0 26px rgba(255,208,112,.18);
+  animation:darekHoupani 1.6s ease-in-out infinite;
+}
+@keyframes darekHoupani{
+  0%, 100%{ transform:rotate(-5deg) scale(1); }
+  50%     { transform:rotate(5deg) scale(1.06); }
+}
+.darek-btn:active{ transform:scale(.92); animation:none; }
+.darek-btn[disabled]{ animation:none; opacity:.55; cursor:default; }
+/* odměna po otevření */
+.darek-zisk{
+  font-size:2rem; font-weight:900; color:#ffd070;
+  animation:darekZisk .7s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes darekZisk{
+  0%  { transform:scale(.4); opacity:0; }
+  60% { transform:scale(1.18); opacity:1; }
+  100%{ transform:scale(1); opacity:1; }
+}
+
 .board-list{
   width:100%; max-width:340px;
   display:flex; flex-direction:column; gap:7px;

@@ -155,6 +155,7 @@
      Žádné heslo, žádný účet mimo hru. */
   function panelPrihlaseni(){
     ui.boardPanel.classList.remove('hidden');
+    ui.boardPanel.classList.remove('darek');   // po dárku zpět na běžný vzhled
 
     if (krokPrihlaseni === 'kod') return krokKod();
     if (krokPrihlaseni === 'jmeno') return krokJmeno();
@@ -264,8 +265,58 @@
     }
   }
 
+  /* ---------- dárek za umístění v denním žebříčku ---------- */
+
+  const MISTA = { 1: '1st', 2: '2nd', 3: '3rd' };
+
+  /* Vrátí true, když se dárek ukázal — volající pak nekreslí nic dalšího.
+     O tom, jestli na dárek je nárok a jestli už byl vyzvednutý, rozhoduje
+     výhradně server; tady se jen zobrazuje, co odpoví. */
+  async function zkusUkazatDarek(){
+    const o = await Sit.cekajiciOdmena();
+    if (!o) return false;
+
+    ui.boardList.classList.add('hidden');
+    ui.boardEmpty.classList.add('hidden');
+    ui.boardPanel.classList.remove('hidden');
+    ui.boardPanel.classList.add('darek');
+    ui.boardPanel.innerHTML =
+      '<span class="darek-den">' + bezpecne(hezkeDatum(o.den)) + '</span>' +
+      '<span class="darek-misto">You were ' + (MISTA[o.poradi] || o.poradi + 'th') + '!</span>' +
+      '<button class="darek-btn" id="btn-darek" aria-label="Open your gift">🎁</button>' +
+      '<span class="panel-msg" id="msg-darek">Tap the gift to collect your crystals.</span>';
+
+    $('btn-darek').addEventListener('click', async () => {
+      const btn = $('btn-darek'), msg = $('msg-darek');
+      btn.disabled = true;
+      msg.textContent = 'Opening…';
+      let ziskano = 0;
+      try { ziskano = await Sit.vyzvedniOdmenu(o.den); }
+      catch(e){ ziskano = 0; }
+
+      if (!ziskano){
+        /* Server řekl ne — buď už bylo vyzvednuto na jiném zařízení, nebo
+           spadlo spojení. Nikdy nic nepřipisovat "pro jistotu". */
+        msg.className = 'panel-msg chyba';
+        msg.textContent = 'Could not collect it right now. Try again later.';
+        btn.disabled = false;
+        return;
+      }
+
+      Mena.pripsatOdmenu(ziskano);
+      Sit.nahrajPostup();
+      prehraj('krystal', 3);
+      zavibruj('krystal');
+      btn.outerHTML = '<span class="darek-zisk">+' + ziskano + ' 💎</span>';
+      msg.className = 'panel-msg ok';
+      msg.textContent = 'Added to your crystals. Well climbed!';
+    });
+    return true;
+  }
+
   function panelKamaradi(){
     ui.boardPanel.classList.remove('hidden');
+    ui.boardPanel.classList.remove('darek');   // po dárku zpět na běžný vzhled
     ui.boardPanel.innerHTML =
       '<span class="panel-label">Your code — send it to a friend</span>' +
       '<div class="panel-code">' + bezpecne(Sit.kod() || '——————') + '</div>' +
@@ -299,6 +350,7 @@
     ui.tabFriends.classList.toggle('tab-on', zalozka === 'friends');
     ui.tabMe.classList.toggle('tab-on',      zalozka === 'me');
     ui.boardPanel.classList.add('hidden');
+    ui.boardPanel.classList.remove('darek');
     ui.boardPanel.innerHTML = '';
 
     const dnes = todaySeed();
@@ -335,6 +387,10 @@
       panelPrihlaseni();
       return;
     }
+
+    /* Dárek za umístění má přednost před vším ostatním v panelu — je to
+       jednorázová věc, kterou má hráč vidět hned, jak žebříček otevře. */
+    if (await zkusUkazatDarek()) return;
 
     if (zalozka === 'friends') panelKamaradi();
 

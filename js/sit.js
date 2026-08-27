@@ -250,6 +250,29 @@ const Sit = {
     } catch(e){ return null; }
   },
 
+  /* ---------- dárek za umístění v denním žebříčku ---------- */
+
+  /* Zeptá se, jestli na mě čeká nevyzvednutý dárek za některý z minulých dnů.
+     Vrátí {den, poradi, krystalu}, nebo null. Nic nezapisuje — o pořadí
+     i o tom, jestli už bylo vyzvednuto, rozhoduje server, ne tenhle kód. */
+  async cekajiciOdmena(){
+    if (!this.pripojeno() || !this.prihlasen()) return null;
+    try {
+      const odpoved = await this.rpc('cekajici_odmena', {}, true);
+      const o = Array.isArray(odpoved) ? odpoved[0] : odpoved;
+      return (o && o.krystalu > 0) ? o : null;
+    } catch(e){ return null; }
+  },
+
+  /* Vyzvedne dárek za daný den. Vrátí počet krystalů, nebo 0, když na něj
+     nárok není nebo už byl vyzvednutý dřív (server to hlídá primárním
+     klíčem, takže ani dvojí kliknutí nic nepřidá dvakrát). */
+  async vyzvedniOdmenu(den){
+    if (!this.pripojeno() || !this.prihlasen()) return 0;
+    const n = await this.rpc('vyzvedni_odmenu', { p_den: den }, true);
+    return Number(n) || 0;
+  },
+
   /* ---------- odesílání výsledků ---------- */
 
   fronta(){

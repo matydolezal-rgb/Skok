@@ -47,11 +47,24 @@ create table if not exists postup (
   aktualizovano timestamptz not null default now()
 );
 
+-- Od 28. 8. 2026: vyzvednuté dárky za umístění v denním žebříčku. Jeden řádek
+-- na hráče a den — primární klíč sám zaručí, že tentýž den nejde vyzvednout
+-- dvakrát, i kdyby appka poslala požadavek dvakrát rychle za sebou.
+create table if not exists odmeny (
+  hrac       uuid not null references hraci(id) on delete cascade,
+  den        date not null,
+  poradi     integer not null,
+  krystalu   integer not null,
+  vyzvednuto timestamptz not null default now(),
+  primary key (hrac, den)
+);
+
 -- Nikdo zvenčí nesmí do tabulek přímo. Zapnutá ochrana bez jediného
 -- povolujícího pravidla znamená: přes REST API se k datům nedostaneš.
 alter table hraci enable row level security;
 alter table skore enable row level security;
 alter table postup enable row level security;
+alter table odmeny enable row level security;
 
 -- ---------- funkce, které hra volá ----------
 
@@ -211,6 +224,84 @@ as $$
   select h.jmeno, h.kod from hraci h where h.id = auth.uid();
 $$;
 
+-- ---------- dárek za umístění v denním žebříčku (od 28. 8. 2026) ----------
+-- Pořadí i vyzvednutí počítá server, ne appka: jinak by stačilo smazat data
+-- v telefonu a brát dárek pořád dokola, nebo si "vyrobit" první místo.
+
+-- Pořadí hráče v daném dni a kolik mu za to náleží. Vnitřní pomocník, appka
+-- ho nevolá — obě funkce níž ho sdílejí, ať se pravidla nemůžou rozejít.
+create or replace function odmena_vypocet(p_uid uuid, p_den date)
+returns table (poradi integer, krystalu integer)
+language sql
+security definer
+set search_path = public
+as $$
+  with poradi_dne as (
+    select hrac, rank() over (order by metry desc, zapsano asc) as m
+    from skore where den = p_den
+  ),
+  pocet as (select count(*) as n from skore where den = p_den)
+  select p.m::integer,
+         (case p.m when 1 then 50 when 2 then 30 when 3 then 20 end)::integer
+  from poradi_dne p, pocet
+  where p.hrac = p_uid and p.m <= 3 and pocet.n >= 5;
+  -- pod pět hráčů se nedává: jinak by v top 3 byl skoro každý, kdo si zahrál
+$$;
+
+-- Co na mě čeká. Nejnovější den (dnešek ne, ten ještě běží), kde jsem byl
+-- v top 3 a ještě jsem si dárek nevzal. Sedm dní zpátky, ať o odměnu
+-- nepřijde někdo, kdo se pár dní nedostal ke hraní. NIC NEZAPISUJE.
+create or replace function cekajici_odmena()
+returns table (den date, poradi integer, krystalu integer)
+language sql
+security definer
+set search_path = public
+as $$
+  select d.den, v.poradi, v.krystalu
+  from (
+    select distinct s.den from skore s
+    where s.hrac = auth.uid() and s.den < current_date and s.den >= current_date - 7
+  ) d
+  cross join lateral odmena_vypocet(auth.uid(), d.den) v
+  where not exists (select 1 from odmeny o where o.hrac = auth.uid() and o.den = d.den)
+  order by d.den desc
+  limit 1;
+$$;
+
+-- Vyzvednutí. Druhé volání pro tentýž den vrátí 0 — insert neprojde přes
+-- primární klíč, takže dvojí kliknutí ani opakovaný pokus nic nepřidá.
+create or replace function vyzvedni_odmenu(p_den date)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_poradi integer;
+  v_krystalu integer;
+  v_zapsano integer;
+begin
+  if v_uid is null then raise exception 'not authenticated'; end if;
+  if p_den is null or p_den >= current_date or p_den < current_date - 7 then
+    return 0;
+  end if;
+
+  select poradi, krystalu into v_poradi, v_krystalu
+  from odmena_vypocet(v_uid, p_den);
+  if v_krystalu is null then return 0; end if;   -- nebyl v top 3, nebo málo hráčů
+
+  insert into odmeny (hrac, den, poradi, krystalu)
+  values (v_uid, p_den, v_poradi, v_krystalu)
+  on conflict (hrac, den) do nothing;
+
+  get diagnostics v_zapsano = row_count;
+  if v_zapsano = 0 then return 0; end if;        -- už bylo vyzvednuto dřív
+
+  return v_krystalu;
+end;
+$$;
+
 -- Číst žebříček může kdokoliv (i bez přihlášení), zapisovat jen přihlášený účet.
 --
 -- POZOR na past: PostgreSQL dává každé nové funkci právo na spuštění roli
@@ -221,8 +312,14 @@ revoke execute on function muj_profil()                from public, anon;
 revoke execute on function zapis_skore(date, int)      from public, anon;
 revoke execute on function uloz_postup(jsonb)          from public, anon;
 revoke execute on function nacti_postup()              from public, anon;
+revoke execute on function odmena_vypocet(uuid, date)  from public, anon;
+revoke execute on function cekajici_odmena()           from public, anon;
+revoke execute on function vyzvedni_odmenu(date)       from public, anon;
 
 grant execute on function registruj(text)              to authenticated;
+grant execute on function cekajici_odmena()            to authenticated;
+grant execute on function vyzvedni_odmenu(date)        to authenticated;
+-- odmena_vypocet zůstává bez grantu — je to jen vnitřní pomocník
 grant execute on function muj_profil()                 to authenticated;
 grant execute on function zapis_skore(date, int)       to authenticated;
 grant execute on function top_dne(date, int)           to anon, authenticated;
