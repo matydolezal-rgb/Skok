@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Náhled ikon — No Way But Up</title>
+<style>
+  body{ margin:0; padding:28px 20px 60px; background:#12151c; color:#e6edf7;
+        font:15px/1.55 system-ui, sans-serif; }
+  main{ max-width:900px; margin:0 auto; }
+  h1{ font-size:1.4rem; margin:0 0 4px; }
+  .pod{ color:#8b9bb0; margin:0 0 26px; font-size:.9rem; }
+  h2{ font-size:1rem; margin:30px 0 4px; color:#9fd4ff; }
+  .poznamka{ color:#8b9bb0; font-size:.85rem; margin:0 0 12px; }
+  .rada{ display:flex; gap:22px; flex-wrap:wrap; align-items:flex-end; }
+  .kus{ text-align:center; }
+  .kus span{ display:block; margin-top:7px; color:#8b9bb0; font-size:.75rem; }
+  .plocha{ background:#1c2230; padding:16px; border-radius:14px; }
+  /* tvary, do kterých si výrobci telefonů ikonu ořezávají */
+  .kruh{ border-radius:50%; }
+  .squircle{ border-radius:24%; }
+  .ctverec{ border-radius:12%; }
+  .kapka{ border-radius:50% 50% 50% 12%; }
+  .slozena{ position:relative; overflow:hidden; }
+  .slozena img{ position:absolute; inset:0; width:100%; height:100%; }
+  img{ display:block; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Náhled ikon</h1>
+<p class="pod">Jak bude ikona vypadat po tom, co si ji telefon ořízne do svého tvaru.</p>
+
+<h2>Android — adaptivní ikona (pozadí + postava zvlášť)</h2>
+<p class="poznamka">Každý výrobce ořezává jinak. Ve všech tvarech musí zůstat postava celá a barva musí sahat až k okraji.</p>
+<div class="rada" id="adaptivni"></div>
+
+<h2>iOS — ikona na ploše</h2>
+<p class="poznamka">Apple ořezává jen rohy, obsah zůstává. Vlevo skutečná velikost na ploše, vpravo zvětšeno.</p>
+<div class="rada" id="ios"></div>
+
+<h2>Web / PWA — maskable</h2>
+<p class="poznamka">Když si hru přidáš na plochu z prohlížeče.</p>
+<div class="rada" id="web"></div>
+
+<h2>Malé velikosti — test čitelnosti</h2>
+<p class="poznamka">Takhle malá ikona je na ploše telefonu ve skutečnosti. Pozná se na první pohled, že jde o tvoji hru?</p>
+<div class="rada" id="male"></div>
+
+</main>
+<script>
+/* Cesty s časovým razítkem: bez něj prohlížeč po přegenerování ikon ukazuje
+   staré obrázky z cache a vypadá to, že se změna neprojevila. */
+var T = '?t=' + Date.now();
+var ADAPTIVNI_BG = '../android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_background.png' + T;
+var ADAPTIVNI_FG = '../android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png' + T;
+var IOS = '../ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png' + T;
+var MASKABLE = '../icons/icon-512.png' + T;
+
+/* Adaptivní ikona se skládá ze dvou vrstev a systém zobrazí jen její střed
+   (zhruba 72 ze 108 dílků), proto se obě vrstvy zvětšují o 150 %. */
+function slozena(velikost, tvar){
+  var d = document.createElement('div');
+  d.className = 'slozena ' + tvar;
+  d.style.cssText += 'width:' + velikost + 'px;height:' + velikost + 'px';
+  var vnitrek = document.createElement('div');
+  vnitrek.style.cssText = 'position:absolute;inset:-25%;';
+  vnitrek.innerHTML = '<img src="' + ADAPTIVNI_BG + '"><img src="' + ADAPTIVNI_FG + '">';
+  d.appendChild(vnitrek);
+  return d;
+}
+
+function kus(prvek, popis){
+  var w = document.createElement('div');
+  w.className = 'kus';
+  var p = document.createElement('div');
+  p.className = 'plocha';
+  p.appendChild(prvek);
+  w.appendChild(p);
+  var s = document.createElement('span');
+  s.textContent = popis;
+  w.appendChild(s);
+  return w;
+}
+
+function obrazek(src, velikost, tvar){
+  var i = document.createElement('img');
+  i.src = src; i.width = velikost; i.height = velikost;
+  i.className = tvar || '';
+  return i;
+}
+
+['kruh', 'squircle', 'ctverec', 'kapka'].forEach(function(t){
+  var jmena = { kruh:'kolečko (Pixel)', squircle:'squircle (Samsung)', ctverec:'čtvereček', kapka:'kapka' };
+  document.getElementById('adaptivni').appendChild(kus(slozena(120, t), jmena[t]));
+});
+
+document.getElementById('ios').appendChild(kus(obrazek(IOS, 60, 'squircle'), 'skutečná velikost'));
+document.getElementById('ios').appendChild(kus(obrazek(IOS, 160, 'squircle'), 'zvětšeno'));
+
+document.getElementById('web').appendChild(kus(obrazek(MASKABLE, 120, 'kruh'), 'kolečko'));
+document.getElementById('web').appendChild(kus(obrazek(MASKABLE, 120, 'squircle'), 'squircle'));
+document.getElementById('web').appendChild(kus(obrazek(MASKABLE, 120), 'bez ořezu'));
+
+[48, 60, 72, 96].forEach(function(v){
+  document.getElementById('male').appendChild(kus(slozena(v, 'squircle'), v + ' px'));
+});
+</script>
+</body>
+</html>
