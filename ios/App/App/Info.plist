@@ -51,18 +51,17 @@
 	<array>
 		<string>armv7</string>
 	</array>
+	<!-- Hra je navržená striktně na výšku (roklina se šplhá vzhůru). Landscape
+	     tu byl ze šablony Capacitoru; na iPhonu by šlo appku otočit a rozložení
+	     by se rozsypalo. manifest.json řeší jen PWA, nativní build se řídí tímhle. -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>

@@ -9,7 +9,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!-- Hra je navržená striktně na výšku (roklina se šplhá vzhůru), takže
+             otočení na šířku se zamyká. V PWA to řeší manifest.json, ale
+             nativní build se jím neřídí — bez tohohle by šlo appku otočit
+             a rozložení by se rozsypalo. -->
         <activity
+            android:screenOrientation="portrait"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name=".MainActivity"
             android:label="@string/title_activity_main"

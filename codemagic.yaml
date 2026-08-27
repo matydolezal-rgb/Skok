@@ -1,0 +1,112 @@
+# Cloudový build pro Codemagic (codemagic.io).
+#
+# PROČ: iOS aplikaci nejde sestavit jinde než na macOS, a Mac nemáme.
+# Codemagic build spustí na svém Macu a hotový .ipa pošle do App Store Connect.
+# Android build je tu taky, ať se nemusí ručně pouštět gradle na notebooku.
+#
+# CO JE POTŘEBA NASTAVIT V CODEMAGICU (až bude Apple účet schválený):
+#   1. Teams → Integrations → Apple Developer Portal → nahrát App Store Connect
+#      API klíč (.p8) z App Store Connect → Users and Access → Integrations.
+#      Ten samý klíč pak chce i RevenueCat pro iOS nákupy.
+#   2. V nastavení workflow zapnout automatické podepisování (iOS code signing
+#      → Automatic), Codemagic si certifikát i provisioning profil vyrobí sám.
+#   3. Do proměnné APP_STORE_APPLE_ID doplnit číslo appky z App Store Connect
+#      (vidíš ho v URL appky). Bez něj build projde, jen se nenahraje.
+#
+# SPOUŠTĚNÍ: v Codemagicu ručně tlačítkem, nebo automaticky po pushnutí do main.
+
+definitions:
+  env_versions: &env_versions
+    xcode: latest
+    cocoapods: default
+    node: 20
+
+workflows:
+
+  # ---------- iOS ----------
+  ios-appstore:
+    name: iOS — TestFlight a App Store
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    environment:
+      <<: *env_versions
+      groups:
+        # skupina proměnných založená v Codemagicu (Teams → Environment variables)
+        - appstore
+      vars:
+        BUNDLE_ID: "com.nowaybutup.game"
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.nowaybutup.game
+
+    scripts:
+      - name: Instalace závislostí
+        script: npm ci || npm install
+
+      # Herní kód je čisté HTML/JS bez build kroku — tenhle skript jen zkopíruje
+      # index.html, css, js, icons, manifest.json a sw.js do www/ a pak
+      # Capacitor přenese www/ do nativního projektu.
+      - name: Sestavení www a synchronizace do nativního projektu
+        script: npm run sync
+
+      - name: Instalace CocoaPods
+        script: |
+          cd ios/App
+          pod install
+
+      # Číslo buildu musí být pokaždé vyšší, jinak App Store Connect nahrání
+      # odmítne. Bereme počet dosavadních buildů v Codemagicu, ať se o to
+      # nemusí nikdo starat ručně.
+      - name: Nastavení čísla buildu
+        script: |
+          cd ios/App
+          agvtool new-version -all $(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0) + 1))
+
+      - name: Sestavení iOS
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Nahraje do TestFlightu pro interní testery. Na ostré vydání do
+        # App Store se přepne až ve chvíli, kdy bude appka odladěná —
+        # schválně to nepouštíme rovnou ven.
+        submit_to_testflight: true
+        submit_to_app_store: false
+
+  # ---------- Android ----------
+  android-play:
+    name: Android — Play Console
+    instance_type: linux_x2
+    max_build_duration: 30
+    environment:
+      java: 21          # stejná verze jako lokálně; starší Java neprojde, novější Gradle nesnese
+      node: 20
+      vars:
+        PACKAGE_NAME: "com.nowaybutup.game"
+
+    scripts:
+      - name: Instalace závislostí
+        script: npm ci || npm install
+
+      - name: Sestavení www a synchronizace do nativního projektu
+        script: npm run sync
+
+      - name: Sestavení podepsaného AAB
+        script: |
+          cd android
+          ./gradlew bundleRelease
+
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/*.apk
